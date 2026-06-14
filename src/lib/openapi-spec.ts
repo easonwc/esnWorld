@@ -96,6 +96,166 @@ export const apiOperations: ApiOperation[] = [
       2,
     ),
   },
+  {
+    id: "locations-list",
+    tag: "Locations",
+    method: "GET",
+    path: "/api/locations",
+    summary: "List all locations",
+    description: "Returns all city locations sorted by name.",
+  },
+  {
+    id: "locations-create",
+    tag: "Locations",
+    method: "POST",
+    path: "/api/locations",
+    summary: "Create a location",
+    description:
+      "Creates a city-level location with name, country, population, coordinates, and IANA timezone.",
+    requestBody: JSON.stringify(
+      {
+        action: "create",
+        name: "New York",
+        country: "United States",
+        latitude: 40.7128,
+        longitude: -74.006,
+        timezone: "America/New_York",
+        population: 8336817,
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "locations-get",
+    tag: "Locations",
+    method: "POST",
+    path: "/api/locations",
+    summary: "Get a location",
+    description: "Retrieves a single city location by id.",
+    requestBody: JSON.stringify(
+      { action: "get", id: "paste-location-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "locations-local-time",
+    tag: "Locations",
+    method: "POST",
+    path: "/api/locations",
+    summary: "Get local time in city",
+    description:
+      "Returns the local datetime for a city. Uses the world clock by default, or an optional isoUtc.",
+    requestBody: JSON.stringify(
+      {
+        action: "localTime",
+        id: "paste-location-id-here",
+        isoUtc: "2020-06-14T16:00:00.000Z",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "locations-delete",
+    tag: "Locations",
+    method: "POST",
+    path: "/api/locations",
+    summary: "Delete a location",
+    description:
+      "Removes a city location by id. Fails if venues still exist in that location.",
+    requestBody: JSON.stringify(
+      { action: "delete", id: "paste-location-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "venues-list",
+    tag: "Venues",
+    method: "GET",
+    path: "/api/venues",
+    summary: "List all venues",
+    description: "Returns all venues sorted by name.",
+  },
+  {
+    id: "venues-create",
+    tag: "Venues",
+    method: "POST",
+    path: "/api/venues",
+    summary: "Create a venue",
+    description:
+      "Creates a venue within a location (e.g. stadium, golf course). Requires a valid locationId.",
+    requestBody: JSON.stringify(
+      {
+        action: "create",
+        locationId: "paste-location-id-here",
+        name: "Madison Square Garden",
+        latitude: 40.7505,
+        longitude: -73.9934,
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "venues-list-by-location",
+    tag: "Venues",
+    method: "POST",
+    path: "/api/venues",
+    summary: "List venues in a location",
+    description: "Returns all venues within a given city location.",
+    requestBody: JSON.stringify(
+      { action: "listByLocation", locationId: "paste-location-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "venues-get",
+    tag: "Venues",
+    method: "POST",
+    path: "/api/venues",
+    summary: "Get a venue",
+    description: "Retrieves a single venue by id.",
+    requestBody: JSON.stringify(
+      { action: "get", id: "paste-venue-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "venues-local-time",
+    tag: "Venues",
+    method: "POST",
+    path: "/api/venues",
+    summary: "Get local time at venue",
+    description:
+      "Returns local datetime at a venue using its parent location timezone.",
+    requestBody: JSON.stringify(
+      {
+        action: "localTime",
+        id: "paste-venue-id-here",
+        isoUtc: "2020-06-14T16:00:00.000Z",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "venues-delete",
+    tag: "Venues",
+    method: "POST",
+    path: "/api/venues",
+    summary: "Delete a venue",
+    description: "Removes a venue by id.",
+    requestBody: JSON.stringify(
+      { action: "delete", id: "paste-venue-id-here" },
+      null,
+      2,
+    ),
+  },
 ];
 
 export function buildOpenApiSpec() {
@@ -128,6 +288,7 @@ export function buildOpenApiSpec() {
           },
         },
         "400": { description: "Invalid request" },
+        "404": { description: "Resource not found" },
         "409": { description: "Clock state conflict (start/stop)" },
       },
     };
@@ -163,6 +324,14 @@ export function buildOpenApiSpec() {
       {
         name: "Calendar",
         description: "US Gregorian calendar derived from UTC world time.",
+      },
+      {
+        name: "Locations",
+        description: "Cities with country, coordinates, and timezone.",
+      },
+      {
+        name: "Venues",
+        description: "Venues within a location, such as stadiums or golf courses.",
       },
     ],
     paths,

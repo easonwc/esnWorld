@@ -1,0 +1,24 @@
+export class LocationError extends Error {
+  readonly code: string;
+
+  constructor(code: string, message: string) {
+    super(message);
+    this.name = "LocationError";
+    this.code = code;
+  }
+}
+
+export const LocationErrorCodes = {
+  INVALID_ACTION: "INVALID_ACTION",
+  INVALID_NAME: "INVALID_NAME",
+  INVALID_LATITUDE: "INVALID_LATITUDE",
+  INVALID_LONGITUDE: "INVALID_LONGITUDE",
+  INVALID_TIMEZONE: "INVALID_TIMEZONE",
+  INVALID_ID: "INVALID_ID",
+  MISSING_ID: "MISSING_ID",
+  LOCATION_NOT_FOUND: "LOCATION_NOT_FOUND",
+  LOCATION_HAS_VENUES: "LOCATION_HAS_VENUES",
+  INVALID_ISO_UTC: "INVALID_ISO_UTC",
+  INVALID_COUNTRY: "INVALID_COUNTRY",
+  INVALID_POPULATION: "INVALID_POPULATION",
+} as const;

@@ -1,6 +1,17 @@
 # ESN World Engine
 
-A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript**. It provides APIs for a simulated world with a UTC clock, US calendar, and (planned) location-based event scheduling.
+A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript**. It provides APIs for a simulated world with a UTC clock, US calendar, city locations, venues, and (planned) event scheduling.
+
+## Domain model
+
+| Entity | Represents | Example |
+|--------|------------|---------|
+| **World Clock** | Canonical UTC time for the entire world | `2020-01-01T12:00:00.000Z` |
+| **Calendar** | US Gregorian date derived from UTC | June 14, 2020 — Sunday, day 166 |
+| **Location** | A city in a country | New York, United States |
+| **Venue** | A place within a city | Madison Square Garden, Bethpage Black Course |
+
+Locations hold the **timezone** used for local-time calculations. Venues belong to a location and inherit its timezone.
 
 ## Modules
 
@@ -8,7 +19,8 @@ A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript
 |--------|--------|-------------|
 | **World Clock** | ✅ | Canonical UTC time source with configurable simulated tick rate |
 | **Calendar** | ✅ | US Gregorian calendar derived from world clock UTC time |
-| **Locations** | 🔜 | Venues with latitude/longitude and local timezone offsets |
+| **Locations** | ✅ | Cities with country, population, coordinates, and IANA timezone |
+| **Venues** | ✅ | Venues within a location (stadiums, golf courses, etc.) |
 | **Events** | 🔜 | Parallel events scheduled at venue-local times |
 
 Each module follows an **inputs → transformation → outputs** model with lightweight error handling and unit tests.
@@ -60,6 +72,8 @@ Open [http://localhost:3000/api-docs](http://localhost:3000/api-docs) for the in
 | `POST` | `/api/world-clock/start` | Start automatic time advancement |
 | `POST` | `/api/world-clock/stop` | Stop and freeze time |
 
+`advance` only accepts positive millisecond values.
+
 ### Calendar
 
 | Method | Endpoint | Description |
@@ -67,12 +81,66 @@ Open [http://localhost:3000/api-docs](http://localhost:3000/api-docs) for the in
 | `GET` | `/api/calendar` | Get calendar date for current world clock time |
 | `POST` | `/api/calendar` | Convert UTC to calendar (`action`: `fromIso`, `fromDate`) |
 
+`GET` returns the live date when the clock is running — re-execute to see updates.
+
+### Locations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/locations` | List all cities |
+| `POST` | `/api/locations` | Create, get, delete, or get local time (`action`: `create`, `get`, `delete`, `localTime`) |
+
+**Create a city:**
+
+```json
+{
+  "action": "create",
+  "name": "New York",
+  "country": "United States",
+  "population": 8336817,
+  "latitude": 40.7128,
+  "longitude": -74.006,
+  "timezone": "America/New_York"
+}
+```
+
+`population` must be a non-negative integer. A location cannot be deleted while it still has venues.
+
+### Venues
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/venues` | List all venues |
+| `POST` | `/api/venues` | Create, get, delete, list by location, or get local time (`action`: `create`, `get`, `delete`, `listByLocation`, `localTime`) |
+
+**Create a venue within a city:**
+
+```json
+{
+  "action": "create",
+  "locationId": "<location-id>",
+  "name": "Madison Square Garden",
+  "latitude": 40.7505,
+  "longitude": -73.9934
+}
+```
+
+Local time at a venue uses the parent location's timezone.
+
 ### Other
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/openapi` | OpenAPI 3.0 JSON spec |
 | — | `/api-docs` | Interactive API explorer (Swagger-style) |
+
+## Example workflow
+
+1. **Start the world clock** — `POST /api/world-clock/start`
+2. **Create a location** — `POST /api/locations` with `action: "create"`
+3. **Create venues** in that city — `POST /api/venues` with `action: "create"`
+4. **Check the calendar** — `GET /api/calendar`
+5. **Get local time at a venue** — `POST /api/venues` with `action: "localTime"`
 
 ## Scripts
 
@@ -92,6 +160,8 @@ src/
   modules/
     world-clock/     # UTC clock, tick rate, start/stop
     calendar/        # US Gregorian calendar transforms
+    locations/       # Cities with country, population, and timezone
+    venues/          # Venues within a location
   app/
     api/             # API route handlers
     api-docs/        # Interactive API explorer
