@@ -31,7 +31,7 @@ export async function listGetResponse<T>(
   }
 
   if (!options) {
-    return jsonResponse({ data: await list() });
+    return jsonResponse({ data: await list() }, 200, "catalog");
   }
 
   const [data, total] = await Promise.all([list(options), count()]);
@@ -41,5 +41,5 @@ export async function listGetResponse<T>(
     offset: options.offset,
   };
 
-  return jsonResponse({ data, pagination });
+  return jsonResponse({ data, pagination }, 200, "catalog");
 }
