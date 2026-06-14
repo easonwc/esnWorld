@@ -1,6 +1,5 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { resetEventStore } from "@/modules/events";
-import { resetLocationStore } from "@/modules/locations";
 import { resetVenueStore } from "@/modules/venues";
 import {
   WeatherService,
@@ -9,6 +8,11 @@ import {
   transformWeatherAtPoint,
 } from "@/modules/weather";
 import { createWeatherSystems } from "@/modules/weather/systems";
+import {
+  seedNewYorkLocation,
+  seedUnitedStatesCountry,
+  resetWorldFixtures,
+} from "@/test/world-fixtures";
 
 describe("weather transform", () => {
   const systems = createWeatherSystems(42, Date.parse("2020-01-01T00:00:00.000Z"));
@@ -70,39 +74,37 @@ describe("executeWeather", () => {
   let venueId: string;
   let eventId: string;
 
-  beforeEach(() => {
-    resetLocationStore();
-    resetVenueStore();
+  beforeEach(async () => {
+    await resetWorldFixtures();
     resetEventStore();
+    resetVenueStore();
     resetWeatherService();
 
-    const locationId = resetLocationStore().create({
-      name: "New York",
-      country: "United States",
-      latitude: 40.7128,
-      longitude: -74.006,
-      timezone: "America/New_York",
-      population: 8336817,
-    }).id;
+    const country = await seedUnitedStatesCountry();
+    const location = await seedNewYorkLocation(country.id);
 
-    venueId = resetVenueStore().create({
-      locationId,
-      name: "Madison Square Garden",
-      latitude: 40.7505,
-      longitude: -73.9934,
-      isIndoor: true,
-    }).id;
+    venueId = (
+      await resetVenueStore().create({
+        locationId: location.id,
+        name: "Madison Square Garden",
+        latitude: 40.7505,
+        longitude: -73.9934,
+        isIndoor: true,
+      })
+    ).id;
 
-    eventId = resetEventStore().create({
-      name: "Championship Final",
-      venueId,
-      localStart: { year: 2020, month: 6, day: 14, hour: 12, minute: 0 },
-      durationMinutes: 120,
-    }).id;
+    eventId = (
+      await resetEventStore().create({
+        name: "Championship Final",
+        venueId,
+        localStart: { year: 2020, month: 6, day: 14, hour: 12, minute: 0 },
+        durationMinutes: 120,
+      })
+    ).id;
   });
 
-  it("gets weather at a venue", () => {
-    const result = executeWeather({
+  it("gets weather at a venue", async () => {
+    const result = await executeWeather({
       action: "getAtVenue",
       venueId,
       isoUtc: "2020-06-14T16:00:00.000Z",
@@ -117,8 +119,8 @@ describe("executeWeather", () => {
     });
   });
 
-  it("gets weather for an event at start", () => {
-    const result = executeWeather({
+  it("gets weather for an event at start", async () => {
+    const result = await executeWeather({
       action: "getForEvent",
       eventId,
       phase: "start",
@@ -131,8 +133,8 @@ describe("executeWeather", () => {
     });
   });
 
-  it("lists moving systems at a time", () => {
-    const result = executeWeather({
+  it("lists moving systems at a time", async () => {
+    const result = await executeWeather({
       action: "listSystems",
       isoUtc: "2020-06-14T16:00:00.000Z",
     });

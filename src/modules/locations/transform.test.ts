@@ -6,18 +6,24 @@ import {
   buildLocation,
   resetLocationStore,
   utcToLocalTime,
-  validateCountry,
+  validateCountryId,
   validateLatitude,
   validateLongitude,
   validatePopulation,
   validateTimezone,
 } from "@/modules/locations";
+import { getCountryStore, resetCountryStore } from "@/modules/countries";
+import {
+  seedNewYorkLocation,
+  seedUnitedStatesCountry,
+  seedUnitedStatesWithNewYork,
+} from "@/test/world-fixtures";
 
 describe("locations validation", () => {
-  it("accepts valid coordinates, country, and timezone", () => {
+  it("accepts valid coordinates, countryId, and timezone", () => {
     expect(validateLatitude(40.7128)).toBe(40.7128);
     expect(validateLongitude(-74.006)).toBe(-74.006);
-    expect(validateCountry("United States")).toBe("United States");
+    expect(validateCountryId("country-123")).toBe("country-123");
     expect(validateTimezone("America/New_York")).toBe("America/New_York");
   });
 
@@ -67,16 +73,20 @@ describe("utcToLocalTime", () => {
 
 describe("LocationStore", () => {
   let store: LocationStore;
+  let countryId: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     resetVenueStore();
+    resetLocationStore();
+    resetCountryStore();
     store = resetLocationStore();
+    countryId = (await seedUnitedStatesCountry()).id;
   });
 
-  it("creates and retrieves a city location", () => {
-    const created = store.create({
+  it("creates and retrieves a city location", async () => {
+    const created = await store.create({
       name: "New York",
-      country: "United States",
+      countryId,
       latitude: 40.7128,
       longitude: -74.006,
       timezone: "America/New_York",
@@ -85,66 +95,77 @@ describe("LocationStore", () => {
 
     expect(created.id).toBeTruthy();
     expect(created.name).toBe("New York");
-    expect(created.country).toBe("United States");
+    expect(created.countryName).toBe("United States");
     expect(created.population).toBe(8336817);
 
-    const fetched = store.get(created.id);
+    const fetched = await store.get(created.id);
     expect(fetched).toEqual(created);
   });
 
-  it("lists locations sorted by city name", () => {
-    store.create({
+  it("lists locations sorted by city name", async () => {
+    const switzerland = await getCountryStore().create({
+      name: "Switzerland",
+      isoCode: "CH",
+      languages: ["German", "French", "Italian"],
+    });
+    const netherlands = await getCountryStore().create({
+      name: "Netherlands",
+      isoCode: "NL",
+      languages: ["Dutch"],
+    });
+
+    await store.create({
       name: "Zurich",
-      country: "Switzerland",
+      countryId: switzerland.id,
       latitude: 47.3769,
       longitude: 8.5417,
       timezone: "Europe/Zurich",
       population: 415367,
     });
-    store.create({
+    await store.create({
       name: "Amsterdam",
-      country: "Netherlands",
+      countryId: netherlands.id,
       latitude: 52.3676,
       longitude: 4.9041,
       timezone: "Europe/Amsterdam",
       population: 872680,
     });
 
-    const list = store.list();
+    const list = await store.list();
     expect(list.map((l) => l.name)).toEqual(["Amsterdam", "Zurich"]);
   });
 
-  it("returns local time for a city", () => {
-    const created = store.create({
+  it("returns local time for a city", async () => {
+    const created = await store.create({
       name: "Los Angeles",
-      country: "United States",
+      countryId,
       latitude: 34.0522,
       longitude: -118.2437,
       timezone: "America/Los_Angeles",
       population: 3979576,
     });
 
-    const localTime = store.getLocalTime(
+    const localTime = await store.getLocalTime(
       created.id,
       "2020-06-14T19:00:00.000Z",
     );
 
     expect(localTime.locationName).toBe("Los Angeles");
-    expect(localTime.country).toBe("United States");
+    expect(localTime.countryName).toBe("United States");
     expect(localTime.local.hour).toBe(12);
   });
 
-  it("prevents deleting a location that still has venues", () => {
-    const created = store.create({
+  it("prevents deleting a location that still has venues", async () => {
+    const created = await store.create({
       name: "Chicago",
-      country: "United States",
+      countryId,
       latitude: 41.8781,
       longitude: -87.6298,
       timezone: "America/Chicago",
       population: 2746388,
     });
 
-    getVenueStore().create({
+    await getVenueStore().create({
       locationId: created.id,
       name: "Soldier Field",
       latitude: 41.8623,
@@ -152,28 +173,73 @@ describe("LocationStore", () => {
       isIndoor: false,
     });
 
-    expect(() => store.delete(created.id)).toThrowError(
+    await expect(store.delete(created.id)).rejects.toThrowError(
       expect.objectContaining({ code: LocationErrorCodes.LOCATION_HAS_VENUES }),
+    );
+  });
+
+  it("rejects create when countryId is omitted", async () => {
+    await expect(
+      store.create({
+        name: "Ghost City",
+        latitude: 0,
+        longitude: 0,
+        timezone: "UTC",
+        population: 1,
+      }),
+    ).rejects.toThrowError(
+      expect.objectContaining({ code: LocationErrorCodes.COUNTRY_REQUIRED }),
+    );
+  });
+
+  it("rejects legacy country string instead of countryId", async () => {
+    await expect(
+      store.create({
+        name: "Ghost City",
+        country: "United States",
+        latitude: 0,
+        longitude: 0,
+        timezone: "UTC",
+        population: 1,
+      }),
+    ).rejects.toThrowError(
+      expect.objectContaining({ code: LocationErrorCodes.INVALID_COUNTRY_ID }),
+    );
+  });
+
+  it("rejects unknown country on create", async () => {
+    await expect(
+      store.create({
+        name: "Ghost City",
+        countryId: "missing-country",
+        latitude: 0,
+        longitude: 0,
+        timezone: "UTC",
+        population: 1,
+      }),
+    ).rejects.toThrowError(
+      expect.objectContaining({ code: LocationErrorCodes.COUNTRY_NOT_FOUND }),
     );
   });
 });
 
 describe("buildLocation", () => {
-  it("trims name, country, and timezone", () => {
+  it("trims name and timezone", () => {
     const location = buildLocation(
       {
         name: "  Tokyo  ",
-        country: " Japan ",
+        countryId: "country-id",
         latitude: 35.6762,
         longitude: 139.6503,
         timezone: " Asia/Tokyo ",
         population: 13960000,
       },
       "test-id",
+      " Japan ",
     );
 
     expect(location.name).toBe("Tokyo");
-    expect(location.country).toBe("Japan");
+    expect(location.countryName).toBe("Japan");
     expect(location.timezone).toBe("Asia/Tokyo");
   });
 });

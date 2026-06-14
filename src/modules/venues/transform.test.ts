@@ -6,27 +6,26 @@ import {
   resetVenueStore,
   validateIsIndoor,
 } from "@/modules/venues";
+import {
+  seedNewYorkLocation,
+  seedUnitedStatesCountry,
+  resetWorldFixtures,
+} from "@/test/world-fixtures";
 
 describe("VenueStore", () => {
   let store: VenueStore;
   let locationId: string;
 
-  beforeEach(() => {
-    resetLocationStore();
+  beforeEach(async () => {
+    await resetWorldFixtures();
     store = resetVenueStore();
 
-    locationId = resetLocationStore().create({
-      name: "New York",
-      country: "United States",
-      latitude: 40.7128,
-      longitude: -74.006,
-      timezone: "America/New_York",
-      population: 8336817,
-    }).id;
+    const country = await seedUnitedStatesCountry();
+    locationId = (await seedNewYorkLocation(country.id)).id;
   });
 
-  it("creates a venue within a location", () => {
-    const venue = store.create({
+  it("creates a venue within a location", async () => {
+    const venue = await store.create({
       locationId,
       name: "Madison Square Garden",
       latitude: 40.7505,
@@ -39,15 +38,15 @@ describe("VenueStore", () => {
     expect(venue.locationId).toBe(locationId);
   });
 
-  it("allows multiple venues in the same location", () => {
-    store.create({
+  it("allows multiple venues in the same location", async () => {
+    await store.create({
       locationId,
       name: "Madison Square Garden",
       latitude: 40.7505,
       longitude: -73.9934,
       isIndoor: true,
     });
-    store.create({
+    await store.create({
       locationId,
       name: "Bethpage Black Course",
       latitude: 40.7446,
@@ -55,7 +54,7 @@ describe("VenueStore", () => {
       isIndoor: false,
     });
 
-    const venues = store.listByLocation(locationId);
+    const venues = await store.listByLocation(locationId);
     expect(venues.map((v) => v.name)).toEqual([
       "Bethpage Black Course",
       "Madison Square Garden",
@@ -68,8 +67,8 @@ describe("VenueStore", () => {
     );
   });
 
-  it("rejects venue creation for unknown location", () => {
-    expect(() =>
+  it("rejects venue creation for unknown location", async () => {
+    await expect(
       store.create({
         locationId: "missing-id",
         name: "Ghost Arena",
@@ -77,13 +76,13 @@ describe("VenueStore", () => {
         longitude: 0,
         isIndoor: false,
       }),
-    ).toThrowError(
+    ).rejects.toThrowError(
       expect.objectContaining({ code: VenueErrorCodes.LOCATION_NOT_FOUND }),
     );
   });
 
-  it("returns local time using parent location timezone", () => {
-    const venue = store.create({
+  it("returns local time using parent location timezone", async () => {
+    const venue = await store.create({
       locationId,
       name: "Madison Square Garden",
       latitude: 40.7505,
@@ -91,7 +90,7 @@ describe("VenueStore", () => {
       isIndoor: true,
     });
 
-    const localTime = store.getLocalTime(
+    const localTime = await store.getLocalTime(
       venue.id,
       "2020-06-14T16:00:00.000Z",
     );
@@ -102,8 +101,8 @@ describe("VenueStore", () => {
     expect(localTime.local.hour).toBe(12);
   });
 
-  it("counts venues per location", () => {
-    store.create({
+  it("counts venues per location", async () => {
+    await store.create({
       locationId,
       name: "Venue A",
       latitude: 0,
@@ -111,6 +110,6 @@ describe("VenueStore", () => {
       isIndoor: false,
     });
 
-    expect(store.countByLocation(locationId)).toBe(1);
+    expect(await store.countByLocation(locationId)).toBe(1);
   });
 });

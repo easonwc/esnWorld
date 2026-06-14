@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const output = executeWeather(input);
+    const output = await executeWeather(input);
     return jsonResponse({ data: output });
   } catch (error) {
     if (

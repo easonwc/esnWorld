@@ -6,6 +6,10 @@ import {
   parseIsoUtc,
   utcToLocalTime,
 } from "@/modules/locations";
+import {
+  getDefaultVenueRepository,
+  type VenueRepository,
+} from "@/persistence/repositories";
 import { VenueError, VenueErrorCodes } from "./errors";
 import { buildVenue, validateId, validateLocationId } from "./transform";
 import type {
@@ -16,31 +20,24 @@ import type {
 } from "./types";
 
 export class VenueStore {
-  private readonly venues = new Map<string, Venue>();
+  constructor(private readonly repository: VenueRepository) {}
 
-  list(): Venue[] {
-    return [...this.venues.values()].sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+  async list(): Promise<Venue[]> {
+    return this.repository.list();
   }
 
-  listByLocation(locationId: string): Venue[] {
+  async listByLocation(locationId: string): Promise<Venue[]> {
     const id = validateLocationId(locationId);
-    getLocationStore().get(id);
-
-    return [...this.venues.values()]
-      .filter((venue) => venue.locationId === id)
-      .sort((a, b) => a.name.localeCompare(b.name));
+    await getLocationStore().get(id);
+    return this.repository.listByLocation(id);
   }
 
-  countByLocation(locationId: string): number {
-    return [...this.venues.values()].filter(
-      (venue) => venue.locationId === locationId,
-    ).length;
+  async countByLocation(locationId: string): Promise<number> {
+    return this.repository.countByLocation(locationId);
   }
 
-  get(id: string): Venue {
-    const venue = this.venues.get(id);
+  async get(id: string): Promise<Venue> {
+    const venue = await this.repository.get(id);
 
     if (!venue) {
       throw new VenueError(
@@ -52,19 +49,18 @@ export class VenueStore {
     return venue;
   }
 
-  create(input: {
+  async create(input: {
     locationId: unknown;
     name: unknown;
     latitude: unknown;
     longitude: unknown;
     isIndoor: unknown;
-  }): Venue {
-    const locationStore = getLocationStore();
+  }): Promise<Venue> {
     const venueId = crypto.randomUUID();
     const venue = buildVenue(input, venueId);
 
     try {
-      locationStore.get(venue.locationId);
+      await getLocationStore().get(venue.locationId);
     } catch (error) {
       if (error instanceof LocationError) {
         throw new VenueError(
@@ -75,27 +71,30 @@ export class VenueStore {
       throw error;
     }
 
-    this.venues.set(venueId, venue);
-    return venue;
+    return this.repository.create(venue);
   }
 
-  delete(id: string): { deleted: true; id: string } {
+  async delete(id: string): Promise<{ deleted: true; id: string }> {
     validateId(id);
 
-    if (!this.venues.has(id)) {
+    const venue = await this.repository.get(id);
+    if (!venue) {
       throw new VenueError(
         VenueErrorCodes.VENUE_NOT_FOUND,
         `Venue not found: ${id}`,
       );
     }
 
-    this.venues.delete(id);
+    await this.repository.delete(id);
     return { deleted: true, id };
   }
 
-  getLocalTime(id: string, isoUtc?: string): VenueLocalTimeOutput {
-    const venue = this.get(id);
-    const location = getLocationStore().get(venue.locationId);
+  async getLocalTime(
+    id: string,
+    isoUtc?: string,
+  ): Promise<VenueLocalTimeOutput> {
+    const venue = await this.get(id);
+    const location = await getLocationStore().get(venue.locationId);
     const sourceIsoUtc =
       isoUtc === undefined
         ? getWorldClockService().getCurrentOutput().isoUtc
@@ -106,15 +105,15 @@ export class VenueStore {
       venueName: venue.name,
       locationId: location.id,
       locationName: location.name,
-      country: location.country,
+      country: location.countryName,
       timezone: location.timezone,
       isoUtc: sourceIsoUtc,
       local: utcToLocalTime(sourceIsoUtc, location.timezone),
     };
   }
 
-  clear(): void {
-    this.venues.clear();
+  async clear(): Promise<void> {
+    await this.repository.clear();
   }
 }
 
@@ -124,18 +123,18 @@ const globalForVenues = globalThis as typeof globalThis & {
 
 export function getVenueStore(): VenueStore {
   if (!globalForVenues.__venueStore) {
-    globalForVenues.__venueStore = new VenueStore();
+    globalForVenues.__venueStore = new VenueStore(getDefaultVenueRepository());
   }
   return globalForVenues.__venueStore;
 }
 
-export function resetVenueStore(): VenueStore {
-  const store = new VenueStore();
+export function resetVenueStore(repository?: VenueRepository): VenueStore {
+  const store = new VenueStore(repository ?? getDefaultVenueRepository());
   globalForVenues.__venueStore = store;
   return store;
 }
 
-export function executeVenue(input: VenueInput): VenueOutput {
+export async function executeVenue(input: VenueInput): Promise<VenueOutput> {
   const store = getVenueStore();
 
   switch (input.action) {
@@ -164,7 +163,7 @@ export function executeVenue(input: VenueInput): VenueOutput {
   }
 }
 
-export function listVenues(): Venue[] {
+export async function listVenues(): Promise<Venue[]> {
   return getVenueStore().list();
 }
 

@@ -97,6 +97,61 @@ export const apiOperations: ApiOperation[] = [
     ),
   },
   {
+    id: "countries-list",
+    tag: "Countries",
+    method: "GET",
+    path: "/api/countries",
+    summary: "List all countries",
+    description:
+      "Returns all countries sorted by name. Population is the sum of all city populations in that country.",
+  },
+  {
+    id: "countries-create",
+    tag: "Countries",
+    method: "POST",
+    path: "/api/countries",
+    summary: "Create a country",
+    description:
+      "Creates a country with name, ISO code, and official languages. A local flag SVG is downloaded automatically.",
+    requestBody: JSON.stringify(
+      {
+        action: "create",
+        name: "United States",
+        isoCode: "US",
+        languages: ["English"],
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "countries-get",
+    tag: "Countries",
+    method: "POST",
+    path: "/api/countries",
+    summary: "Get a country",
+    description: "Retrieves a single country by id, including aggregated population.",
+    requestBody: JSON.stringify(
+      { action: "get", id: "paste-country-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "countries-delete",
+    tag: "Countries",
+    method: "POST",
+    path: "/api/countries",
+    summary: "Delete a country",
+    description:
+      "Removes a country by id. Fails if cities still exist in that country.",
+    requestBody: JSON.stringify(
+      { action: "delete", id: "paste-country-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
     id: "locations-list",
     tag: "Locations",
     method: "GET",
@@ -111,12 +166,12 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/locations",
     summary: "Create a location",
     description:
-      "Creates a city-level location with name, country, population, coordinates, and IANA timezone.",
+      "Creates a city-level location within a country. countryId is required and must reference an existing country.",
     requestBody: JSON.stringify(
       {
         action: "create",
         name: "New York",
-        country: "United States",
+        countryId: "paste-country-id-here",
         latitude: 40.7128,
         longitude: -74.006,
         timezone: "America/New_York",
@@ -498,8 +553,13 @@ export function buildOpenApiSpec() {
         description: "US Gregorian calendar derived from UTC world time.",
       },
       {
+        name: "Countries",
+        description:
+          "Countries with ISO codes, local flag images, languages, and population aggregated from cities.",
+      },
+      {
         name: "Locations",
-        description: "Cities with country, coordinates, and timezone.",
+        description: "Cities belonging to a country, with coordinates and timezone.",
       },
       {
         name: "Venues",

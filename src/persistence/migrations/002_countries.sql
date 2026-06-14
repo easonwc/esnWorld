@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS countries (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+  flag TEXT NOT NULL,
+  languages TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

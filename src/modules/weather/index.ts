@@ -87,11 +87,14 @@ export function resetWeatherService(systems?: WeatherSystem[]): WeatherService {
   return service;
 }
 
-function weatherAtVenue(venueId: string, isoUtc: string): WeatherResult {
+async function weatherAtVenue(
+  venueId: string,
+  isoUtc: string,
+): Promise<WeatherResult> {
   let venue;
 
   try {
-    venue = getVenueStore().get(venueId);
+    venue = await getVenueStore().get(venueId);
   } catch (error) {
     if (error instanceof VenueError) {
       throw new WeatherError(WeatherErrorCodes.VENUE_NOT_FOUND, error.message);
@@ -99,7 +102,7 @@ function weatherAtVenue(venueId: string, isoUtc: string): WeatherResult {
     throw error;
   }
 
-  const location = getLocationStore().get(venue.locationId);
+  const location = await getLocationStore().get(venue.locationId);
   const service = getWeatherService();
 
   return transformWeatherAtPoint(
@@ -109,7 +112,7 @@ function weatherAtVenue(venueId: string, isoUtc: string): WeatherResult {
       isoUtc,
       locationId: location.id,
       locationName: location.name,
-      country: location.country,
+      country: location.countryName,
       timezone: location.timezone,
       venueId: venue.id,
       venueName: venue.name,
@@ -121,11 +124,14 @@ function weatherAtVenue(venueId: string, isoUtc: string): WeatherResult {
   );
 }
 
-function weatherAtLocation(locationId: string, isoUtc: string): WeatherResult {
+async function weatherAtLocation(
+  locationId: string,
+  isoUtc: string,
+): Promise<WeatherResult> {
   let location;
 
   try {
-    location = getLocationStore().get(locationId);
+    location = await getLocationStore().get(locationId);
   } catch (error) {
     if (error instanceof LocationError) {
       throw new WeatherError(
@@ -145,7 +151,7 @@ function weatherAtLocation(locationId: string, isoUtc: string): WeatherResult {
       isoUtc,
       locationId: location.id,
       locationName: location.name,
-      country: location.country,
+      country: location.countryName,
       timezone: location.timezone,
       weatherApplies: true,
     },
@@ -154,10 +160,10 @@ function weatherAtLocation(locationId: string, isoUtc: string): WeatherResult {
   );
 }
 
-function weatherForEvent(
+async function weatherForEvent(
   eventId: string,
   phase: "start" | "end" = "start",
-): WeatherResult {
+): Promise<WeatherResult> {
   let event;
 
   try {
@@ -173,7 +179,9 @@ function weatherForEvent(
   return weatherAtVenue(event.venueId, isoUtc);
 }
 
-export function executeWeather(input: WeatherInput): WeatherResult {
+export async function executeWeather(
+  input: WeatherInput,
+): Promise<WeatherResult> {
   switch (input.action) {
     case "getAtVenue":
       return weatherAtVenue(

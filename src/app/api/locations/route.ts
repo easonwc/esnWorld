@@ -1,4 +1,5 @@
 import { jsonResponse } from "@/lib/api-response";
+import { CountryError } from "@/modules/countries";
 import {
   executeLocation,
   listLocations,
@@ -8,9 +9,11 @@ import {
 
 export const dynamic = "force-dynamic";
 
-function errorResponse(error: LocationError) {
-  const status = error.code === "LOCATION_NOT_FOUND" ? 404 : 400;
-
+function errorResponse(error: LocationError | CountryError) {
+  const status =
+    error.code === "LOCATION_NOT_FOUND" || error.code === "COUNTRY_NOT_FOUND"
+      ? 404
+      : 400;
   return jsonResponse(
     { error: { code: error.code, message: error.message } },
     status,
@@ -18,7 +21,7 @@ function errorResponse(error: LocationError) {
 }
 
 export async function GET() {
-  const locations = listLocations();
+  const locations = await listLocations();
   return jsonResponse({ data: locations });
 }
 
@@ -44,10 +47,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    const output = executeLocation(input);
+    const output = await executeLocation(input);
     return jsonResponse({ data: output });
   } catch (error) {
-    if (error instanceof LocationError) {
+    if (error instanceof LocationError || error instanceof CountryError) {
       return errorResponse(error);
     }
     throw error;

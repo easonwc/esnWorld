@@ -22,9 +22,12 @@ function resolveIsoUtc(isoUtc?: string): string {
     : parseIsoUtc(isoUtc);
 }
 
-function toEventOutput(event: EventRecord, atIsoUtc: string): EventOutput {
-  const venue = getVenueStore().get(event.venueId);
-  const location = getLocationStore().get(venue.locationId);
+async function toEventOutput(
+  event: EventRecord,
+  atIsoUtc: string,
+): Promise<EventOutput> {
+  const venue = await getVenueStore().get(event.venueId);
+  const location = await getLocationStore().get(venue.locationId);
 
   return {
     id: event.id,
@@ -35,7 +38,7 @@ function toEventOutput(event: EventRecord, atIsoUtc: string): EventOutput {
     weatherApplies: !venue.isIndoor,
     locationId: location.id,
     locationName: location.name,
-    country: location.country,
+    country: location.countryName,
     timezone: location.timezone,
     localStart: event.localStart,
     isoUtcStart: event.isoUtcStart,
@@ -54,9 +57,9 @@ export class EventStore {
     );
   }
 
-  listByVenue(venueId: string): EventRecord[] {
+  async listByVenue(venueId: string): Promise<EventRecord[]> {
     const id = validateVenueId(venueId);
-    getVenueStore().get(id);
+    await getVenueStore().get(id);
 
     return this.list().filter((event) => event.venueId === id);
   }
@@ -83,17 +86,17 @@ export class EventStore {
     return event;
   }
 
-  create(input: {
+  async create(input: {
     name: unknown;
     venueId: unknown;
     localStart: unknown;
     durationMinutes: unknown;
-  }): EventRecord {
+  }): Promise<EventRecord> {
     const venueId = validateVenueId(input.venueId);
     let venue;
 
     try {
-      venue = getVenueStore().get(venueId);
+      venue = await getVenueStore().get(venueId);
     } catch (error) {
       if (error instanceof VenueError) {
         throw new EventError(
@@ -104,7 +107,7 @@ export class EventStore {
       throw error;
     }
 
-    const location = getLocationStore().get(venue.locationId);
+    const location = await getLocationStore().get(venue.locationId);
     const id = crypto.randomUUID();
     const event = buildEventRecord(input, location.timezone, id);
     this.events.set(id, event);
@@ -147,7 +150,7 @@ export function resetEventStore(): EventStore {
   return store;
 }
 
-export function executeEvent(input: EventInput): EventsOutput {
+export async function executeEvent(input: EventInput): Promise<EventsOutput> {
   const store = getEventStore();
   const atIsoUtc = resolveIsoUtc(
     input.action === "listAtTime" ? input.isoUtc : undefined,
@@ -155,7 +158,7 @@ export function executeEvent(input: EventInput): EventsOutput {
 
   switch (input.action) {
     case "create": {
-      const event = store.create(input);
+      const event = await store.create(input);
       return toEventOutput(event, atIsoUtc);
     }
 
@@ -166,19 +169,25 @@ export function executeEvent(input: EventInput): EventsOutput {
       return store.delete(validateId(input.id));
 
     case "listByVenue":
-      return store
-        .listByVenue(validateVenueId(input.venueId))
-        .map((event) => toEventOutput(event, atIsoUtc));
+      return Promise.all(
+        (await store.listByVenue(validateVenueId(input.venueId))).map(
+          (event) => toEventOutput(event, atIsoUtc),
+        ),
+      );
 
     case "listActive":
-      return store
-        .listActiveAt(atIsoUtc)
-        .map((event) => toEventOutput(event, atIsoUtc));
+      return Promise.all(
+        store
+          .listActiveAt(atIsoUtc)
+          .map((event) => toEventOutput(event, atIsoUtc)),
+      );
 
     case "listAtTime":
-      return store
-        .listActiveAt(atIsoUtc)
-        .map((event) => toEventOutput(event, atIsoUtc));
+      return Promise.all(
+        store
+          .listActiveAt(atIsoUtc)
+          .map((event) => toEventOutput(event, atIsoUtc)),
+      );
 
     default: {
       const unknownAction = (input as { action: string }).action;
@@ -190,10 +199,12 @@ export function executeEvent(input: EventInput): EventsOutput {
   }
 }
 
-export function listEvents(atIsoUtc?: string): EventOutput[] {
+export async function listEvents(atIsoUtc?: string): Promise<EventOutput[]> {
   const store = getEventStore();
   const isoUtc = resolveIsoUtc(atIsoUtc);
-  return store.list().map((event) => toEventOutput(event, isoUtc));
+  return Promise.all(
+    store.list().map((event) => toEventOutput(event, isoUtc)),
+  );
 }
 
 export * from "./types";

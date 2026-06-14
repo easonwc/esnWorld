@@ -90,22 +90,41 @@ export function validateTimezone(timezone: unknown): string {
   return tz;
 }
 
-export function validateCountry(country: unknown): string {
-  if (typeof country !== "string" || country.trim().length === 0) {
+export function validateCountryId(countryId: unknown): string {
+  if (countryId === undefined || countryId === null) {
     throw new LocationError(
-      LocationErrorCodes.INVALID_COUNTRY,
-      "country must be a non-empty string",
+      LocationErrorCodes.COUNTRY_REQUIRED,
+      "countryId is required; every city must belong to an existing country",
     );
   }
 
-  if (country.trim().length > 100) {
+  if (typeof countryId !== "string" || countryId.trim().length === 0) {
     throw new LocationError(
-      LocationErrorCodes.INVALID_COUNTRY,
-      "country must be 100 characters or fewer",
+      LocationErrorCodes.INVALID_COUNTRY_ID,
+      "countryId must be a non-empty string",
     );
   }
 
-  return country.trim();
+  return countryId.trim();
+}
+
+export function validateLocationCreateInput(input: {
+  name: unknown;
+  countryId?: unknown;
+  country?: unknown;
+  latitude: unknown;
+  longitude: unknown;
+  timezone: unknown;
+  population: unknown;
+}): string {
+  if ("country" in input && input.country !== undefined) {
+    throw new LocationError(
+      LocationErrorCodes.INVALID_COUNTRY_ID,
+      "country is not accepted; create a country first and provide countryId",
+    );
+  }
+
+  return validateCountryId(input.countryId);
 }
 
 export function validatePopulation(population: unknown): number {
@@ -160,18 +179,20 @@ export function parseIsoUtc(isoUtc: string): string {
 export function buildLocation(
   input: {
     name: unknown;
-    country: unknown;
+    countryId: unknown;
     latitude: unknown;
     longitude: unknown;
     timezone: unknown;
     population: unknown;
   },
   id: string,
+  countryName: string,
 ): Location {
   return {
     id,
     name: validateName(input.name),
-    country: validateCountry(input.country),
+    countryId: validateCountryId(input.countryId),
+    countryName: countryName.trim(),
     latitude: validateLatitude(input.latitude),
     longitude: validateLongitude(input.longitude),
     timezone: validateTimezone(input.timezone),

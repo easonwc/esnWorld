@@ -4,8 +4,8 @@ export interface LocationCreateInput {
   action: "create";
   /** City name, e.g. "New York" */
   name: string;
-  /** Country name, e.g. "United States" */
-  country: string;
+  /** Id of the parent country */
+  countryId: string;
   latitude: number;
   longitude: number;
   /** IANA timezone for the city/region, e.g. "America/New_York" */
@@ -39,7 +39,8 @@ export type LocationInput =
 export interface Location {
   id: string;
   name: string;
-  country: string;
+  countryId: string;
+  countryName: string;
   latitude: number;
   longitude: number;
   timezone: string;
@@ -70,7 +71,8 @@ export interface LocalDateTimeInput {
 export interface LocationLocalTimeOutput {
   locationId: string;
   locationName: string;
-  country: string;
+  countryId: string;
+  countryName: string;
   timezone: string;
   isoUtc: string;
   local: LocalTimeParts;

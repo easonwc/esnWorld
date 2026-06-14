@@ -6,7 +6,11 @@ import {
   executeEvent,
   resetEventStore,
 } from "@/modules/events";
-import { resetLocationStore } from "@/modules/locations";
+import {
+  seedNewYorkLocation,
+  seedUnitedStatesCountry,
+  resetWorldFixtures,
+} from "@/test/world-fixtures";
 import { resetVenueStore } from "@/modules/venues";
 
 describe("computeEventStatus", () => {
@@ -41,33 +45,29 @@ describe("EventStore", () => {
   let store: EventStore;
   let venueId: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    await resetWorldFixtures();
     resetEventStore();
     resetVenueStore();
-    resetLocationStore();
 
-    const locationId = resetLocationStore().create({
-      name: "New York",
-      country: "United States",
-      latitude: 40.7128,
-      longitude: -74.006,
-      timezone: "America/New_York",
-      population: 8336817,
-    }).id;
+    const country = await seedUnitedStatesCountry();
+    const location = await seedNewYorkLocation(country.id);
 
-    venueId = resetVenueStore().create({
-      locationId,
-      name: "Madison Square Garden",
-      latitude: 40.7505,
-      longitude: -73.9934,
-      isIndoor: true,
-    }).id;
+    venueId = (
+      await resetVenueStore().create({
+        locationId: location.id,
+        name: "Madison Square Garden",
+        latitude: 40.7505,
+        longitude: -73.9934,
+        isIndoor: true,
+      })
+    ).id;
 
     store = resetEventStore();
   });
 
-  it("creates an event scheduled at venue local time", () => {
-    const event = store.create({
+  it("creates an event scheduled at venue local time", async () => {
+    const event = await store.create({
       name: "Championship Final",
       venueId,
       localStart: {
@@ -86,15 +86,17 @@ describe("EventStore", () => {
     expect(event.localStart.hour).toBe(12);
   });
 
-  it("exposes indoor status and weather applicability on event output", () => {
-    const output = executeEvent({
+  it("exposes indoor status and weather applicability on event output", async () => {
+    const output = await executeEvent({
       action: "get",
-      id: store.create({
-        name: "Indoor Final",
-        venueId,
-        localStart: { year: 2020, month: 6, day: 14, hour: 12, minute: 0 },
-        durationMinutes: 120,
-      }).id,
+      id: (
+        await store.create({
+          name: "Indoor Final",
+          venueId,
+          localStart: { year: 2020, month: 6, day: 14, hour: 12, minute: 0 },
+          durationMinutes: 120,
+        })
+      ).id,
     });
 
     expect(output).toMatchObject({
@@ -103,14 +105,14 @@ describe("EventStore", () => {
     });
   });
 
-  it("lists active events in parallel", () => {
-    store.create({
+  it("lists active events in parallel", async () => {
+    await store.create({
       name: "Morning Session",
       venueId,
       localStart: { year: 2020, month: 6, day: 14, hour: 10, minute: 0 },
       durationMinutes: 180,
     });
-    store.create({
+    await store.create({
       name: "Afternoon Session",
       venueId,
       localStart: { year: 2020, month: 6, day: 14, hour: 12, minute: 0 },
@@ -124,41 +126,41 @@ describe("EventStore", () => {
     ]);
   });
 
-  it("lists events by venue", () => {
-    const event = store.create({
+  it("lists events by venue", async () => {
+    const event = await store.create({
       name: "Concert",
       venueId,
       localStart: { year: 2020, month: 7, day: 4, hour: 20, minute: 0 },
       durationMinutes: 90,
     });
 
-    const list = store.listByVenue(venueId);
+    const list = await store.listByVenue(venueId);
     expect(list).toHaveLength(1);
     expect(list[0].id).toBe(event.id);
   });
 
-  it("rejects invalid venue", () => {
-    expect(() =>
+  it("rejects invalid venue", async () => {
+    await expect(
       store.create({
         name: "Ghost Event",
         venueId: "missing",
         localStart: { year: 2020, month: 1, day: 1, hour: 12, minute: 0 },
         durationMinutes: 60,
       }),
-    ).toThrowError(
+    ).rejects.toThrowError(
       expect.objectContaining({ code: EventErrorCodes.VENUE_NOT_FOUND }),
     );
   });
 
-  it("rejects non-positive duration", () => {
-    expect(() =>
+  it("rejects non-positive duration", async () => {
+    await expect(
       store.create({
         name: "Bad Duration",
         venueId,
         localStart: { year: 2020, month: 1, day: 1, hour: 12, minute: 0 },
         durationMinutes: 0,
       }),
-    ).toThrowError(
+    ).rejects.toThrowError(
       expect.objectContaining({ code: EventErrorCodes.INVALID_DURATION }),
     );
   });

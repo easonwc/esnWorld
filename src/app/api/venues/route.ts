@@ -22,7 +22,7 @@ function errorResponse(error: VenueError | LocationError) {
 }
 
 export async function GET() {
-  const venues = listVenues();
+  const venues = await listVenues();
   return jsonResponse({ data: venues });
 }
 
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const output = executeVenue(input);
+    const output = await executeVenue(input);
     return jsonResponse({ data: output });
   } catch (error) {
     if (error instanceof VenueError || error instanceof LocationError) {

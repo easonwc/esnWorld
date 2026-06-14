@@ -34,6 +34,16 @@ yarn-error.log*
 .env.*.local
 !.env.example
 
+# sqlite database
+/data/
+*.db
+*.db-shm
+*.db-wal
+
+# downloaded country flag images (run npm run download-flags)
+/public/flags/*
+!/public/flags/.gitkeep
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

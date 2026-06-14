@@ -1,11 +1,18 @@
 import { getWorldClockService } from "@/modules/world-clock";
+import { getCountryStore, CountryError } from "@/modules/countries";
 import { getVenueStore } from "@/modules/venues";
+import {
+  getDefaultLocationRepository,
+  type LocationRepository,
+} from "@/persistence/repositories";
 import { LocationError, LocationErrorCodes } from "./errors";
 import {
   buildLocation,
   parseIsoUtc,
   utcToLocalTime,
+  validateCountryId,
   validateId,
+  validateLocationCreateInput,
 } from "./transform";
 import type {
   Location,
@@ -15,16 +22,14 @@ import type {
 } from "./types";
 
 export class LocationStore {
-  private readonly locations = new Map<string, Location>();
+  constructor(private readonly repository: LocationRepository) {}
 
-  list(): Location[] {
-    return [...this.locations.values()].sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+  async list(): Promise<Location[]> {
+    return this.repository.list();
   }
 
-  get(id: string): Location {
-    const location = this.locations.get(id);
+  async get(id: string): Promise<Location> {
+    const location = await this.repository.get(id);
 
     if (!location) {
       throw new LocationError(
@@ -36,31 +41,59 @@ export class LocationStore {
     return location;
   }
 
-  create(input: {
+  async countByCountry(countryId: string): Promise<number> {
+    return this.repository.countByCountry(countryId);
+  }
+
+  async sumPopulationByCountry(countryId: string): Promise<number> {
+    return this.repository.sumPopulationByCountry(countryId);
+  }
+
+  async create(input: {
     name: unknown;
-    country: unknown;
+    countryId?: unknown;
+    country?: unknown;
     latitude: unknown;
     longitude: unknown;
     timezone: unknown;
     population: unknown;
-  }): Location {
+  }): Promise<Location> {
+    const countryId = validateLocationCreateInput(input);
+    let country;
+
+    try {
+      country = await getCountryStore().get(countryId);
+    } catch (error) {
+      if (error instanceof CountryError) {
+        throw new LocationError(
+          LocationErrorCodes.COUNTRY_NOT_FOUND,
+          error.message,
+        );
+      }
+      throw error;
+    }
+
     const id = crypto.randomUUID();
-    const location = buildLocation(input, id);
-    this.locations.set(id, location);
-    return location;
+    const location = buildLocation(
+      { ...input, countryId },
+      id,
+      country.name,
+    );
+    return this.repository.create(location);
   }
 
-  delete(id: string): { deleted: true; id: string } {
+  async delete(id: string): Promise<{ deleted: true; id: string }> {
     validateId(id);
 
-    if (!this.locations.has(id)) {
+    const location = await this.repository.get(id);
+    if (!location) {
       throw new LocationError(
         LocationErrorCodes.LOCATION_NOT_FOUND,
         `Location not found: ${id}`,
       );
     }
 
-    const venueCount = getVenueStore().countByLocation(id);
+    const venueCount = await getVenueStore().countByLocation(id);
     if (venueCount > 0) {
       throw new LocationError(
         LocationErrorCodes.LOCATION_HAS_VENUES,
@@ -68,12 +101,15 @@ export class LocationStore {
       );
     }
 
-    this.locations.delete(id);
+    await this.repository.delete(id);
     return { deleted: true, id };
   }
 
-  getLocalTime(id: string, isoUtc?: string): LocationLocalTimeOutput {
-    const location = this.get(id);
+  async getLocalTime(
+    id: string,
+    isoUtc?: string,
+  ): Promise<LocationLocalTimeOutput> {
+    const location = await this.get(id);
     const sourceIsoUtc =
       isoUtc === undefined
         ? getWorldClockService().getCurrentOutput().isoUtc
@@ -82,15 +118,16 @@ export class LocationStore {
     return {
       locationId: location.id,
       locationName: location.name,
-      country: location.country,
+      countryId: location.countryId,
+      countryName: location.countryName,
       timezone: location.timezone,
       isoUtc: sourceIsoUtc,
       local: utcToLocalTime(sourceIsoUtc, location.timezone),
     };
   }
 
-  clear(): void {
-    this.locations.clear();
+  async clear(): Promise<void> {
+    await this.repository.clear();
   }
 }
 
@@ -100,18 +137,26 @@ const globalForLocations = globalThis as typeof globalThis & {
 
 export function getLocationStore(): LocationStore {
   if (!globalForLocations.__locationStore) {
-    globalForLocations.__locationStore = new LocationStore();
+    globalForLocations.__locationStore = new LocationStore(
+      getDefaultLocationRepository(),
+    );
   }
   return globalForLocations.__locationStore;
 }
 
-export function resetLocationStore(): LocationStore {
-  const store = new LocationStore();
+export function resetLocationStore(
+  repository?: LocationRepository,
+): LocationStore {
+  const store = new LocationStore(
+    repository ?? getDefaultLocationRepository(),
+  );
   globalForLocations.__locationStore = store;
   return store;
 }
 
-export function executeLocation(input: LocationInput): LocationOutput {
+export async function executeLocation(
+  input: LocationInput,
+): Promise<LocationOutput> {
   const store = getLocationStore();
 
   switch (input.action) {
@@ -137,7 +182,7 @@ export function executeLocation(input: LocationInput): LocationOutput {
   }
 }
 
-export function listLocations(): Location[] {
+export async function listLocations(): Promise<Location[]> {
   return getLocationStore().list();
 }
 
@@ -148,7 +193,8 @@ export {
   localTimeToIsoUtc,
   parseIsoUtc,
   utcToLocalTime,
-  validateCountry,
+  validateCountryId,
+  validateLocationCreateInput,
   validateLatitude,
   validateLongitude,
   validateName,

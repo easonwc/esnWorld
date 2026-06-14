@@ -25,7 +25,7 @@ function errorResponse(error: EventError | LocationError | VenueError) {
 }
 
 export async function GET() {
-  const events = listEvents();
+  const events = await listEvents();
   return jsonResponse({ data: events });
 }
 
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const output = executeEvent(input);
+    const output = await executeEvent(input);
     return jsonResponse({ data: output });
   } catch (error) {
     if (
