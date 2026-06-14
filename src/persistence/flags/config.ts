@@ -1,4 +1,5 @@
 import path from "node:path";
+import { isAssetDownloadEnabled } from "../env";
 
 export const FLAG_CDN_BASE = "https://flagcdn.com";
 
@@ -14,6 +15,11 @@ export function getFlagFilePath(isoCode: string): string {
   return path.join(getFlagsDirectory(), `${isoCode.trim().toLowerCase()}.svg`);
 }
 
-export function shouldDownloadFlags(): boolean {
-  return process.env.VITEST !== "true" && process.env.SKIP_FLAG_DOWNLOAD !== "true";
+export function shouldDownloadFlags(
+  options: { force?: boolean } = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.FLAG_DOWNLOAD_ON_STARTUP,
+    options,
+  );
 }

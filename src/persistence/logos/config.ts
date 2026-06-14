@@ -1,4 +1,5 @@
 import path from "node:path";
+import { isAssetDownloadEnabled, type AssetDownloadOptions } from "../env";
 
 export const NFL_LOGO_CDN_BASE =
   "https://static.www.nfl.com/image/upload/league/api/clubs/logos";
@@ -126,55 +127,75 @@ export function getLeagueLogoFilePath(abbreviation: string): string {
   );
 }
 
-export function shouldDownloadNflLogos(): boolean {
-  return (
-    process.env.VITEST !== "true" && process.env.SKIP_NFL_LOGO_DOWNLOAD !== "true"
+export function shouldDownloadNflLogos(
+  options: AssetDownloadOptions = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.NFL_LOGO_DOWNLOAD_ON_STARTUP,
+    options,
   );
 }
 
-export function shouldDownloadMlbLogos(): boolean {
-  return (
-    process.env.VITEST !== "true" && process.env.SKIP_MLB_LOGO_DOWNLOAD !== "true"
+export function shouldDownloadMlbLogos(
+  options: AssetDownloadOptions = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.MLB_LOGO_DOWNLOAD_ON_STARTUP,
+    options,
   );
 }
 
-export function shouldDownloadNbaLogos(): boolean {
-  return (
-    process.env.VITEST !== "true" && process.env.SKIP_NBA_LOGO_DOWNLOAD !== "true"
+export function shouldDownloadNbaLogos(
+  options: AssetDownloadOptions = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.NBA_LOGO_DOWNLOAD_ON_STARTUP,
+    options,
   );
 }
 
-export function shouldDownloadNhlLogos(): boolean {
-  return (
-    process.env.VITEST !== "true" && process.env.SKIP_NHL_LOGO_DOWNLOAD !== "true"
+export function shouldDownloadNhlLogos(
+  options: AssetDownloadOptions = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.NHL_LOGO_DOWNLOAD_ON_STARTUP,
+    options,
   );
 }
 
-export function shouldDownloadMlsLogos(): boolean {
-  return (
-    process.env.VITEST !== "true" && process.env.SKIP_MLS_LOGO_DOWNLOAD !== "true"
+export function shouldDownloadMlsLogos(
+  options: AssetDownloadOptions = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.MLS_LOGO_DOWNLOAD_ON_STARTUP,
+    options,
   );
 }
 
-export function shouldDownloadWnbaLogos(): boolean {
-  return (
-    process.env.VITEST !== "true" && process.env.SKIP_WNBA_LOGO_DOWNLOAD !== "true"
+export function shouldDownloadWnbaLogos(
+  options: AssetDownloadOptions = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.WNBA_LOGO_DOWNLOAD_ON_STARTUP,
+    options,
   );
 }
 
-export function shouldDownloadLeagueLogo(abbreviation: string): boolean {
-  if (process.env.VITEST === "true") {
-    return false;
-  }
-
-  const skipFlags: Record<string, string | undefined> = {
-    NFL: process.env.SKIP_NFL_LOGO_DOWNLOAD,
-    MLB: process.env.SKIP_MLB_LOGO_DOWNLOAD,
-    NBA: process.env.SKIP_NBA_LOGO_DOWNLOAD,
-    NHL: process.env.SKIP_NHL_LOGO_DOWNLOAD,
-    MLS: process.env.SKIP_MLS_LOGO_DOWNLOAD,
-    WNBA: process.env.SKIP_WNBA_LOGO_DOWNLOAD,
+export function shouldDownloadLeagueLogo(
+  abbreviation: string,
+  options: AssetDownloadOptions = {},
+): boolean {
+  const envByLeague: Record<string, string | undefined> = {
+    NFL: process.env.NFL_LOGO_DOWNLOAD_ON_STARTUP,
+    MLB: process.env.MLB_LOGO_DOWNLOAD_ON_STARTUP,
+    NBA: process.env.NBA_LOGO_DOWNLOAD_ON_STARTUP,
+    NHL: process.env.NHL_LOGO_DOWNLOAD_ON_STARTUP,
+    MLS: process.env.MLS_LOGO_DOWNLOAD_ON_STARTUP,
+    WNBA: process.env.WNBA_LOGO_DOWNLOAD_ON_STARTUP,
   };
 
-  return skipFlags[abbreviation.trim().toUpperCase()] !== "true";
+  return isAssetDownloadEnabled(
+    envByLeague[abbreviation.trim().toUpperCase()],
+    options,
+  );
 }

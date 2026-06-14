@@ -7,6 +7,7 @@ import {
   getFlagsDirectory,
   shouldDownloadFlags,
 } from "./config";
+import type { AssetDownloadOptions } from "../env";
 
 export interface FlagDownloadResult {
   downloaded: number;
@@ -26,11 +27,14 @@ function normalizeIsoCode(isoCode: string): string {
   return normalized;
 }
 
-export async function downloadFlagImage(isoCode: string): Promise<string> {
+export async function downloadFlagImage(
+  isoCode: string,
+  options: AssetDownloadOptions = {},
+): Promise<string> {
   const normalized = normalizeIsoCode(isoCode);
   const publicPath = getFlagPublicPath(normalized);
 
-  if (!shouldDownloadFlags()) {
+  if (!shouldDownloadFlags(options)) {
     return publicPath;
   }
 
@@ -72,7 +76,7 @@ export async function downloadSeedFlagImages(): Promise<FlagDownloadResult> {
     }
 
     try {
-      await downloadFlagImage(entry.isoCode);
+      await downloadFlagImage(entry.isoCode, { force: true });
       downloaded += 1;
     } catch {
       failed += 1;

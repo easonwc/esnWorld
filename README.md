@@ -78,15 +78,17 @@ cp .env.example .env
 | `NHL_SEED_ON_STARTUP` | `false` | Merge NHL league hierarchy |
 | `MLS_SEED_ON_STARTUP` | `false` | Merge MLS league hierarchy |
 | `WNBA_SEED_ON_STARTUP` | `false` | Merge WNBA league hierarchy |
-| `SKIP_FLAG_DOWNLOAD` | unset | When `true`, skip downloading country flag SVGs |
-| `SKIP_NFL_LOGO_DOWNLOAD` | unset | When `true`, skip NFL team and league logo downloads |
-| `SKIP_MLB_LOGO_DOWNLOAD` | unset | When `true`, skip MLB team and league logo downloads |
-| `SKIP_NBA_LOGO_DOWNLOAD` | unset | When `true`, skip NBA team and league logo downloads |
-| `SKIP_NHL_LOGO_DOWNLOAD` | unset | When `true`, skip NHL team and league logo downloads |
-| `SKIP_MLS_LOGO_DOWNLOAD` | unset | When `true`, skip MLS team and league logo downloads |
-| `SKIP_WNBA_LOGO_DOWNLOAD` | unset | When `true`, skip WNBA team and league logo downloads |
+| `FLAG_DOWNLOAD_ON_STARTUP` | `false` | Download country flag SVGs on server startup |
+| `NFL_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download NFL team and league logos on startup |
+| `MLB_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download MLB team and league logos on startup |
+| `NBA_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download NBA team and league logos on startup |
+| `NHL_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download NHL team and league logos on startup |
+| `MLS_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download MLS team and league logos on startup |
+| `WNBA_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download WNBA team and league logos on startup |
 
 League seed flags are independent — enable any combination. Each seed also merges countries and supplemental stadium cities as needed, so they can run without `LOCATIONS_SEED_ON_STARTUP` (though enabling both is recommended for a complete world).
+
+League seeds assign logo paths but do **not** download images unless the matching `{LEAGUE}_LOGO_DOWNLOAD_ON_STARTUP=true`.
 
 ### Country flag images
 
@@ -109,10 +111,10 @@ Requires a network connection on first run. Downloaded images are gitignored (`p
 
 **Other ways flags get downloaded:**
 
-- **Server startup** — after seeding (if enabled), the server syncs missing flag files for countries already in the database
-- **Create country API** — `POST /api/countries` with `isoCode` downloads that country's flag automatically
+- **Server startup** — when `FLAG_DOWNLOAD_ON_STARTUP=true`, syncs missing flag files for countries in the database
+- **Create country API** — `POST /api/countries` with `isoCode` respects `FLAG_DOWNLOAD_ON_STARTUP` (set `true` to download on create, or run `npm run download-flags`)
 
-Set `SKIP_FLAG_DOWNLOAD=true` in `.env` to disable network fetches (flag paths are still stored, but files are not downloaded).
+By default, flag downloads are **off** on startup. Image paths are still stored; use `npm run download-flags` or set `FLAG_DOWNLOAD_ON_STARTUP=true` to fetch files.
 
 ### Run
 
@@ -196,10 +198,12 @@ Each enabled seed is **idempotent**: existing leagues, conferences, divisions, v
 
 #### League and team logos
 
-On server startup, each enabled league seed:
+On server startup, each enabled league seed assigns logo paths on team and league records. **Network downloads are off by default.** Set the matching `{LEAGUE}_LOGO_DOWNLOAD_ON_STARTUP=true` (or `FLAG_DOWNLOAD_ON_STARTUP` for flags) to fetch images during startup, or use the `npm run download-*` scripts anytime.
 
-1. **Downloads team logos** to `public/logos/{league}/` and stores the path on each team record.
-2. **Downloads the league logo** to `public/logos/leagues/` and stores the path on the league record.
+When downloads are enabled:
+
+1. **Team logos** are saved to `public/logos/{league}/` and stored on each team record.
+2. **League logos** are saved to `public/logos/leagues/` and stored on the league record.
 
 Logo sources:
 
@@ -209,7 +213,7 @@ Logo sources:
 | MLB, NBA, NHL, WNBA | ESPN | ESPN |
 | MLS | [MLSsoccer.com](https://www.mlssoccer.com) | ESPN |
 
-Downloaded images are gitignored; each machine fetches its own copy. Set the matching `SKIP_{LEAGUE}_LOGO_DOWNLOAD=true` to skip network fetches for **both** team and league logos (paths are still assigned). Vitest always skips downloads.
+Downloaded images are gitignored; each machine fetches its own copy. Vitest always skips downloads. Paths are assigned even when downloads are disabled.
 
 **Download logos manually:**
 
@@ -234,7 +238,7 @@ Set `NFL_SEED_ON_STARTUP=true` in `.env` to merge the full **National Football L
 - **1 league** (NFL), with logo at `/logos/leagues/nfl.png`
 - **2 conferences** (AFC, NFC)
 - **8 divisions**
-- **32 teams**, each with a downloaded logo at `/logos/nfl/{abbreviation}.png`
+- **32 teams**, each with a logo path at `/logos/nfl/{abbreviation}.png`
 - **~30 stadium venues** (shared stadiums such as MetLife and SoFi are deduplicated), each linked to a city location
 
 NFL seed also ensures countries and locations exist (including 9 supplemental stadium cities such as Orchard Park and Inglewood). It can run independently of `LOCATIONS_SEED_ON_STARTUP`, though enabling both is recommended for a complete world.
@@ -250,7 +254,7 @@ Set `MLB_SEED_ON_STARTUP=true` in `.env` to merge the full **Major League Baseba
 - **1 league** (MLB), with logo at `/logos/leagues/mlb.png`
 - **2 conferences** (American League, National League)
 - **6 divisions**
-- **30 teams**, each with a downloaded logo at `/logos/mlb/{abbreviation}.png`
+- **30 teams**, each with a logo path at `/logos/mlb/{abbreviation}.png`
 - **30 ballpark venues**, each linked to a city location
 
 MLB seed also ensures countries and locations exist (including supplemental stadium cities such as St. Petersburg and Cumberland). It can run alongside `NFL_SEED_ON_STARTUP` — team abbreviations are scoped per league (e.g. both NFL and MLB have a `KC` team).
@@ -264,7 +268,7 @@ Set `NBA_SEED_ON_STARTUP=true` in `.env` to merge the full **National Basketball
 - **1 league** (NBA), with logo at `/logos/leagues/nba.png`
 - **2 conferences** (Eastern, Western)
 - **6 divisions**
-- **30 teams**, each with a downloaded logo at `/logos/nba/{abbreviation}.png`
+- **30 teams**, each with a logo path at `/logos/nba/{abbreviation}.png`
 - **30 arena venues**, each linked to a city location
 
 NBA seed also ensures countries and locations exist (including supplemental arena cities such as Brooklyn and Inglewood). It can run alongside the other league seeds — team abbreviations are scoped per league.
@@ -278,7 +282,7 @@ Set `NHL_SEED_ON_STARTUP=true` in `.env` to merge the full **National Hockey Lea
 - **1 league** (NHL), with logo at `/logos/leagues/nhl.png`
 - **2 conferences** (Eastern, Western)
 - **4 divisions** (Atlantic, Metropolitan, Central, Pacific)
-- **32 teams**, each with a downloaded logo at `/logos/nhl/{abbreviation}.png`
+- **32 teams**, each with a logo path at `/logos/nhl/{abbreviation}.png`
 - **Arena venues** (shared multi-sport buildings such as TD Garden and Madison Square Garden are deduplicated), each linked to a city location
 
 NHL seed also ensures countries and locations exist (including supplemental arena cities such as Newark, Elmont, and Saint Paul). It can run alongside the other league seeds.
@@ -292,7 +296,7 @@ Set `MLS_SEED_ON_STARTUP=true` in `.env` to merge the full **Major League Soccer
 - **1 league** (MLS), with logo at `/logos/leagues/mls.png`
 - **2 conferences** (Eastern, Western)
 - **2 divisions** (one per conference — MLS has no formal divisions since 2020)
-- **30 teams**, each with a downloaded logo at `/logos/mls/{abbreviation}.png`
+- **30 teams**, each with a logo path at `/logos/mls/{abbreviation}.png`
 - **Stadium venues** (shared multi-sport buildings such as Gillette Stadium and Lumen Field are deduplicated), each linked to a city location
 
 MLS seed also ensures countries and locations exist (including supplemental stadium cities such as Harrison, Fort Lauderdale, and Commerce City). It can run alongside the other league seeds.
@@ -306,7 +310,7 @@ Set `WNBA_SEED_ON_STARTUP=true` in `.env` to merge the full **Women's National B
 - **1 league** (WNBA), with logo at `/logos/leagues/wnba.png`
 - **2 conferences** (Eastern, Western)
 - **2 divisions** (one per conference)
-- **13 teams**, each with a downloaded logo at `/logos/wnba/{abbreviation}.png`
+- **13 teams**, each with a logo path at `/logos/wnba/{abbreviation}.png`
 - **Arena venues** (shared multi-sport buildings such as Barclays Center and Target Center are deduplicated), each linked to a city location
 
 WNBA seed also ensures countries and locations exist (including supplemental arena cities such as College Park, Uncasville, and Arlington). It can run alongside the other league seeds.
@@ -362,7 +366,7 @@ The goal across these phases is one rule: **persist everything that is not a con
 }
 ```
 
-The server downloads the flag SVG from [flagcdn.com](https://flagcdn.com) and stores it at `/flags/us.svg`.
+The server stores the flag path at `/flags/us.svg`. The SVG file is downloaded only when `FLAG_DOWNLOAD_ON_STARTUP=true` or you run `npm run download-flags`.
 
 A country cannot be deleted while it still has cities.
 
@@ -427,7 +431,7 @@ A country cannot be deleted while it still has cities.
 }
 ```
 
-Leagues are top-level containers for professional sports teams. Leagues created via the API start with an empty `logo` field; leagues merged from startup seeds include a downloaded logo at `/logos/leagues/{abbreviation}.png`.
+Leagues are top-level containers for professional sports teams. Leagues created via the API start with an empty `logo` field; leagues merged from startup seeds include a logo path at `/logos/leagues/{abbreviation}.png` (the file is downloaded only when `{LEAGUE}_LOGO_DOWNLOAD_ON_STARTUP=true` or you run `npm run download-league-logos`).
 
 ### Conferences
 

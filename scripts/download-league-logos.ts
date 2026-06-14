@@ -11,7 +11,7 @@ async function main() {
 
   for (const abbreviation of LEAGUE_ABBREVIATIONS) {
     try {
-      await downloadLeagueLogo(abbreviation);
+      await downloadLeagueLogo(abbreviation, { force: true });
       downloaded += 1;
     } catch {
       failed += 1;

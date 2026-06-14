@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import type { AssetDownloadOptions } from "@/persistence/env";
 import type { LeagueRepository, TeamRepository } from "@/persistence/repositories";
 import {
   getLeagueLogoFilePath,
@@ -58,11 +59,12 @@ function normalizeAbbreviation(abbreviation: string): string {
 
 export async function downloadLeagueLogo(
   abbreviation: string,
+  options: AssetDownloadOptions = {},
 ): Promise<string> {
   const normalized = normalizeAbbreviation(abbreviation);
   const publicPath = getLeagueLogoPublicPath(normalized);
 
-  if (!shouldDownloadLeagueLogo(normalized)) {
+  if (!shouldDownloadLeagueLogo(normalized, options)) {
     return publicPath;
   }
 
@@ -92,11 +94,12 @@ export async function downloadLeagueLogo(
 
 export async function downloadNflTeamLogo(
   abbreviation: string,
+  options: AssetDownloadOptions = {},
 ): Promise<string> {
   const normalized = normalizeAbbreviation(abbreviation);
   const publicPath = getNflLogoPublicPath(normalized);
 
-  if (!shouldDownloadNflLogos()) {
+  if (!shouldDownloadNflLogos(options)) {
     return publicPath;
   }
 
@@ -124,11 +127,12 @@ export async function downloadNflTeamLogo(
 
 export async function downloadMlbTeamLogo(
   abbreviation: string,
+  options: AssetDownloadOptions = {},
 ): Promise<string> {
   const normalized = normalizeAbbreviation(abbreviation);
   const publicPath = getMlbLogoPublicPath(normalized);
 
-  if (!shouldDownloadMlbLogos()) {
+  if (!shouldDownloadMlbLogos(options)) {
     return publicPath;
   }
 
@@ -156,11 +160,12 @@ export async function downloadMlbTeamLogo(
 
 export async function downloadNbaTeamLogo(
   abbreviation: string,
+  options: AssetDownloadOptions = {},
 ): Promise<string> {
   const normalized = normalizeAbbreviation(abbreviation);
   const publicPath = getNbaLogoPublicPath(normalized);
 
-  if (!shouldDownloadNbaLogos()) {
+  if (!shouldDownloadNbaLogos(options)) {
     return publicPath;
   }
 
@@ -188,11 +193,12 @@ export async function downloadNbaTeamLogo(
 
 export async function downloadNhlTeamLogo(
   abbreviation: string,
+  options: AssetDownloadOptions = {},
 ): Promise<string> {
   const normalized = normalizeAbbreviation(abbreviation);
   const publicPath = getNhlLogoPublicPath(normalized);
 
-  if (!shouldDownloadNhlLogos()) {
+  if (!shouldDownloadNhlLogos(options)) {
     return publicPath;
   }
 
@@ -220,11 +226,12 @@ export async function downloadNhlTeamLogo(
 
 export async function downloadMlsTeamLogo(
   abbreviation: string,
+  options: AssetDownloadOptions = {},
 ): Promise<string> {
   const normalized = normalizeAbbreviation(abbreviation);
   const publicPath = getMlsLogoPublicPath(normalized);
 
-  if (!shouldDownloadMlsLogos()) {
+  if (!shouldDownloadMlsLogos(options)) {
     return publicPath;
   }
 
@@ -252,11 +259,12 @@ export async function downloadMlsTeamLogo(
 
 export async function downloadWnbaTeamLogo(
   abbreviation: string,
+  options: AssetDownloadOptions = {},
 ): Promise<string> {
   const normalized = normalizeAbbreviation(abbreviation);
   const publicPath = getWnbaLogoPublicPath(normalized);
 
-  if (!shouldDownloadWnbaLogos()) {
+  if (!shouldDownloadWnbaLogos(options)) {
     return publicPath;
   }
 
@@ -285,7 +293,10 @@ export async function downloadWnbaTeamLogo(
 export async function downloadSeedLeagueLogos(
   abbreviations: readonly string[],
   getLogoFilePath: (abbreviation: string) => string,
-  downloadLogo: (abbreviation: string) => Promise<string>,
+  downloadLogo: (
+    abbreviation: string,
+    options?: AssetDownloadOptions,
+  ) => Promise<string>,
 ): Promise<LeagueLogoDownloadResult> {
   let downloaded = 0;
   let skipped = 0;
@@ -300,7 +311,7 @@ export async function downloadSeedLeagueLogos(
     }
 
     try {
-      await downloadLogo(abbreviation);
+      await downloadLogo(abbreviation, { force: true });
       downloaded += 1;
     } catch {
       failed += 1;

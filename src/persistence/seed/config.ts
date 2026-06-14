@@ -1,3 +1,5 @@
+import { parseBoolean } from "../env";
+
 export interface LocationSeedConfig {
   enabled: boolean;
 }
@@ -24,22 +26,6 @@ export interface MlsSeedConfig {
 
 export interface WnbaSeedConfig {
   enabled: boolean;
-}
-
-function parseBoolean(value: string | undefined, defaultValue: boolean): boolean {
-  if (value === undefined || value.trim() === "") {
-    return defaultValue;
-  }
-
-  const normalized = value.trim().toLowerCase();
-  if (["1", "true", "yes", "on"].includes(normalized)) {
-    return true;
-  }
-  if (["0", "false", "no", "off"].includes(normalized)) {
-    return false;
-  }
-
-  return defaultValue;
 }
 
 export function loadLocationSeedConfig(
