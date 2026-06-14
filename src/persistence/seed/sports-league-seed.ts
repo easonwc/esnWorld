@@ -19,7 +19,6 @@ import {
   type TeamRepository,
   type VenueRepository,
 } from "@/persistence/repositories";
-import { mergeCountrySeed } from "./countries";
 import { resolveCollegeSeedLocation } from "./colleges";
 import { locationMergeKey, mergeLocationSeed } from "./locations";
 import type {
@@ -50,20 +49,20 @@ function buildVenueKeyMap(venues: Awaited<ReturnType<VenueRepository["list"]>>) 
   );
 }
 
-async function ensureLocations(
+async function ensureSupplementalLocations(
   catalog: SportsLeagueSeedCatalog,
   countryRepository: CountryRepository,
   locationRepository: LocationRepository,
 ) {
-  await mergeCountrySeed(countryRepository);
-  await mergeLocationSeed(locationRepository, countryRepository);
-  if (catalog.supplementalLocations.length > 0) {
-    await mergeLocationSeed(
-      locationRepository,
-      countryRepository,
-      catalog.supplementalLocations,
-    );
+  if (catalog.supplementalLocations.length === 0) {
+    return;
   }
+
+  await mergeLocationSeed(
+    locationRepository,
+    countryRepository,
+    catalog.supplementalLocations,
+  );
 }
 
 async function ensureLeague(
@@ -298,7 +297,7 @@ export async function mergeSportsLeagueSeed(
   const teamRepository =
     repositories.teamRepository ?? getDefaultTeamRepository();
 
-  await ensureLocations(catalog, countryRepository, locationRepository);
+  await ensureSupplementalLocations(catalog, countryRepository, locationRepository);
 
   const { league, added: leagueAdded } = await ensureLeague(
     catalog,
