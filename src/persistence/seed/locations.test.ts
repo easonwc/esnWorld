@@ -7,8 +7,9 @@ import { describe, expect, it } from "vitest";
 import { countryMergeKey, mergeCountrySeed } from "./countries";
 import { COUNTRY_SEED_DATA } from "./countries.data";
 import { getFlagPublicPath } from "@/persistence/flags/config";
-import { COUNTRY_SEED_DATA } from "./countries.data";
 import { LOCATION_SEED_DATA } from "./locations.data";
+import { NCAA_LOCATION_SEED_DATA } from "./ncaa-locations.data";
+import { TENNIS_GOLF_LOCATION_SEED_DATA } from "./tennis-golf-locations.data";
 import { locationMergeKey, mergeLocationSeed } from "./locations";
 
 describe("country seed", () => {
@@ -49,9 +50,18 @@ describe("country seed", () => {
 });
 
 describe("location seed", () => {
-  it("uses a stable merge key from city name and country name", () => {
+  it("includes NCAA campus cities for FBS and FCS programs", () => {
+    expect(NCAA_LOCATION_SEED_DATA.length).toBe(208);
+    expect(TENNIS_GOLF_LOCATION_SEED_DATA.length).toBe(47);
+    expect(LOCATION_SEED_DATA.length).toBe(417);
+  });
+
+  it("uses a stable merge key from city name, region, and country name", () => {
     expect(locationMergeKey("New York", "United States")).toBe(
-      "new york|united states",
+      "new york||united states",
+    );
+    expect(locationMergeKey("Columbia", "United States", "Missouri")).toBe(
+      "columbia|missouri|united states",
     );
   });
 
@@ -92,6 +102,7 @@ describe("location seed", () => {
         {
           name: firstCity.name,
           countryId: country!.id,
+          region: firstCity.region ?? null,
           latitude: firstCity.latitude,
           longitude: firstCity.longitude,
           timezone: firstCity.timezone,
@@ -128,6 +139,7 @@ describe("location seed", () => {
         {
           name: entry.name,
           countryId: country!.id,
+          region: entry.region ?? null,
           latitude: entry.latitude,
           longitude: entry.longitude,
           timezone: entry.timezone,
@@ -138,6 +150,54 @@ describe("location seed", () => {
       );
 
       expect(location.countryName).toBe(entry.countryName);
+    }
+  });
+
+  it("validates every NCAA campus city through buildLocation", async () => {
+    const countryRepository = new MemoryCountryRepository();
+    await mergeCountrySeed(countryRepository);
+
+    for (const entry of NCAA_LOCATION_SEED_DATA) {
+      const country = await countryRepository.getByName(entry.countryName);
+      expect(country).toBeTruthy();
+
+      buildLocation(
+        {
+          name: entry.name,
+          countryId: country!.id,
+          region: entry.region ?? null,
+          latitude: entry.latitude,
+          longitude: entry.longitude,
+          timezone: entry.timezone,
+          population: entry.population,
+        },
+        "ncaa-seed-test-id",
+        country!.name,
+      );
+    }
+  });
+
+  it("validates every tennis and golf host city through buildLocation", async () => {
+    const countryRepository = new MemoryCountryRepository();
+    await mergeCountrySeed(countryRepository);
+
+    for (const entry of TENNIS_GOLF_LOCATION_SEED_DATA) {
+      const country = await countryRepository.getByName(entry.countryName);
+      expect(country).toBeTruthy();
+
+      buildLocation(
+        {
+          name: entry.name,
+          countryId: country!.id,
+          region: entry.region ?? null,
+          latitude: entry.latitude,
+          longitude: entry.longitude,
+          timezone: entry.timezone,
+          population: entry.population,
+        },
+        "tennis-golf-seed-test-id",
+        country!.name,
+      );
     }
   });
 });

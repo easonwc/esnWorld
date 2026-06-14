@@ -6,6 +6,8 @@ export interface LocationCreateInput {
   name: string;
   /** Id of the parent country */
   countryId: string;
+  /** State, province, or administrative region (optional) */
+  region?: string | null;
   latitude: number;
   longitude: number;
   /** IANA timezone for the city/region, e.g. "America/New_York" */
@@ -41,6 +43,8 @@ export interface Location {
   name: string;
   countryId: string;
   countryName: string;
+  /** State, province, or administrative region; null when not applicable */
+  region: string | null;
   latitude: number;
   longitude: number;
   timezone: string;

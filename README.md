@@ -130,15 +130,17 @@ On first run, the database is **empty** unless you set `LOCATIONS_SEED_ON_STARTU
 
 ### World seed (optional)
 
-Set `LOCATIONS_SEED_ON_STARTUP=true` in `.env` to merge **200 countries** and **73 cities** when the server starts. Countries are seeded first (ISO code, languages, local flag image), then cities are linked by country name.
+Set `LOCATIONS_SEED_ON_STARTUP=true` in `.env` to merge **200 countries** and **417 cities** when the server starts. Countries are seeded first (ISO code, languages, local flag image), then cities are linked by country name.
 
 Merge behavior:
 
 - **Empty database** — all seed countries and cities are inserted.
-- **Existing database** — only entries not already present are added (countries by `name`; cities by `name` + `countryName`, case-insensitive). Nothing is overwritten or duplicated.
+- **Existing database** — only entries not already present are added (countries by `name`; cities by `name` + `region` + `countryName`, case-insensitive). Nothing is overwritten or duplicated.
 - **Disabled** (`false`, the default) — no seed runs; the database stays as-is.
 
-Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/locations.data.ts`.
+Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/locations.data.ts`, `src/persistence/seed/ncaa-locations.data.ts` (auto-generated from `scripts/generate-ncaa-locations.ts`), and `src/persistence/seed/tennis-golf-locations.data.ts`.
+
+The city catalog includes major world metros, all NFL/NBA/MLB/NHL markets, **208 NCAA Division I campus cities**, and **47 tennis and golf event host cities** (Grand Slams, ATP/WTA Masters staples, golf majors, and flagship PGA/DP World Tour venues). NCAA entries use plain city names with a `region` field for the US state. Schools in cities already present without a conflicting region (e.g. New York, Los Angeles, Chicago) are not duplicated.
 
 ### Future enhancements
 
@@ -207,6 +209,7 @@ A country cannot be deleted while it still has cities.
   "action": "create",
   "name": "New York",
   "countryId": "<country-id>",
+  "region": "New York",
   "population": 8336817,
   "latitude": 40.7128,
   "longitude": -74.006,
@@ -214,7 +217,7 @@ A country cannot be deleted while it still has cities.
 }
 ```
 
-`population` must be a non-negative integer. Every city **must** include a valid `countryId` referencing an existing country — free-text country names are not accepted. A location cannot be deleted while it still has venues.
+`population` must be a non-negative integer. Every city **must** include a valid `countryId` referencing an existing country — free-text country names are not accepted. `region` is optional and holds a state, province, or administrative subdivision (use it to distinguish cities with the same name in one country, e.g. `Columbia` in Missouri vs South Carolina). A location cannot be deleted while it still has venues.
 
 ### Venues
 
@@ -327,6 +330,7 @@ npm run start        # Start production server
 npm test             # Run unit tests
 npm run test:watch   # Run tests in watch mode
 npm run download-flags  # Download all 200 country flag SVGs to public/flags/
+npm run generate-ncaa-locations  # Regenerate NCAA campus city seed data
 npm run lint         # Lint
 ```
 

@@ -53,6 +53,7 @@ export class LocationStore {
     name: unknown;
     countryId?: unknown;
     country?: unknown;
+    region?: unknown;
     latitude: unknown;
     longitude: unknown;
     timezone: unknown;
@@ -199,5 +200,6 @@ export {
   validateLongitude,
   validateName,
   validatePopulation,
+  validateRegion,
   validateTimezone,
 } from "./transform";

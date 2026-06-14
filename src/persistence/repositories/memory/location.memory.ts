@@ -5,9 +5,13 @@ export class MemoryLocationRepository implements LocationRepository {
   private readonly locations = new Map<string, Location>();
 
   async list(): Promise<Location[]> {
-    return [...this.locations.values()].sort((a, b) =>
-      a.name.localeCompare(b.name),
-    );
+    return [...this.locations.values()].sort((a, b) => {
+      const byName = a.name.localeCompare(b.name);
+      if (byName !== 0) {
+        return byName;
+      }
+      return (a.region ?? "").localeCompare(b.region ?? "");
+    });
   }
 
   async get(id: string): Promise<Location | null> {

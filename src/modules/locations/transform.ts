@@ -108,10 +108,38 @@ export function validateCountryId(countryId: unknown): string {
   return countryId.trim();
 }
 
+export function validateRegion(region: unknown): string | null {
+  if (region === undefined || region === null) {
+    return null;
+  }
+
+  if (typeof region !== "string") {
+    throw new LocationError(
+      LocationErrorCodes.INVALID_REGION,
+      "region must be a string when provided",
+    );
+  }
+
+  const trimmed = region.trim();
+  if (trimmed.length === 0) {
+    return null;
+  }
+
+  if (trimmed.length > 100) {
+    throw new LocationError(
+      LocationErrorCodes.INVALID_REGION,
+      "region must be 100 characters or fewer",
+    );
+  }
+
+  return trimmed;
+}
+
 export function validateLocationCreateInput(input: {
   name: unknown;
   countryId?: unknown;
   country?: unknown;
+  region?: unknown;
   latitude: unknown;
   longitude: unknown;
   timezone: unknown;
@@ -180,6 +208,7 @@ export function buildLocation(
   input: {
     name: unknown;
     countryId: unknown;
+    region?: unknown;
     latitude: unknown;
     longitude: unknown;
     timezone: unknown;
@@ -193,6 +222,7 @@ export function buildLocation(
     name: validateName(input.name),
     countryId: validateCountryId(input.countryId),
     countryName: countryName.trim(),
+    region: validateRegion(input.region),
     latitude: validateLatitude(input.latitude),
     longitude: validateLongitude(input.longitude),
     timezone: validateTimezone(input.timezone),

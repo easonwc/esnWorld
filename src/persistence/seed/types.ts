@@ -14,6 +14,8 @@ export interface CountrySeedResult {
 export interface LocationSeedEntry {
   name: string;
   countryName: string;
+  /** State, province, or administrative region (optional) */
+  region?: string | null;
   latitude: number;
   longitude: number;
   timezone: string;

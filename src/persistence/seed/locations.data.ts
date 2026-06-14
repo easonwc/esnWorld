@@ -1,11 +1,16 @@
 import type { LocationSeedEntry } from "./types";
+import { NCAA_LOCATION_SEED_DATA } from "./ncaa-locations.data";
+import { TENNIS_GOLF_LOCATION_SEED_DATA } from "./tennis-golf-locations.data";
 
 /**
- * Major world cities across continents and countries, including national capitals.
+ * Major world cities across continents and countries, including national capitals,
+ * large metropolitan areas, hubs for major sports and international events, every
+ * NFL/NBA/MLB/NHL franchise city, NCAA Division I football/basketball campuses,
+ * and host cities for premier professional tennis and golf tournaments.
  * Populations are approximate metropolitan-area figures for megacities and
  * city-proper figures for smaller capitals (circa 2020–2024 estimates).
  */
-export const LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
+const WORLD_LOCATION_SEED_DATA = [
   // Asia
   { name: "Tokyo", countryName: "Japan", latitude: 35.6762, longitude: 139.6503, timezone: "Asia/Tokyo", population: 37_274_000 },
   { name: "Delhi", countryName: "India", latitude: 28.7041, longitude: 77.1025, timezone: "Asia/Kolkata", population: 32_941_000 },
@@ -32,6 +37,17 @@ export const LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
   { name: "Dubai", countryName: "United Arab Emirates", latitude: 25.2048, longitude: 55.2708, timezone: "Asia/Dubai", population: 3_478_000 },
   { name: "New Delhi", countryName: "India", latitude: 28.6139, longitude: 77.209, timezone: "Asia/Kolkata", population: 333_000 },
   { name: "Islamabad", countryName: "Pakistan", latitude: 33.6844, longitude: 73.0479, timezone: "Asia/Karachi", population: 1_014_000 },
+  { name: "Shenzhen", countryName: "China", latitude: 22.5431, longitude: 114.0579, timezone: "Asia/Shanghai", population: 17_494_000 },
+  { name: "Chengdu", countryName: "China", latitude: 30.5728, longitude: 104.0668, timezone: "Asia/Shanghai", population: 16_045_000 },
+  { name: "Hyderabad", countryName: "India", latitude: 17.385, longitude: 78.4867, timezone: "Asia/Kolkata", population: 10_004_000 },
+  { name: "Chennai", countryName: "India", latitude: 13.0827, longitude: 80.2707, timezone: "Asia/Kolkata", population: 11_235_000 },
+  { name: "Ahmedabad", countryName: "India", latitude: 23.0225, longitude: 72.5714, timezone: "Asia/Kolkata", population: 8_450_000 },
+  { name: "Kuala Lumpur", countryName: "Malaysia", latitude: 3.139, longitude: 101.6869, timezone: "Asia/Kuala_Lumpur", population: 8_043_000 },
+  { name: "Taipei", countryName: "Taiwan", latitude: 25.033, longitude: 121.5654, timezone: "Asia/Taipei", population: 7_047_000 },
+  { name: "Doha", countryName: "Qatar", latitude: 25.2854, longitude: 51.531, timezone: "Asia/Qatar", population: 2_382_000 },
+  { name: "Tel Aviv", countryName: "Israel", latitude: 32.0853, longitude: 34.7818, timezone: "Asia/Jerusalem", population: 4_075_000 },
+  { name: "Busan", countryName: "South Korea", latitude: 35.1796, longitude: 129.0756, timezone: "Asia/Seoul", population: 3_408_000 },
+  { name: "Abu Dhabi", countryName: "United Arab Emirates", latitude: 24.4539, longitude: 54.3773, timezone: "Asia/Dubai", population: 3_101_000 },
 
   // Africa
   { name: "Cairo", countryName: "Egypt", latitude: 30.0444, longitude: 31.2357, timezone: "Africa/Cairo", population: 22_183_000 },
@@ -44,6 +60,12 @@ export const LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
   { name: "Casablanca", countryName: "Morocco", latitude: 33.5731, longitude: -7.5898, timezone: "Africa/Casablanca", population: 3_752_000 },
   { name: "Algiers", countryName: "Algeria", latitude: 36.7538, longitude: 3.0588, timezone: "Africa/Algiers", population: 3_916_000 },
   { name: "Accra", countryName: "Ghana", latitude: 5.6037, longitude: -0.187, timezone: "Africa/Accra", population: 2_514_000 },
+  { name: "Durban", countryName: "South Africa", latitude: -29.8587, longitude: 31.0218, timezone: "Africa/Johannesburg", population: 3_920_000 },
+  { name: "Pretoria", countryName: "South Africa", latitude: -25.7461, longitude: 28.1881, timezone: "Africa/Johannesburg", population: 2_921_000 },
+  { name: "Dakar", countryName: "Senegal", latitude: 14.7167, longitude: -17.4677, timezone: "Africa/Dakar", population: 3_940_000 },
+  { name: "Abidjan", countryName: "Ivory Coast", latitude: 5.3599, longitude: -4.0083, timezone: "Africa/Abidjan", population: 5_600_000 },
+  { name: "Dar es Salaam", countryName: "Tanzania", latitude: -6.7924, longitude: 39.2083, timezone: "Africa/Dar_es_Salaam", population: 7_047_000 },
+  { name: "Marrakech", countryName: "Morocco", latitude: 31.6295, longitude: -7.9811, timezone: "Africa/Casablanca", population: 1_511_000 },
 
   // Europe
   { name: "Istanbul", countryName: "Turkey", latitude: 41.0082, longitude: 28.9784, timezone: "Europe/Istanbul", population: 15_636_000 },
@@ -62,6 +84,25 @@ export const LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
   { name: "Brussels", countryName: "Belgium", latitude: 50.8503, longitude: 4.3517, timezone: "Europe/Brussels", population: 1_208_000 },
   { name: "Dublin", countryName: "Ireland", latitude: 53.3498, longitude: -6.2603, timezone: "Europe/Dublin", population: 1_263_000 },
   { name: "Prague", countryName: "Czech Republic", latitude: 50.0755, longitude: 14.4378, timezone: "Europe/Prague", population: 1_357_000 },
+  { name: "Barcelona", countryName: "Spain", latitude: 41.3851, longitude: 2.1734, timezone: "Europe/Madrid", population: 5_624_000 },
+  { name: "Munich", countryName: "Germany", latitude: 48.1351, longitude: 11.582, timezone: "Europe/Berlin", population: 2_944_000 },
+  { name: "Milan", countryName: "Italy", latitude: 45.4642, longitude: 9.19, timezone: "Europe/Rome", population: 3_227_000 },
+  { name: "Manchester", countryName: "United Kingdom", latitude: 53.4808, longitude: -2.2426, timezone: "Europe/London", population: 2_930_000 },
+  { name: "Liverpool", countryName: "United Kingdom", latitude: 53.4084, longitude: -2.9916, timezone: "Europe/London", population: 1_532_000 },
+  { name: "Saint Petersburg", countryName: "Russia", latitude: 59.9311, longitude: 30.3609, timezone: "Europe/Moscow", population: 5_601_000 },
+  { name: "Kyiv", countryName: "Ukraine", latitude: 50.4501, longitude: 30.5234, timezone: "Europe/Kyiv", population: 3_785_000 },
+  { name: "Budapest", countryName: "Hungary", latitude: 47.4979, longitude: 19.0402, timezone: "Europe/Budapest", population: 3_058_000 },
+  { name: "Copenhagen", countryName: "Denmark", latitude: 55.6761, longitude: 12.5683, timezone: "Europe/Copenhagen", population: 2_037_000 },
+  { name: "Lisbon", countryName: "Portugal", latitude: 38.7223, longitude: -9.1393, timezone: "Europe/Lisbon", population: 2_930_000 },
+  { name: "Porto", countryName: "Portugal", latitude: 41.1579, longitude: -8.6291, timezone: "Europe/Lisbon", population: 1_736_000 },
+  { name: "Zurich", countryName: "Switzerland", latitude: 47.3769, longitude: 8.5417, timezone: "Europe/Zurich", population: 1_434_000 },
+  { name: "Frankfurt", countryName: "Germany", latitude: 50.1109, longitude: 8.6821, timezone: "Europe/Berlin", population: 2_318_000 },
+  { name: "Lyon", countryName: "France", latitude: 45.764, longitude: 4.8357, timezone: "Europe/Paris", population: 2_323_000 },
+  { name: "Marseille", countryName: "France", latitude: 43.2965, longitude: 5.3698, timezone: "Europe/Paris", population: 1_873_000 },
+  { name: "Birmingham", countryName: "United Kingdom", latitude: 52.4862, longitude: -1.8904, timezone: "Europe/London", population: 2_919_000 },
+  { name: "Glasgow", countryName: "United Kingdom", latitude: 55.8642, longitude: -4.2518, timezone: "Europe/London", population: 1_698_000 },
+  { name: "Baku", countryName: "Azerbaijan", latitude: 40.4093, longitude: 49.8671, timezone: "Asia/Baku", population: 2_293_000 },
+  { name: "Naples", countryName: "Italy", latitude: 40.8518, longitude: 14.2681, timezone: "Europe/Rome", population: 3_115_000 },
 
   // North America
   { name: "Mexico City", countryName: "Mexico", latitude: 19.4326, longitude: -99.1332, timezone: "America/Mexico_City", population: 22_281_000 },
@@ -73,6 +114,52 @@ export const LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
   { name: "Montreal", countryName: "Canada", latitude: 45.5017, longitude: -73.5673, timezone: "America/Toronto", population: 4_292_000 },
   { name: "Vancouver", countryName: "Canada", latitude: 49.2827, longitude: -123.1207, timezone: "America/Vancouver", population: 2_642_000 },
   { name: "Ottawa", countryName: "Canada", latitude: 45.4215, longitude: -75.6972, timezone: "America/Toronto", population: 1_017_000 },
+  { name: "Houston", countryName: "United States", latitude: 29.7604, longitude: -95.3698, timezone: "America/Chicago", population: 7_122_000 },
+  { name: "Dallas", countryName: "United States", latitude: 32.7767, longitude: -96.797, timezone: "America/Chicago", population: 7_637_000 },
+  { name: "Philadelphia", countryName: "United States", latitude: 39.9526, longitude: -75.1652, timezone: "America/New_York", population: 6_245_000 },
+  { name: "Miami", countryName: "United States", latitude: 25.7617, longitude: -80.1918, timezone: "America/New_York", population: 6_138_000 },
+  { name: "Boston", countryName: "United States", latitude: 42.3601, longitude: -71.0589, timezone: "America/New_York", population: 4_941_000 },
+  { name: "San Francisco", countryName: "United States", latitude: 37.7749, longitude: -122.4194, timezone: "America/Los_Angeles", population: 4_729_000 },
+  { name: "Seattle", countryName: "United States", latitude: 47.6062, longitude: -122.3321, timezone: "America/Los_Angeles", population: 4_018_000 },
+  { name: "Atlanta", countryName: "United States", latitude: 33.749, longitude: -84.388, timezone: "America/New_York", population: 6_144_000 },
+  { name: "Denver", countryName: "United States", latitude: 39.7392, longitude: -104.9903, timezone: "America/Denver", population: 2_963_000 },
+  { name: "Las Vegas", countryName: "United States", latitude: 36.1699, longitude: -115.1398, timezone: "America/Los_Angeles", population: 2_265_000 },
+  { name: "Phoenix", countryName: "United States", latitude: 33.4484, longitude: -112.074, timezone: "America/Phoenix", population: 4_948_000 },
+  { name: "Minneapolis", countryName: "United States", latitude: 44.9778, longitude: -93.265, timezone: "America/Chicago", population: 3_690_000 },
+  { name: "Orlando", countryName: "United States", latitude: 28.5383, longitude: -81.3792, timezone: "America/New_York", population: 2_673_000 },
+  // United States — NFL, NBA, MLB, and NHL franchise cities
+  { name: "Anaheim", countryName: "United States", latitude: 33.8366, longitude: -117.9143, timezone: "America/Los_Angeles", population: 1_010_000 },
+  { name: "Baltimore", countryName: "United States", latitude: 39.2904, longitude: -76.6122, timezone: "America/New_York", population: 2_800_000 },
+  { name: "Buffalo", countryName: "United States", latitude: 42.8864, longitude: -78.8784, timezone: "America/New_York", population: 1_166_000 },
+  { name: "Charlotte", countryName: "United States", latitude: 35.2271, longitude: -80.8431, timezone: "America/New_York", population: 2_800_000 },
+  { name: "Cincinnati", countryName: "United States", latitude: 39.1031, longitude: -84.512, timezone: "America/New_York", population: 2_256_000 },
+  { name: "Cleveland", countryName: "United States", latitude: 41.4993, longitude: -81.6944, timezone: "America/New_York", population: 2_048_000 },
+  { name: "Columbus", countryName: "United States", latitude: 39.9612, longitude: -82.9988, timezone: "America/New_York", population: 2_138_000 },
+  { name: "Detroit", countryName: "United States", latitude: 42.3314, longitude: -83.0458, timezone: "America/Detroit", population: 4_345_000 },
+  { name: "Green Bay", countryName: "United States", latitude: 44.5192, longitude: -88.0198, timezone: "America/Chicago", population: 320_000 },
+  { name: "Indianapolis", countryName: "United States", latitude: 39.7684, longitude: -86.1581, timezone: "America/Indiana/Indianapolis", population: 2_111_000 },
+  { name: "Jacksonville", countryName: "United States", latitude: 30.3322, longitude: -81.6557, timezone: "America/New_York", population: 1_605_000 },
+  { name: "Kansas City", countryName: "United States", latitude: 39.0997, longitude: -94.5786, timezone: "America/Chicago", population: 2_192_000 },
+  { name: "Memphis", countryName: "United States", latitude: 35.1495, longitude: -90.049, timezone: "America/Chicago", population: 1_348_000 },
+  { name: "Milwaukee", countryName: "United States", latitude: 43.0389, longitude: -87.9065, timezone: "America/Chicago", population: 1_574_000 },
+  { name: "Nashville", countryName: "United States", latitude: 36.1627, longitude: -86.7816, timezone: "America/Chicago", population: 2_012_000 },
+  { name: "New Orleans", countryName: "United States", latitude: 29.9511, longitude: -90.0715, timezone: "America/Chicago", population: 1_271_000 },
+  { name: "Oakland", countryName: "United States", latitude: 37.8044, longitude: -122.2712, timezone: "America/Los_Angeles", population: 872_000 },
+  { name: "Oklahoma City", countryName: "United States", latitude: 35.4676, longitude: -97.5164, timezone: "America/Chicago", population: 1_408_000 },
+  { name: "Portland", countryName: "United States", latitude: 45.5152, longitude: -122.6784, timezone: "America/Los_Angeles", population: 2_512_000 },
+  { name: "Raleigh", countryName: "United States", latitude: 35.7796, longitude: -78.6382, timezone: "America/New_York", population: 1_498_000 },
+  { name: "Sacramento", countryName: "United States", latitude: 38.5816, longitude: -121.4944, timezone: "America/Los_Angeles", population: 2_397_000 },
+  { name: "San Antonio", countryName: "United States", latitude: 29.4241, longitude: -98.4936, timezone: "America/Chicago", population: 2_601_000 },
+  { name: "San Diego", countryName: "United States", latitude: 32.7157, longitude: -117.1611, timezone: "America/Los_Angeles", population: 3_286_000 },
+  { name: "San Jose", countryName: "United States", latitude: 37.3382, longitude: -121.8863, timezone: "America/Los_Angeles", population: 1_998_000 },
+  { name: "Salt Lake City", countryName: "United States", latitude: 40.7608, longitude: -111.891, timezone: "America/Denver", population: 1_257_000 },
+  { name: "St. Louis", countryName: "United States", latitude: 38.627, longitude: -90.1994, timezone: "America/Chicago", population: 2_820_000 },
+  { name: "Tampa", countryName: "United States", latitude: 27.9506, longitude: -82.4572, timezone: "America/New_York", population: 3_175_000 },
+  { name: "Guadalajara", countryName: "Mexico", latitude: 20.6597, longitude: -103.3496, timezone: "America/Mexico_City", population: 5_268_000 },
+  { name: "Monterrey", countryName: "Mexico", latitude: 25.6866, longitude: -100.3161, timezone: "America/Monterrey", population: 5_341_000 },
+  { name: "Calgary", countryName: "Canada", latitude: 51.0447, longitude: -114.0719, timezone: "America/Edmonton", population: 1_389_000 },
+  { name: "Edmonton", countryName: "Canada", latitude: 53.5461, longitude: -113.4938, timezone: "America/Edmonton", population: 1_418_000 },
+  { name: "Winnipeg", countryName: "Canada", latitude: 49.8954, longitude: -97.1385, timezone: "America/Winnipeg", population: 834_000 },
 
   // South America
   { name: "São Paulo", countryName: "Brazil", latitude: -23.5505, longitude: -46.6333, timezone: "America/Sao_Paulo", population: 22_620_000 },
@@ -83,6 +170,12 @@ export const LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
   { name: "Santiago", countryName: "Chile", latitude: -33.4489, longitude: -70.6693, timezone: "America/Santiago", population: 6_903_000 },
   { name: "Brasília", countryName: "Brazil", latitude: -15.7975, longitude: -47.8919, timezone: "America/Sao_Paulo", population: 4_815_000 },
   { name: "Caracas", countryName: "Venezuela", latitude: 10.4806, longitude: -66.9036, timezone: "America/Caracas", population: 2_946_000 },
+  { name: "Medellín", countryName: "Colombia", latitude: 6.2476, longitude: -75.5658, timezone: "America/Bogota", population: 4_045_000 },
+  { name: "Montevideo", countryName: "Uruguay", latitude: -34.9011, longitude: -56.1645, timezone: "America/Montevideo", population: 1_947_000 },
+  { name: "Porto Alegre", countryName: "Brazil", latitude: -30.0346, longitude: -51.2177, timezone: "America/Sao_Paulo", population: 4_342_000 },
+  { name: "Salvador", countryName: "Brazil", latitude: -12.9777, longitude: -38.5016, timezone: "America/Bahia", population: 3_957_000 },
+  { name: "Quito", countryName: "Ecuador", latitude: -0.1807, longitude: -78.4678, timezone: "America/Guayaquil", population: 2_763_000 },
+  { name: "Guayaquil", countryName: "Ecuador", latitude: -2.1894, longitude: -79.8891, timezone: "America/Guayaquil", population: 3_113_000 },
 
   // Oceania
   { name: "Sydney", countryName: "Australia", latitude: -33.8688, longitude: 151.2093, timezone: "Australia/Sydney", population: 5_312_000 },
@@ -90,4 +183,12 @@ export const LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
   { name: "Auckland", countryName: "New Zealand", latitude: -36.8485, longitude: 174.7633, timezone: "Pacific/Auckland", population: 1_657_000 },
   { name: "Wellington", countryName: "New Zealand", latitude: -41.2865, longitude: 174.7762, timezone: "Pacific/Auckland", population: 212_000 },
   { name: "Canberra", countryName: "Australia", latitude: -35.2809, longitude: 149.13, timezone: "Australia/Sydney", population: 460_000 },
-] as const;
+  { name: "Brisbane", countryName: "Australia", latitude: -27.4698, longitude: 153.0251, timezone: "Australia/Brisbane", population: 2_620_000 },
+  { name: "Perth", countryName: "Australia", latitude: -31.9505, longitude: 115.8605, timezone: "Australia/Perth", population: 2_192_000 },
+] as const satisfies readonly LocationSeedEntry[];
+
+export const LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
+  ...WORLD_LOCATION_SEED_DATA,
+  ...NCAA_LOCATION_SEED_DATA,
+  ...TENNIS_GOLF_LOCATION_SEED_DATA,
+];

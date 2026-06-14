@@ -5,7 +5,12 @@ import { getDatabasePath } from "./config";
 import { runCountryLocationMigration } from "./migrations/migrate-002";
 import { runCountryIsoMigration } from "./migrations/migrate-003";
 
-const MIGRATIONS = ["001_initial.sql", "002_countries.sql", "003_country_iso.sql"] as const;
+const MIGRATIONS = [
+  "001_initial.sql",
+  "002_countries.sql",
+  "003_country_iso.sql",
+  "004_location_region.sql",
+] as const;
 
 function runMigrations(db: Database.Database): void {
   db.exec(`

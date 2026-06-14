@@ -172,6 +172,7 @@ export const apiOperations: ApiOperation[] = [
         action: "create",
         name: "New York",
         countryId: "paste-country-id-here",
+        region: "New York",
         latitude: 40.7128,
         longitude: -74.006,
         timezone: "America/New_York",

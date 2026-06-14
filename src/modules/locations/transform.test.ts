@@ -95,6 +95,7 @@ describe("LocationStore", () => {
 
     expect(created.id).toBeTruthy();
     expect(created.name).toBe("New York");
+    expect(created.region).toBeNull();
     expect(created.countryName).toBe("United States");
     expect(created.population).toBe(8336817);
 
@@ -153,6 +154,31 @@ describe("LocationStore", () => {
     expect(localTime.locationName).toBe("Los Angeles");
     expect(localTime.countryName).toBe("United States");
     expect(localTime.local.hour).toBe(12);
+  });
+
+  it("allows duplicate city names in the same country when region differs", async () => {
+    const missouri = await store.create({
+      name: "Columbia",
+      countryId,
+      region: "Missouri",
+      latitude: 38.9517,
+      longitude: -92.3341,
+      timezone: "America/Chicago",
+      population: 126_000,
+    });
+    const southCarolina = await store.create({
+      name: "Columbia",
+      countryId,
+      region: "South Carolina",
+      latitude: 34.0007,
+      longitude: -81.0348,
+      timezone: "America/New_York",
+      population: 137_000,
+    });
+
+    expect(missouri.region).toBe("Missouri");
+    expect(southCarolina.region).toBe("South Carolina");
+    expect(await store.list()).toHaveLength(2);
   });
 
   it("prevents deleting a location that still has venues", async () => {
@@ -239,6 +265,7 @@ describe("buildLocation", () => {
     );
 
     expect(location.name).toBe("Tokyo");
+    expect(location.region).toBeNull();
     expect(location.countryName).toBe("Japan");
     expect(location.timezone).toBe("Asia/Tokyo");
   });

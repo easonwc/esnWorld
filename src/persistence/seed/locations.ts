@@ -10,8 +10,13 @@ import { mergeCountrySeed } from "./countries";
 import { LOCATION_SEED_DATA } from "./locations.data";
 import type { LocationSeedEntry, LocationSeedResult, WorldSeedResult } from "./types";
 
-export function locationMergeKey(name: string, countryName: string): string {
-  return `${name.trim().toLowerCase()}|${countryName.trim().toLowerCase()}`;
+export function locationMergeKey(
+  name: string,
+  countryName: string,
+  region?: string | null,
+): string {
+  const normalizedRegion = region?.trim().toLowerCase() ?? "";
+  return `${name.trim().toLowerCase()}|${normalizedRegion}|${countryName.trim().toLowerCase()}`;
 }
 
 export async function mergeLocationSeed(
@@ -22,7 +27,7 @@ export async function mergeLocationSeed(
   const existing = await locationRepository.list();
   const existingKeys = new Set(
     existing.map((location) =>
-      locationMergeKey(location.name, location.countryName),
+      locationMergeKey(location.name, location.countryName, location.region),
     ),
   );
 
@@ -30,7 +35,7 @@ export async function mergeLocationSeed(
   let skipped = 0;
 
   for (const entry of entries) {
-    const key = locationMergeKey(entry.name, entry.countryName);
+    const key = locationMergeKey(entry.name, entry.countryName, entry.region);
 
     if (existingKeys.has(key)) {
       skipped += 1;
@@ -48,6 +53,7 @@ export async function mergeLocationSeed(
       {
         name: entry.name,
         countryId: country.id,
+        region: entry.region ?? null,
         latitude: entry.latitude,
         longitude: entry.longitude,
         timezone: entry.timezone,

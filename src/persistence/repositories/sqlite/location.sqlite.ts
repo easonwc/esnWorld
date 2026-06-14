@@ -8,6 +8,7 @@ type LocationRow = {
   country_id: string;
   country_name: string;
   name: string;
+  region: string | null;
   latitude: number;
   longitude: number;
   timezone: string;
@@ -20,6 +21,7 @@ function rowToLocation(row: LocationRow): Location {
     name: row.name,
     countryId: row.country_id,
     countryName: row.country_name,
+    region: row.region,
     latitude: row.latitude,
     longitude: row.longitude,
     timezone: row.timezone,
@@ -33,6 +35,7 @@ const LOCATION_SELECT = `
     l.country_id,
     c.name AS country_name,
     l.name,
+    l.region,
     l.latitude,
     l.longitude,
     l.timezone,
@@ -46,7 +49,7 @@ export class SqliteLocationRepository implements LocationRepository {
 
   async list(): Promise<Location[]> {
     const rows = this.db
-      .prepare(`${LOCATION_SELECT} ORDER BY l.name ASC`)
+      .prepare(`${LOCATION_SELECT} ORDER BY l.name ASC, COALESCE(l.region, '') ASC`)
       .all() as LocationRow[];
     return rows.map(rowToLocation);
   }
@@ -62,13 +65,14 @@ export class SqliteLocationRepository implements LocationRepository {
     try {
       this.db
         .prepare(
-          `INSERT INTO locations (id, country_id, name, latitude, longitude, timezone, population)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO locations (id, country_id, name, region, latitude, longitude, timezone, population)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .run(
           location.id,
           location.countryId,
           location.name,
+          location.region,
           location.latitude,
           location.longitude,
           location.timezone,
