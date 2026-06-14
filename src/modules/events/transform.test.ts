@@ -3,6 +3,7 @@ import {
   EventErrorCodes,
   EventStore,
   computeEventStatus,
+  executeEvent,
   resetEventStore,
 } from "@/modules/events";
 import { resetLocationStore } from "@/modules/locations";
@@ -59,6 +60,7 @@ describe("EventStore", () => {
       name: "Madison Square Garden",
       latitude: 40.7505,
       longitude: -73.9934,
+      isIndoor: true,
     }).id;
 
     store = resetEventStore();
@@ -82,6 +84,23 @@ describe("EventStore", () => {
     expect(event.isoUtcStart).toBe("2020-06-14T16:00:00.000Z");
     expect(event.isoUtcEnd).toBe("2020-06-14T18:00:00.000Z");
     expect(event.localStart.hour).toBe(12);
+  });
+
+  it("exposes indoor status and weather applicability on event output", () => {
+    const output = executeEvent({
+      action: "get",
+      id: store.create({
+        name: "Indoor Final",
+        venueId,
+        localStart: { year: 2020, month: 6, day: 14, hour: 12, minute: 0 },
+        durationMinutes: 120,
+      }).id,
+    });
+
+    expect(output).toMatchObject({
+      isIndoor: true,
+      weatherApplies: false,
+    });
   });
 
   it("lists active events in parallel", () => {

@@ -31,6 +31,8 @@ function toEventOutput(event: EventRecord, atIsoUtc: string): EventOutput {
     name: event.name,
     venueId: venue.id,
     venueName: venue.name,
+    isIndoor: venue.isIndoor,
+    weatherApplies: !venue.isIndoor,
     locationId: location.id,
     locationName: location.name,
     country: location.country,

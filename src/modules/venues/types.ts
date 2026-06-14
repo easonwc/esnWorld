@@ -1,3 +1,10 @@
+/**
+ * Venue indoor/outdoor rule for the simulation:
+ * - Outdoor-only → isIndoor: false (weather can affect events)
+ * - Indoor-only → isIndoor: true
+ * - Retractable-roof / hybrid → isIndoor: true (treated as indoor)
+ */
+
 export type VenueAction = "create" | "get" | "delete" | "listByLocation" | "localTime";
 
 export interface VenueCreateInput {
@@ -6,6 +13,8 @@ export interface VenueCreateInput {
   name: string;
   latitude: number;
   longitude: number;
+  /** Whether the venue is indoors. Retractable-roof venues count as indoor for this simulation. */
+  isIndoor: boolean;
 }
 
 export interface VenueGetInput {
@@ -42,6 +51,7 @@ export interface Venue {
   name: string;
   latitude: number;
   longitude: number;
+  isIndoor: boolean;
 }
 
 import type { LocalTimeParts } from "@/modules/locations";

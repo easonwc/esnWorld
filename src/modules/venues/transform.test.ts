@@ -4,6 +4,7 @@ import {
   VenueErrorCodes,
   VenueStore,
   resetVenueStore,
+  validateIsIndoor,
 } from "@/modules/venues";
 
 describe("VenueStore", () => {
@@ -30,9 +31,11 @@ describe("VenueStore", () => {
       name: "Madison Square Garden",
       latitude: 40.7505,
       longitude: -73.9934,
+      isIndoor: true,
     });
 
     expect(venue.name).toBe("Madison Square Garden");
+    expect(venue.isIndoor).toBe(true);
     expect(venue.locationId).toBe(locationId);
   });
 
@@ -42,12 +45,14 @@ describe("VenueStore", () => {
       name: "Madison Square Garden",
       latitude: 40.7505,
       longitude: -73.9934,
+      isIndoor: true,
     });
     store.create({
       locationId,
       name: "Bethpage Black Course",
       latitude: 40.7446,
       longitude: -73.4658,
+      isIndoor: false,
     });
 
     const venues = store.listByLocation(locationId);
@@ -57,6 +62,12 @@ describe("VenueStore", () => {
     ]);
   });
 
+  it("rejects invalid isIndoor", () => {
+    expect(() => validateIsIndoor("yes")).toThrowError(
+      expect.objectContaining({ code: VenueErrorCodes.INVALID_IS_INDOOR }),
+    );
+  });
+
   it("rejects venue creation for unknown location", () => {
     expect(() =>
       store.create({
@@ -64,6 +75,7 @@ describe("VenueStore", () => {
         name: "Ghost Arena",
         latitude: 0,
         longitude: 0,
+        isIndoor: false,
       }),
     ).toThrowError(
       expect.objectContaining({ code: VenueErrorCodes.LOCATION_NOT_FOUND }),
@@ -76,6 +88,7 @@ describe("VenueStore", () => {
       name: "Madison Square Garden",
       latitude: 40.7505,
       longitude: -73.9934,
+      isIndoor: true,
     });
 
     const localTime = store.getLocalTime(
@@ -95,6 +108,7 @@ describe("VenueStore", () => {
       name: "Venue A",
       latitude: 0,
       longitude: 0,
+      isIndoor: false,
     });
 
     expect(store.countByLocation(locationId)).toBe(1);

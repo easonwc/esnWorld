@@ -98,6 +98,9 @@ export interface WeatherOutput {
   longitude: number;
   venueId?: string;
   venueName?: string;
+  isIndoor?: boolean;
+  /** False for indoor venues — outdoor conditions do not affect the event */
+  weatherApplies: boolean;
   locationId: string;
   locationName: string;
   country: string;

@@ -26,6 +26,8 @@ describe("weather transform", () => {
         timezone: "America/New_York",
         venueId: "venue-1",
         venueName: "Madison Square Garden",
+        isIndoor: true,
+        weatherApplies: false,
       },
       service.getSystems(),
       service.getConfig(),
@@ -46,6 +48,7 @@ describe("weather transform", () => {
       locationName: "New York",
       country: "United States",
       timezone: "America/New_York",
+      weatherApplies: true,
     };
 
     const first = transformWeatherAtPoint(
@@ -87,6 +90,7 @@ describe("executeWeather", () => {
       name: "Madison Square Garden",
       latitude: 40.7505,
       longitude: -73.9934,
+      isIndoor: true,
     }).id;
 
     eventId = resetEventStore().create({
@@ -108,6 +112,8 @@ describe("executeWeather", () => {
       venueId,
       venueName: "Madison Square Garden",
       locationName: "New York",
+      isIndoor: true,
+      weatherApplies: false,
     });
   });
 
@@ -121,6 +127,7 @@ describe("executeWeather", () => {
     expect(result).toMatchObject({
       venueId,
       isoUtc: "2020-06-14T16:00:00.000Z",
+      weatherApplies: false,
     });
   });
 

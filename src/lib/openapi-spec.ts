@@ -186,7 +186,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/venues",
     summary: "Create a venue",
     description:
-      "Creates a venue within a location (e.g. stadium, golf course). Requires a valid locationId.",
+      "Creates a venue within a location (e.g. stadium, golf course). Requires isIndoor: true for indoor or retractable-roof venues, false for outdoor-only.",
     requestBody: JSON.stringify(
       {
         action: "create",
@@ -194,6 +194,7 @@ export const apiOperations: ApiOperation[] = [
         name: "Madison Square Garden",
         latitude: 40.7505,
         longitude: -73.9934,
+        isIndoor: true,
       },
       null,
       2,

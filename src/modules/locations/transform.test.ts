@@ -149,6 +149,7 @@ describe("LocationStore", () => {
       name: "Soldier Field",
       latitude: 41.8623,
       longitude: -87.6167,
+      isIndoor: false,
     });
 
     expect(() => store.delete(created.id)).toThrowError(

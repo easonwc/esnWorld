@@ -1,5 +1,5 @@
 import { transformCalendar } from "@/modules/calendar";
-import { parseIsoUtc, utcToLocalTime } from "@/modules/locations";
+import { parseIsoUtc } from "@/modules/locations";
 import {
   convertTemperature,
   convertWindSpeed,
@@ -33,6 +33,8 @@ export interface WeatherPointInput {
   timezone: string;
   venueId?: string;
   venueName?: string;
+  isIndoor?: boolean;
+  weatherApplies: boolean;
 }
 
 export function transformWeatherAtPoint(
@@ -145,6 +147,8 @@ export function transformWeatherAtPoint(
     longitude: input.longitude,
     venueId: input.venueId,
     venueName: input.venueName,
+    isIndoor: input.isIndoor,
+    weatherApplies: input.weatherApplies,
     locationId: input.locationId,
     locationName: input.locationName,
     country: input.country,

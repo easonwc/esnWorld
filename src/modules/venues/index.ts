@@ -57,6 +57,7 @@ export class VenueStore {
     name: unknown;
     latitude: unknown;
     longitude: unknown;
+    isIndoor: unknown;
   }): Venue {
     const locationStore = getLocationStore();
     const venueId = crypto.randomUUID();
@@ -169,4 +170,4 @@ export function listVenues(): Venue[] {
 
 export * from "./types";
 export * from "./errors";
-export { buildVenue, validateId, validateLocationId } from "./transform";
+export { buildVenue, validateId, validateIsIndoor, validateLocationId } from "./transform";

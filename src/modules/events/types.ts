@@ -81,6 +81,8 @@ export interface EventOutput {
   name: string;
   venueId: string;
   venueName: string;
+  isIndoor: boolean;
+  weatherApplies: boolean;
   locationId: string;
   locationName: string;
   country: string;

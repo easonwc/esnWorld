@@ -9,7 +9,7 @@ A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript
 | **World Clock** | Canonical UTC time for the entire world | `2020-01-01T12:00:00.000Z` |
 | **Calendar** | US Gregorian date derived from UTC | June 14, 2020 — Sunday, day 166 |
 | **Location** | A city in a country | New York, United States |
-| **Venue** | A place within a city | Madison Square Garden, Bethpage Black Course |
+| **Venue** | A place within a city | Madison Square Garden (indoor), Bethpage Black Course (outdoor). Retractable-roof venues count as indoor. |
 | **Event** | A scheduled happening at a venue | Championship Final at 12:00 local, 2 hours |
 | **Weather** | Simulated conditions at a place and time | 78°F, partly cloudy, rain likely at kickoff |
 
@@ -127,11 +127,14 @@ Open [http://localhost:3000/api-docs](http://localhost:3000/api-docs) for the in
   "locationId": "<location-id>",
   "name": "Madison Square Garden",
   "latitude": 40.7505,
-  "longitude": -73.9934
+  "longitude": -73.9934,
+  "isIndoor": true
 }
 ```
 
 Local time at a venue uses the parent location's timezone.
+
+**Indoor vs outdoor:** Set `isIndoor: true` for venues where weather does not affect events — including fully indoor arenas and **retractable-roof venues** (hybrid venues count as indoor in this simulation). Use `isIndoor: false` for outdoor-only venues such as open-air stadiums and golf courses.
 
 ### Events
 
@@ -188,7 +191,7 @@ Weather combines a **seasonal baseline** (latitude + day of year) with **moving 
 }
 ```
 
-Venue queries use **venue coordinates**; city queries use **location coordinates**. Results are seeded and reproducible via `WEATHER_SEED`.
+Venue queries use **venue coordinates**; city queries use **location coordinates**. Results include `weatherApplies` (false for indoor venues). Results are seeded and reproducible via `WEATHER_SEED`.
 
 ### Other
 

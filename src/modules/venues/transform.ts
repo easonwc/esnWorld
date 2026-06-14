@@ -28,12 +28,24 @@ export function validateLocationId(locationId: unknown): string {
   return locationId.trim();
 }
 
+export function validateIsIndoor(isIndoor: unknown): boolean {
+  if (typeof isIndoor !== "boolean") {
+    throw new VenueError(
+      VenueErrorCodes.INVALID_IS_INDOOR,
+      "isIndoor must be a boolean",
+    );
+  }
+
+  return isIndoor;
+}
+
 export function buildVenue(
   input: {
     locationId: unknown;
     name: unknown;
     latitude: unknown;
     longitude: unknown;
+    isIndoor: unknown;
   },
   id: string,
 ): Venue {
@@ -43,6 +55,7 @@ export function buildVenue(
     name: validateVenueName(input.name),
     latitude: validateLatitude(input.latitude),
     longitude: validateLongitude(input.longitude),
+    isIndoor: validateIsIndoor(input.isIndoor),
   };
 }
 
