@@ -1,0 +1,212 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 3rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #1f2937;
+}
+
+.header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.title {
+  margin: 0 0 0.25rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0;
+  color: #6b7280;
+}
+
+.specLink {
+  display: inline-block;
+  margin-top: 0.75rem;
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.specLink:hover {
+  text-decoration: underline;
+}
+
+.tag {
+  margin: 2rem 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.operation {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+}
+
+.operationHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #fafafa;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.operationHeader:hover {
+  background: #f3f4f6;
+}
+
+.method {
+  min-width: 4.5rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  color: #fff;
+}
+
+.methodGet {
+  background: #2563eb;
+}
+
+.methodPost {
+  background: #16a34a;
+}
+
+.path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.summary {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.operationBody {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.description {
+  margin: 0 0 1rem;
+  color: #4b5563;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.tryItOut {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid #2563eb;
+  border-radius: 4px;
+  background: #fff;
+  color: #2563eb;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tryItOut:hover {
+  background: #eff6ff;
+}
+
+.tryItOutActive {
+  background: #2563eb;
+  color: #fff;
+}
+
+.tryItOutActive:hover {
+  background: #1d4ed8;
+}
+
+.panel {
+  margin-top: 1rem;
+}
+
+.panelTitle {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 7rem;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.execute {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 4px;
+  background: #16a34a;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.execute:hover {
+  background: #15803d;
+}
+
+.execute:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.responseMeta {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+}
+
+.statusOk {
+  color: #16a34a;
+  font-weight: 700;
+}
+
+.statusError {
+  color: #dc2626;
+  font-weight: 700;
+}
+
+.pre {
+  margin: 0;
+  padding: 0.75rem;
+  background: #111827;
+  color: #e5e7eb;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.errorText {
+  margin-top: 0.5rem;
+  color: #dc2626;
+  font-size: 0.85rem;
+}
