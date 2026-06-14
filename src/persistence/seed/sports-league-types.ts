@@ -31,6 +31,8 @@ export interface SportsLeagueSeedCatalog {
   divisions: readonly SportsDivisionSeedEntry[];
   supplementalLocations: readonly LocationSeedEntry[];
   teams: readonly SportsTeamSeedEntry[];
+  getTeamLogoPublicPath: (abbreviation: string) => string;
+  getLeagueLogoPublicPath: (abbreviation: string) => string;
   downloadLogo: (abbreviation: string) => Promise<string>;
   downloadLeagueLogo: (abbreviation: string) => Promise<string>;
 }

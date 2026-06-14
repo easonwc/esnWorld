@@ -51,6 +51,30 @@ export interface LeagueLogoSyncResult extends LeagueLogoDownloadResult {
   updated: number;
 }
 
+const LOGO_DOWNLOAD_CONCURRENCY = 8;
+
+async function runWithConcurrency<T>(
+  items: readonly T[],
+  concurrency: number,
+  fn: (item: T) => Promise<void>,
+): Promise<void> {
+  if (items.length === 0) {
+    return;
+  }
+
+  let index = 0;
+  async function worker(): Promise<void> {
+    while (index < items.length) {
+      const current = index;
+      index += 1;
+      await fn(items[current]!);
+    }
+  }
+
+  const workers = Math.min(concurrency, items.length);
+  await Promise.all(Array.from({ length: workers }, () => worker()));
+}
+
 function normalizeAbbreviation(abbreviation: string): string {
   const normalized = abbreviation.trim().toUpperCase();
   if (!/^[A-Z0-9]{2,4}$/.test(normalized)) {
@@ -325,27 +349,25 @@ export async function downloadSeedLeagueLogos(
     options?: AssetDownloadOptions,
   ) => Promise<string>,
 ): Promise<LeagueLogoDownloadResult> {
-  let downloaded = 0;
-  let skipped = 0;
-  let failed = 0;
+  const result: LeagueLogoDownloadResult = { downloaded: 0, skipped: 0, failed: 0 };
 
-  for (const abbreviation of abbreviations) {
+  await runWithConcurrency(abbreviations, LOGO_DOWNLOAD_CONCURRENCY, async (abbreviation) => {
     const filePath = getLogoFilePath(abbreviation);
 
     if (fs.existsSync(filePath)) {
-      skipped += 1;
-      continue;
+      result.skipped += 1;
+      return;
     }
 
     try {
       await downloadLogo(abbreviation, { force: true });
-      downloaded += 1;
+      result.downloaded += 1;
     } catch {
-      failed += 1;
+      result.failed += 1;
     }
-  }
+  });
 
-  return { downloaded, skipped, failed };
+  return result;
 }
 
 export async function downloadSeedNflLogos(
@@ -416,19 +438,24 @@ async function syncLeagueTeamLogos(
   getLogoFilePath: (abbreviation: string) => string,
   shouldDownload: () => boolean,
 ): Promise<LeagueLogoSyncResult> {
+  if (!shouldDownload()) {
+    return { downloaded: 0, skipped: 0, failed: 0, updated: 0 };
+  }
+
   const league = await leagueRepository.getByAbbreviation(leagueAbbreviation);
   if (!league) {
     return { downloaded: 0, skipped: 0, failed: 0, updated: 0 };
   }
 
   const teams = await teamRepository.listByLeague(league.id);
+  const result: LeagueLogoSyncResult = {
+    downloaded: 0,
+    skipped: 0,
+    failed: 0,
+    updated: 0,
+  };
 
-  let downloaded = 0;
-  let skipped = 0;
-  let failed = 0;
-  let updated = 0;
-
-  for (const team of teams) {
+  await runWithConcurrency(teams, LOGO_DOWNLOAD_CONCURRENCY, async (team) => {
     const logoFilePath = getLogoFilePath(team.abbreviation);
     const existed = fs.existsSync(logoFilePath);
 
@@ -437,23 +464,23 @@ async function syncLeagueTeamLogos(
       const saved = fs.existsSync(logoFilePath);
 
       if (existed) {
-        skipped += 1;
+        result.skipped += 1;
       } else if (saved) {
-        downloaded += 1;
-      } else if (shouldDownload()) {
-        failed += 1;
+        result.downloaded += 1;
+      } else {
+        result.failed += 1;
       }
 
       if (team.logo !== logoPath) {
         await teamRepository.updateLogo(team.id, logoPath);
-        updated += 1;
+        result.updated += 1;
       }
     } catch {
-      failed += 1;
+      result.failed += 1;
     }
-  }
+  });
 
-  return { downloaded, skipped, failed, updated };
+  return result;
 }
 
 export async function syncNflTeamLogos(
@@ -545,13 +572,16 @@ export async function syncLeagueEntityLogo(
   abbreviation: string,
 ): Promise<LeagueLogoSyncResult> {
   const normalized = normalizeAbbreviation(abbreviation);
+
+  if (!shouldDownloadLeagueLogo(normalized)) {
+    return { downloaded: 0, skipped: 0, failed: 0, updated: 0 };
+  }
+
   const league = await leagueRepository.getByAbbreviation(normalized);
 
   if (!league) {
     return { downloaded: 0, skipped: 0, failed: 0, updated: 0 };
   }
-
-  const shouldDownload = () => shouldDownloadLeagueLogo(normalized);
 
   try {
     const existed = fs.existsSync(getLeagueLogoFilePath(normalized));
@@ -562,7 +592,7 @@ export async function syncLeagueEntityLogo(
 
     if (existed) {
       skipped = 1;
-    } else if (shouldDownload()) {
+    } else {
       downloaded = 1;
     }
 

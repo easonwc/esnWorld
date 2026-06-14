@@ -1,4 +1,5 @@
 import { downloadLeagueLogo, downloadNbaTeamLogo } from "@/persistence/logos/download";
+import { getLeagueLogoPublicPath, getNbaLogoPublicPath } from "@/persistence/logos/config";
 import { loadNbaSeedConfig } from "./config";
 import { mergeSportsLeagueSeed } from "./sports-league-seed";
 import type { SportsLeagueSeedCatalog, SportsLeagueSeedResult } from "./sports-league-types";
@@ -18,6 +19,8 @@ const NBA_CATALOG: SportsLeagueSeedCatalog = {
   divisions: NBA_DIVISION_SEED_DATA,
   supplementalLocations: NBA_LOCATION_SEED_DATA,
   teams: NBA_TEAM_SEED_DATA,
+  getTeamLogoPublicPath: getNbaLogoPublicPath,
+  getLeagueLogoPublicPath: getLeagueLogoPublicPath,
   downloadLogo: downloadNbaTeamLogo,
   downloadLeagueLogo,
 };

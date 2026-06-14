@@ -74,7 +74,7 @@ async function ensureLeague(
   );
   if (existing) {
     if (!existing.logo) {
-      const logo = await catalog.downloadLeagueLogo(catalog.league.abbreviation);
+      const logo = catalog.getLeagueLogoPublicPath(catalog.league.abbreviation);
       await leagueRepository.updateLogo(existing.id, logo);
       return { league: { ...existing, logo }, added: false };
     }
@@ -82,7 +82,7 @@ async function ensureLeague(
     return { league: existing, added: false };
   }
 
-  const logo = await catalog.downloadLeagueLogo(catalog.league.abbreviation);
+  const logo = catalog.getLeagueLogoPublicPath(catalog.league.abbreviation);
   const league = buildLeague(
     { ...catalog.league, logo },
     crypto.randomUUID(),
@@ -227,7 +227,7 @@ async function ensureTeam(
     return { added: false };
   }
 
-  const logo = await catalog.downloadLogo(entry.abbreviation);
+  const logo = catalog.getTeamLogoPublicPath(entry.abbreviation);
   const team = buildTeam(
     {
       divisionId: division.id,

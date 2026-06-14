@@ -1,4 +1,5 @@
 import { downloadLeagueLogo, downloadWnbaTeamLogo } from "@/persistence/logos/download";
+import { getLeagueLogoPublicPath, getWnbaLogoPublicPath } from "@/persistence/logos/config";
 import { loadWnbaSeedConfig } from "./config";
 import { mergeSportsLeagueSeed } from "./sports-league-seed";
 import type { SportsLeagueSeedCatalog, SportsLeagueSeedResult } from "./sports-league-types";
@@ -18,6 +19,8 @@ const WNBA_CATALOG: SportsLeagueSeedCatalog = {
   divisions: WNBA_DIVISION_SEED_DATA,
   supplementalLocations: WNBA_LOCATION_SEED_DATA,
   teams: WNBA_TEAM_SEED_DATA,
+  getTeamLogoPublicPath: getWnbaLogoPublicPath,
+  getLeagueLogoPublicPath: getLeagueLogoPublicPath,
   downloadLogo: downloadWnbaTeamLogo,
   downloadLeagueLogo,
 };

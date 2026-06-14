@@ -47,101 +47,129 @@ export async function register() {
       const leagueRepository = getDefaultLeagueRepository();
       const teamRepository = getDefaultTeamRepository();
 
-      if (nflSeed?.enabled) {
-        const logoSync = await syncNflTeamLogos(teamRepository, leagueRepository);
-        if (logoSync.downloaded > 0 || logoSync.updated > 0) {
-          console.info(
-            `[nfl logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
-          );
-        }
+      const logoSyncTasks: Promise<void>[] = [];
 
-        const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "NFL");
-        if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
-          console.info(
-            `[nfl league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
-          );
-        }
+      if (nflSeed?.enabled) {
+        logoSyncTasks.push(
+          (async () => {
+            const logoSync = await syncNflTeamLogos(teamRepository, leagueRepository);
+            if (logoSync.downloaded > 0 || logoSync.updated > 0) {
+              console.info(
+                `[nfl logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
+              );
+            }
+
+            const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "NFL");
+            if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
+              console.info(
+                `[nfl league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
+              );
+            }
+          })(),
+        );
       }
 
       if (mlbSeed?.enabled) {
-        const logoSync = await syncMlbTeamLogos(teamRepository, leagueRepository);
-        if (logoSync.downloaded > 0 || logoSync.updated > 0) {
-          console.info(
-            `[mlb logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
-          );
-        }
+        logoSyncTasks.push(
+          (async () => {
+            const logoSync = await syncMlbTeamLogos(teamRepository, leagueRepository);
+            if (logoSync.downloaded > 0 || logoSync.updated > 0) {
+              console.info(
+                `[mlb logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
+              );
+            }
 
-        const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "MLB");
-        if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
-          console.info(
-            `[mlb league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
-          );
-        }
+            const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "MLB");
+            if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
+              console.info(
+                `[mlb league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
+              );
+            }
+          })(),
+        );
       }
 
       if (nbaSeed?.enabled) {
-        const logoSync = await syncNbaTeamLogos(teamRepository, leagueRepository);
-        if (logoSync.downloaded > 0 || logoSync.updated > 0) {
-          console.info(
-            `[nba logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
-          );
-        }
+        logoSyncTasks.push(
+          (async () => {
+            const logoSync = await syncNbaTeamLogos(teamRepository, leagueRepository);
+            if (logoSync.downloaded > 0 || logoSync.updated > 0) {
+              console.info(
+                `[nba logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
+              );
+            }
 
-        const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "NBA");
-        if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
-          console.info(
-            `[nba league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
-          );
-        }
+            const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "NBA");
+            if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
+              console.info(
+                `[nba league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
+              );
+            }
+          })(),
+        );
       }
 
       if (nhlSeed?.enabled) {
-        const logoSync = await syncNhlTeamLogos(teamRepository, leagueRepository);
-        if (logoSync.downloaded > 0 || logoSync.updated > 0 || logoSync.failed > 0) {
-          console.info(
-            `[nhl logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)${logoSync.failed > 0 ? `, ${logoSync.failed} failed` : ""}`,
-          );
-        }
+        logoSyncTasks.push(
+          (async () => {
+            const logoSync = await syncNhlTeamLogos(teamRepository, leagueRepository);
+            if (logoSync.downloaded > 0 || logoSync.updated > 0 || logoSync.failed > 0) {
+              console.info(
+                `[nhl logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)${logoSync.failed > 0 ? `, ${logoSync.failed} failed` : ""}`,
+              );
+            }
 
-        const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "NHL");
-        if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
-          console.info(
-            `[nhl league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
-          );
-        }
+            const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "NHL");
+            if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
+              console.info(
+                `[nhl league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
+              );
+            }
+          })(),
+        );
       }
 
       if (mlsSeed?.enabled) {
-        const logoSync = await syncMlsTeamLogos(teamRepository, leagueRepository);
-        if (logoSync.downloaded > 0 || logoSync.updated > 0) {
-          console.info(
-            `[mls logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
-          );
-        }
+        logoSyncTasks.push(
+          (async () => {
+            const logoSync = await syncMlsTeamLogos(teamRepository, leagueRepository);
+            if (logoSync.downloaded > 0 || logoSync.updated > 0) {
+              console.info(
+                `[mls logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
+              );
+            }
 
-        const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "MLS");
-        if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
-          console.info(
-            `[mls league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
-          );
-        }
+            const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "MLS");
+            if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
+              console.info(
+                `[mls league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
+              );
+            }
+          })(),
+        );
       }
 
       if (wnbaSeed?.enabled) {
-        const logoSync = await syncWnbaTeamLogos(teamRepository, leagueRepository);
-        if (logoSync.downloaded > 0 || logoSync.updated > 0) {
-          console.info(
-            `[wnba logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
-          );
-        }
+        logoSyncTasks.push(
+          (async () => {
+            const logoSync = await syncWnbaTeamLogos(teamRepository, leagueRepository);
+            if (logoSync.downloaded > 0 || logoSync.updated > 0) {
+              console.info(
+                `[wnba logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
+              );
+            }
 
-        const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "WNBA");
-        if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
-          console.info(
-            `[wnba league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
-          );
-        }
+            const leagueLogoSync = await syncLeagueEntityLogo(leagueRepository, "WNBA");
+            if (leagueLogoSync.downloaded > 0 || leagueLogoSync.updated > 0) {
+              console.info(
+                `[wnba league logo] synced ${leagueLogoSync.downloaded} new image(s), updated ${leagueLogoSync.updated} league record(s)`,
+              );
+            }
+          })(),
+        );
       }
+
+      await Promise.all(logoSyncTasks);
     }
 
     if (nflSeed?.enabled) {

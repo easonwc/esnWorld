@@ -89,6 +89,10 @@ export async function downloadSeedFlagImages(): Promise<FlagDownloadResult> {
 export async function syncCountryFlagImages(
   repository: CountryRepository,
 ): Promise<FlagSyncResult> {
+  if (!shouldDownloadFlags()) {
+    return { downloaded: 0, skipped: 0, failed: 0, updated: 0 };
+  }
+
   const countries = await repository.list();
 
   let downloaded = 0;

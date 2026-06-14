@@ -1,4 +1,5 @@
 import { downloadLeagueLogo, downloadNflTeamLogo } from "@/persistence/logos/download";
+import { getLeagueLogoPublicPath, getNflLogoPublicPath } from "@/persistence/logos/config";
 import { loadNflSeedConfig } from "./config";
 import { mergeSportsLeagueSeed } from "./sports-league-seed";
 import type { SportsLeagueSeedCatalog } from "./sports-league-types";
@@ -19,6 +20,8 @@ const NFL_CATALOG: SportsLeagueSeedCatalog = {
   divisions: NFL_DIVISION_SEED_DATA,
   supplementalLocations: NFL_LOCATION_SEED_DATA,
   teams: NFL_TEAM_SEED_DATA,
+  getTeamLogoPublicPath: getNflLogoPublicPath,
+  getLeagueLogoPublicPath: getLeagueLogoPublicPath,
   downloadLogo: downloadNflTeamLogo,
   downloadLeagueLogo,
 };
