@@ -53,6 +53,15 @@ export class SqliteDivisionRepository implements DivisionRepository {
     return rows.map(rowToDivision);
   }
 
+  async listByLeague(leagueId: string): Promise<Division[]> {
+    const rows = this.db
+      .prepare(
+        `${DIVISION_SELECT} WHERE c.league_id = ? ORDER BY d.name ASC`,
+      )
+      .all(leagueId) as DivisionRow[];
+    return rows.map(rowToDivision);
+  }
+
   async listByConference(conferenceId: string): Promise<Division[]> {
     const rows = this.db
       .prepare(

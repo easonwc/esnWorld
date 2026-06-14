@@ -50,6 +50,17 @@ export function validateConferenceId(conferenceId: unknown): string {
   return conferenceId.trim();
 }
 
+export function validateLeagueId(leagueId: unknown): string {
+  if (typeof leagueId !== "string" || leagueId.trim().length === 0) {
+    throw new DivisionError(
+      DivisionErrorCodes.INVALID_LEAGUE_ID,
+      "leagueId is required",
+    );
+  }
+
+  return leagueId.trim();
+}
+
 export function validateId(id: unknown): string {
   if (typeof id !== "string" || id.trim().length === 0) {
     throw new DivisionError(

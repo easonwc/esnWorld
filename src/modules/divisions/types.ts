@@ -1,4 +1,4 @@
-export type DivisionAction = "create" | "get" | "delete" | "listByConference";
+export type DivisionAction = "create" | "get" | "delete" | "listByConference" | "listByLeague";
 
 export interface DivisionCreateInput {
   action: "create";
@@ -22,11 +22,17 @@ export interface DivisionListByConferenceInput {
   conferenceId: string;
 }
 
+export interface DivisionListByLeagueInput {
+  action: "listByLeague";
+  leagueId: string;
+}
+
 export type DivisionInput =
   | DivisionCreateInput
   | DivisionGetInput
   | DivisionDeleteInput
-  | DivisionListByConferenceInput;
+  | DivisionListByConferenceInput
+  | DivisionListByLeagueInput;
 
 export interface Division {
   id: string;

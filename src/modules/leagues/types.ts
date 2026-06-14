@@ -1,4 +1,14 @@
-export type LeagueAction = "create" | "get" | "delete";
+import type { Conference } from "@/modules/conferences/types";
+import type { Division } from "@/modules/divisions/types";
+import type { Team } from "@/modules/teams/types";
+
+export type LeagueAction =
+  | "create"
+  | "get"
+  | "delete"
+  | "listConferences"
+  | "listDivisions"
+  | "listTeams";
 
 export interface LeagueCreateInput {
   action: "create";
@@ -17,10 +27,28 @@ export interface LeagueDeleteInput {
   id: string;
 }
 
+export interface LeagueListConferencesInput {
+  action: "listConferences";
+  leagueId: string;
+}
+
+export interface LeagueListDivisionsInput {
+  action: "listDivisions";
+  leagueId: string;
+}
+
+export interface LeagueListTeamsInput {
+  action: "listTeams";
+  leagueId: string;
+}
+
 export type LeagueInput =
   | LeagueCreateInput
   | LeagueGetInput
-  | LeagueDeleteInput;
+  | LeagueDeleteInput
+  | LeagueListConferencesInput
+  | LeagueListDivisionsInput
+  | LeagueListTeamsInput;
 
 /** Professional sports league container for teams. */
 export interface League {
@@ -33,4 +61,7 @@ export interface League {
 export type LeagueOutput =
   | League
   | League[]
+  | Conference[]
+  | Division[]
+  | Team[]
   | { deleted: true; id: string };

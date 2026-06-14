@@ -81,6 +81,7 @@ export interface ConferenceRepository {
 
 export interface DivisionRepository {
   list(): Promise<Division[]>;
+  listByLeague(leagueId: string): Promise<Division[]>;
   listByConference(conferenceId: string): Promise<Division[]>;
   countByConference(conferenceId: string): Promise<number>;
   get(id: string): Promise<Division | null>;

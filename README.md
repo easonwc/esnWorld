@@ -420,7 +420,34 @@ A country cannot be deleted while it still has cities.
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/leagues` | List all leagues |
-| `POST` | `/api/leagues` | Create, get, or delete (`action`: `create`, `get`, `delete`) |
+| `POST` | `/api/leagues` | Create, get, delete, or list children (`action`: `create`, `get`, `delete`, `listConferences`, `listDivisions`, `listTeams`) |
+
+**List conferences in a league:**
+
+```json
+{
+  "action": "listConferences",
+  "leagueId": "<league-id>"
+}
+```
+
+**List divisions in a league:**
+
+```json
+{
+  "action": "listDivisions",
+  "leagueId": "<league-id>"
+}
+```
+
+**List teams in a league:**
+
+```json
+{
+  "action": "listTeams",
+  "leagueId": "<league-id>"
+}
+```
 
 **Create a league:**
 
@@ -446,7 +473,7 @@ Leagues are top-level containers for professional sports teams. Leagues created 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/divisions` | List all divisions |
-| `POST` | `/api/divisions` | Create, get, delete, or list by conference (`action`: `create`, `get`, `delete`, `listByConference`) |
+| `POST` | `/api/divisions` | Create, get, delete, list by conference, or list by league (`action`: `create`, `get`, `delete`, `listByConference`, `listByLeague`) |
 
 ### Teams
 

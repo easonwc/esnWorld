@@ -300,7 +300,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/leagues",
     summary: "List all leagues",
     description:
-      "Returns all professional sports leagues sorted by name. Leagues are containers for teams.",
+      "Returns all professional sports leagues sorted by name. Leagues contain conferences, divisions, and teams.",
   },
   {
     id: "leagues-create",
@@ -309,7 +309,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/leagues",
     summary: "Create a league",
     description:
-      "Creates a professional sports league container. Teams will belong to a league in a later phase.",
+      "Creates a professional sports league container. Add conferences, divisions, and teams under the league.",
     requestBody: JSON.stringify(
       {
         action: "create",
@@ -342,6 +342,274 @@ export const apiOperations: ApiOperation[] = [
     description: "Removes a league by id.",
     requestBody: JSON.stringify(
       { action: "delete", id: "paste-league-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "leagues-list-conferences",
+    tag: "Leagues",
+    method: "POST",
+    path: "/api/leagues",
+    summary: "List conferences in a league",
+    description:
+      "Returns all conferences within a league (e.g. AFC and NFC for the NFL).",
+    requestBody: JSON.stringify(
+      { action: "listConferences", leagueId: "paste-league-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "leagues-list-divisions",
+    tag: "Leagues",
+    method: "POST",
+    path: "/api/leagues",
+    summary: "List divisions in a league",
+    description:
+      "Returns all divisions across every conference in a league.",
+    requestBody: JSON.stringify(
+      { action: "listDivisions", leagueId: "paste-league-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "leagues-list-teams",
+    tag: "Leagues",
+    method: "POST",
+    path: "/api/leagues",
+    summary: "List teams in a league",
+    description: "Returns all teams in a league, across all conferences and divisions.",
+    requestBody: JSON.stringify(
+      { action: "listTeams", leagueId: "paste-league-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "conferences-list",
+    tag: "Conferences",
+    method: "GET",
+    path: "/api/conferences",
+    summary: "List all conferences",
+    description: "Returns all conferences sorted by name.",
+  },
+  {
+    id: "conferences-create",
+    tag: "Conferences",
+    method: "POST",
+    path: "/api/conferences",
+    summary: "Create a conference",
+    description: "Creates a conference within a league (e.g. AFC, Eastern Conference).",
+    requestBody: JSON.stringify(
+      {
+        action: "create",
+        leagueId: "paste-league-id-here",
+        name: "American Football Conference",
+        abbreviation: "AFC",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "conferences-get",
+    tag: "Conferences",
+    method: "POST",
+    path: "/api/conferences",
+    summary: "Get a conference",
+    description: "Retrieves a single conference by id.",
+    requestBody: JSON.stringify(
+      { action: "get", id: "paste-conference-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "conferences-list-by-league",
+    tag: "Conferences",
+    method: "POST",
+    path: "/api/conferences",
+    summary: "List conferences in a league",
+    description: "Returns all conferences within a given league.",
+    requestBody: JSON.stringify(
+      { action: "listByLeague", leagueId: "paste-league-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "conferences-delete",
+    tag: "Conferences",
+    method: "POST",
+    path: "/api/conferences",
+    summary: "Delete a conference",
+    description:
+      "Removes a conference by id. Fails if divisions still exist in that conference.",
+    requestBody: JSON.stringify(
+      { action: "delete", id: "paste-conference-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "divisions-list",
+    tag: "Divisions",
+    method: "GET",
+    path: "/api/divisions",
+    summary: "List all divisions",
+    description: "Returns all divisions sorted by name.",
+  },
+  {
+    id: "divisions-create",
+    tag: "Divisions",
+    method: "POST",
+    path: "/api/divisions",
+    summary: "Create a division",
+    description:
+      "Creates a division within a conference (e.g. AFC East, Atlantic Division).",
+    requestBody: JSON.stringify(
+      {
+        action: "create",
+        conferenceId: "paste-conference-id-here",
+        name: "AFC East",
+        abbreviation: "AFCE",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "divisions-get",
+    tag: "Divisions",
+    method: "POST",
+    path: "/api/divisions",
+    summary: "Get a division",
+    description: "Retrieves a single division by id.",
+    requestBody: JSON.stringify(
+      { action: "get", id: "paste-division-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "divisions-list-by-conference",
+    tag: "Divisions",
+    method: "POST",
+    path: "/api/divisions",
+    summary: "List divisions in a conference",
+    description: "Returns all divisions within a given conference.",
+    requestBody: JSON.stringify(
+      { action: "listByConference", conferenceId: "paste-conference-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "divisions-list-by-league",
+    tag: "Divisions",
+    method: "POST",
+    path: "/api/divisions",
+    summary: "List divisions in a league",
+    description: "Returns all divisions across every conference in a league.",
+    requestBody: JSON.stringify(
+      { action: "listByLeague", leagueId: "paste-league-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "divisions-delete",
+    tag: "Divisions",
+    method: "POST",
+    path: "/api/divisions",
+    summary: "Delete a division",
+    description:
+      "Removes a division by id. Fails if teams still exist in that division.",
+    requestBody: JSON.stringify(
+      { action: "delete", id: "paste-division-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "teams-list",
+    tag: "Teams",
+    method: "GET",
+    path: "/api/teams",
+    summary: "List all teams",
+    description: "Returns all professional sports teams sorted by name.",
+  },
+  {
+    id: "teams-create",
+    tag: "Teams",
+    method: "POST",
+    path: "/api/teams",
+    summary: "Create a team",
+    description:
+      "Creates a team in a division with a home venue. Abbreviations are unique per league.",
+    requestBody: JSON.stringify(
+      {
+        action: "create",
+        divisionId: "paste-division-id-here",
+        venueId: "paste-venue-id-here",
+        name: "Buffalo Bills",
+        abbreviation: "BUF",
+        logo: "/logos/nfl/buf.png",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "teams-get",
+    tag: "Teams",
+    method: "POST",
+    path: "/api/teams",
+    summary: "Get a team",
+    description: "Retrieves a single team by id.",
+    requestBody: JSON.stringify(
+      { action: "get", id: "paste-team-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "teams-list-by-division",
+    tag: "Teams",
+    method: "POST",
+    path: "/api/teams",
+    summary: "List teams in a division",
+    description: "Returns all teams within a given division.",
+    requestBody: JSON.stringify(
+      { action: "listByDivision", divisionId: "paste-division-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "teams-list-by-league",
+    tag: "Teams",
+    method: "POST",
+    path: "/api/teams",
+    summary: "List teams in a league",
+    description: "Returns all teams within a given league.",
+    requestBody: JSON.stringify(
+      { action: "listByLeague", leagueId: "paste-league-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "teams-delete",
+    tag: "Teams",
+    method: "POST",
+    path: "/api/teams",
+    summary: "Delete a team",
+    description: "Removes a team by id.",
+    requestBody: JSON.stringify(
+      { action: "delete", id: "paste-team-id-here" },
       null,
       2,
     ),
@@ -689,7 +957,21 @@ export function buildOpenApiSpec() {
       {
         name: "Leagues",
         description:
-          "Professional sports league containers that will hold teams.",
+          "Professional sports league containers. Use listConferences, listDivisions, and listTeams to browse a league hierarchy.",
+      },
+      {
+        name: "Conferences",
+        description: "League subdivisions such as AFC/NFC or Eastern/Western conferences.",
+      },
+      {
+        name: "Divisions",
+        description:
+          "Conference subdivisions such as AFC East or Atlantic Division.",
+      },
+      {
+        name: "Teams",
+        description:
+          "Professional franchises with home venues. Team abbreviations are unique per league.",
       },
       {
         name: "Venues",

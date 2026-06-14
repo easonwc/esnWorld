@@ -10,6 +10,12 @@ export class MemoryDivisionRepository implements DivisionRepository {
     );
   }
 
+  async listByLeague(leagueId: string): Promise<Division[]> {
+    return [...this.divisions.values()]
+      .filter((division) => division.leagueId === leagueId)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   async listByConference(conferenceId: string): Promise<Division[]> {
     return [...this.divisions.values()]
       .filter((division) => division.conferenceId === conferenceId)

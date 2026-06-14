@@ -1,3 +1,6 @@
+import { getConferenceStore } from "@/modules/conferences";
+import { getDivisionStore } from "@/modules/divisions";
+import { getTeamStore } from "@/modules/teams";
 import {
   getDefaultConferenceRepository,
   getDefaultLeagueRepository,
@@ -107,6 +110,24 @@ export async function executeLeague(
 
     case "delete":
       return store.delete(validateId(input.id));
+
+    case "listConferences": {
+      const leagueId = validateId(input.leagueId);
+      await store.get(leagueId);
+      return getConferenceStore().listByLeague(leagueId);
+    }
+
+    case "listDivisions": {
+      const leagueId = validateId(input.leagueId);
+      await store.get(leagueId);
+      return getDivisionStore().listByLeague(leagueId);
+    }
+
+    case "listTeams": {
+      const leagueId = validateId(input.leagueId);
+      await store.get(leagueId);
+      return getTeamStore().listByLeague(leagueId);
+    }
 
     default: {
       const unknownAction = (input as { action: string }).action;

@@ -1,4 +1,5 @@
 import { getConferenceStore, ConferenceError } from "@/modules/conferences";
+import { getLeagueStore, LeagueError } from "@/modules/leagues";
 import {
   getDefaultDivisionRepository,
   getDefaultTeamRepository,
@@ -9,6 +10,7 @@ import {
   buildDivision,
   validateConferenceId,
   validateId,
+  validateLeagueId,
 } from "./transform";
 import type { Division, DivisionInput, DivisionOutput } from "./types";
 
@@ -23,6 +25,24 @@ export class DivisionStore {
     const id = validateConferenceId(conferenceId);
     await getConferenceStore().get(id);
     return this.repository.listByConference(id);
+  }
+
+  async listByLeague(leagueId: string): Promise<Division[]> {
+    const id = validateLeagueId(leagueId);
+
+    try {
+      await getLeagueStore().get(id);
+    } catch (error) {
+      if (error instanceof LeagueError) {
+        throw new DivisionError(
+          DivisionErrorCodes.LEAGUE_NOT_FOUND,
+          error.message,
+        );
+      }
+      throw error;
+    }
+
+    return this.repository.listByLeague(id);
   }
 
   async countByConference(conferenceId: string): Promise<number> {
@@ -145,6 +165,9 @@ export async function executeDivision(
     case "listByConference":
       return store.listByConference(validateConferenceId(input.conferenceId));
 
+    case "listByLeague":
+      return store.listByLeague(validateLeagueId(input.leagueId));
+
     default: {
       const unknownAction = (input as { action: string }).action;
       throw new DivisionError(
@@ -166,5 +189,6 @@ export {
   validateAbbreviation,
   validateConferenceId,
   validateId,
+  validateLeagueId,
   validateName,
 } from "./transform";

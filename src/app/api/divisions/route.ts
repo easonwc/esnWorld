@@ -1,5 +1,6 @@
 import { jsonResponse } from "@/lib/api-response";
 import { ConferenceError } from "@/modules/conferences";
+import { LeagueError } from "@/modules/leagues";
 import {
   DivisionError,
   executeDivision,
@@ -9,9 +10,11 @@ import {
 
 export const dynamic = "force-dynamic";
 
-function errorResponse(error: DivisionError | ConferenceError) {
+function errorResponse(error: DivisionError | ConferenceError | LeagueError) {
   const status =
-    error.code === "DIVISION_NOT_FOUND" || error.code === "CONFERENCE_NOT_FOUND"
+    error.code === "DIVISION_NOT_FOUND" ||
+    error.code === "CONFERENCE_NOT_FOUND" ||
+    error.code === "LEAGUE_NOT_FOUND"
       ? 404
       : 400;
 
@@ -51,7 +54,7 @@ export async function POST(request: Request) {
     const output = await executeDivision(input);
     return jsonResponse({ data: output });
   } catch (error) {
-    if (error instanceof DivisionError || error instanceof ConferenceError) {
+    if (error instanceof DivisionError || error instanceof ConferenceError || error instanceof LeagueError) {
       return errorResponse(error);
     }
     throw error;
