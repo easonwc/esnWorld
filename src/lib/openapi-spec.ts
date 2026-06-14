@@ -295,6 +295,59 @@ export const apiOperations: ApiOperation[] = [
     ),
   },
   {
+    id: "leagues-list",
+    tag: "Leagues",
+    method: "GET",
+    path: "/api/leagues",
+    summary: "List all leagues",
+    description:
+      "Returns all professional sports leagues sorted by name. Leagues are containers for teams.",
+  },
+  {
+    id: "leagues-create",
+    tag: "Leagues",
+    method: "POST",
+    path: "/api/leagues",
+    summary: "Create a league",
+    description:
+      "Creates a professional sports league container. Teams will belong to a league in a later phase.",
+    requestBody: JSON.stringify(
+      {
+        action: "create",
+        name: "National Football League",
+        abbreviation: "NFL",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "leagues-get",
+    tag: "Leagues",
+    method: "POST",
+    path: "/api/leagues",
+    summary: "Get a league",
+    description: "Retrieves a single league by id.",
+    requestBody: JSON.stringify(
+      { action: "get", id: "paste-league-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "leagues-delete",
+    tag: "Leagues",
+    method: "POST",
+    path: "/api/leagues",
+    summary: "Delete a league",
+    description: "Removes a league by id.",
+    requestBody: JSON.stringify(
+      { action: "delete", id: "paste-league-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
     id: "venues-list",
     tag: "Venues",
     method: "GET",
@@ -633,6 +686,11 @@ export function buildOpenApiSpec() {
         name: "Colleges",
         description:
           "Colleges and universities within a location, with student attendance.",
+      },
+      {
+        name: "Leagues",
+        description:
+          "Professional sports league containers that will hold teams.",
       },
       {
         name: "Venues",

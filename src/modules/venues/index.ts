@@ -8,6 +8,7 @@ import {
 } from "@/modules/locations";
 import {
   getDefaultVenueRepository,
+  getDefaultTeamRepository,
   type VenueRepository,
 } from "@/persistence/repositories";
 import { VenueError, VenueErrorCodes } from "./errors";
@@ -82,6 +83,14 @@ export class VenueStore {
       throw new VenueError(
         VenueErrorCodes.VENUE_NOT_FOUND,
         `Venue not found: ${id}`,
+      );
+    }
+
+    const teamCount = await getDefaultTeamRepository().countByVenue(id);
+    if (teamCount > 0) {
+      throw new VenueError(
+        VenueErrorCodes.VENUE_HAS_TEAMS,
+        `Cannot delete venue with ${teamCount} team(s). Delete teams first.`,
       );
     }
 

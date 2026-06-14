@@ -1,6 +1,6 @@
 # ESN World Engine
 
-A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript**. It provides APIs for a simulated world with a UTC clock, US calendar, city locations, colleges, venues, events, and weather.
+A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript**. It provides APIs for a simulated world with a UTC clock, US calendar, city locations, colleges, leagues, teams, venues, events, and weather.
 
 ## Domain model
 
@@ -11,11 +11,15 @@ A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript
 | **Country** | A nation with ISO code, local flag image, languages, and aggregated city population | United States — `/flags/us.svg` |
 | **Location** | A city belonging to a country | New York, United States |
 | **College** | A US college or university within a city | University of Michigan (Ann Arbor, Michigan) |
-| **Venue** | A place within a city | Madison Square Garden (indoor), Bethpage Black Course (outdoor). Retractable-roof venues count as indoor. |
+| **League** | A professional sports league container for teams | National Football League (NFL) |
+| **Conference** | A league subdivision (e.g. AFC, NFC) | American Football Conference |
+| **Division** | A conference subdivision (e.g. AFC East) | AFC East |
+| **Team** | A professional sports franchise with home stadium | Buffalo Bills |
+| **Venue** | A place within a city | Highmark Stadium (outdoor), SoFi Stadium (indoor) |
 | **Event** | A scheduled happening at a venue | Championship Final at 12:00 local, 2 hours |
 | **Weather** | Simulated conditions at a place and time | 78°F, partly cloudy, rain likely at kickoff |
 
-Locations hold the **timezone** used for local-time calculations. Cities belong to a **country** (flag, languages, total population from cities). Colleges and venues belong to a location; colleges store enrollment **attendance**, venues store coordinates and indoor/outdoor classification.
+Locations hold the **timezone** used for local-time calculations. Cities belong to a **country** (flag, languages, total population from cities). Colleges and venues belong to a location. Teams belong to a division (within a conference and league) and reference a home **venue** (stadium) with its own coordinates.
 
 ## Modules
 
@@ -26,6 +30,10 @@ Locations hold the **timezone** used for local-time calculations. Cities belong 
 | **Countries** | ✅ | Nations with ISO code, local flag image, languages, and population summed from cities |
 | **Locations** | ✅ | Cities with country, population, coordinates, and IANA timezone |
 | **Colleges** | ✅ | US colleges and universities within a location (name, attendance) |
+| **Leagues** | ✅ | Professional sports league containers (name, abbreviation) |
+| **Conferences** | ✅ | League subdivisions (AFC, NFC) |
+| **Divisions** | ✅ | Conference subdivisions (AFC East, NFC West, etc.) |
+| **Teams** | ✅ | Professional franchises with home venue and logo |
 | **Venues** | ✅ | Venues within a location (stadiums, golf courses, etc.) |
 | **Events** | ✅ | Parallel events scheduled at venue-local start times |
 | **Weather** | ✅ | Seasonal baseline + moving systems across locations |
@@ -62,7 +70,7 @@ cp .env.example .env
 | `WEATHER_SEED` | `42` | Seed for reproducible weather probability |
 | `WEATHER_UNITS` | `fahrenheit` | Temperature unit (`fahrenheit` or `celsius`) |
 | `WEATHER_WIND_UNITS` | `mph` | Wind speed unit (`mph` or `kph`) |
-| `DATABASE_PATH` | `./data/world.db` | SQLite file for persisted countries, locations, colleges, and venues |
+| `DATABASE_PATH` | `./data/world.db` | SQLite file for persisted world geography and sports entities |
 | `LOCATIONS_SEED_ON_STARTUP` | `false` | When `true`, merge seed countries and cities on server startup (skips entries that already exist) |
 | `SKIP_FLAG_DOWNLOAD` | unset | When `true`, skip downloading flag SVGs (tests use this implicitly via Vitest) |
 
@@ -124,6 +132,10 @@ The **calendar** is derived from world clock UTC — it has no independent state
 | Countries | Countries | ✅ | Flag, languages; population summed from cities |
 | Cities | Locations | ✅ Phase 1 | SQLite via `DATABASE_PATH`; belong to a country |
 | Colleges | Colleges | ✅ Phase 1 | SQLite via `DATABASE_PATH`; belong to a location |
+| Leagues | Leagues | ✅ Phase 1 | SQLite via `DATABASE_PATH` |
+| Conferences | Conferences | ✅ Phase 1 | SQLite via `DATABASE_PATH`; belong to a league |
+| Divisions | Divisions | ✅ Phase 1 | SQLite via `DATABASE_PATH`; belong to a conference |
+| Teams | Teams | ✅ Phase 1 | SQLite via `DATABASE_PATH`; belong to a division and home venue |
 | Venues | Venues | ✅ Phase 1 | SQLite via `DATABASE_PATH` |
 | Scheduled events | Events | ❌ | In-memory; lost on restart |
 | World clock | World Clock | ❌ | Current UTC, running/stopped, tick progress — in-memory |
@@ -146,6 +158,140 @@ Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/l
 The city catalog includes major world metros, all NFL/NBA/MLB/NHL markets, **209 NCAA Division I campus cities**, and **47 tennis and golf event host cities** (Grand Slams, ATP/WTA Masters staples, golf majors, and flagship PGA/DP World Tour venues). NCAA entries use plain city names with a `region` field for the US state. Schools in cities already present without a conflicting region (e.g. New York, Los Angeles, Chicago) are not duplicated.
 
 The college catalog lists **225 NCAA Division I football programs** (FBS + FCS) with approximate enrollment. Each college links to its campus city by `locationName` + `locationRegion` + `countryName`, falling back to a region-less city match when the metro is already in the world catalog (e.g. Atlanta, Houston).
+
+### NFL seed (optional)
+
+Set `NFL_SEED_ON_STARTUP=true` in `.env` to merge the full **National Football League** on server startup:
+
+- **1 league** (NFL), with logo at `/logos/leagues/nfl.png`
+- **2 conferences** (AFC, NFC)
+- **8 divisions**
+- **32 teams**, each with a downloaded logo at `/logos/nfl/{abbreviation}.png`
+- **~30 stadium venues** (shared stadiums such as MetLife and SoFi are deduplicated), each linked to a city location
+
+NFL seed also ensures countries and locations exist (including 9 supplemental stadium cities such as Orchard Park and Inglewood). It can run independently of `LOCATIONS_SEED_ON_STARTUP`, though enabling both is recommended for a complete world.
+
+Merge behavior is idempotent: existing leagues, conferences, divisions, venues, and teams are skipped (teams merge by league + abbreviation).
+
+**Download team logos manually:**
+
+```bash
+npm run download-nfl-logos
+```
+
+Logos are fetched from NFL.com and stored in `public/logos/nfl/`. League logos use ESPN's CDN at `public/logos/leagues/`. Downloaded images are gitignored; each machine fetches its own copy. Set `SKIP_NFL_LOGO_DOWNLOAD=true` to skip network downloads for both team and league logos (paths are still assigned).
+
+Seed catalog: `src/persistence/seed/nfl-teams.data.ts`.
+
+### MLB seed (optional)
+
+Set `MLB_SEED_ON_STARTUP=true` in `.env` to merge the full **Major League Baseball** on server startup:
+
+- **1 league** (MLB), with logo at `/logos/leagues/mlb.png`
+- **2 conferences** (American League, National League)
+- **6 divisions**
+- **30 teams**, each with a downloaded logo at `/logos/mlb/{abbreviation}.png`
+- **30 ballpark venues**, each linked to a city location
+
+MLB seed also ensures countries and locations exist (including supplemental stadium cities such as St. Petersburg and Cumberland). It can run alongside `NFL_SEED_ON_STARTUP` — team abbreviations are scoped per league (e.g. both NFL and MLB have a `KC` team).
+
+**Download team logos manually:**
+
+```bash
+npm run download-mlb-logos
+```
+
+Logos are fetched from ESPN's CDN and stored in `public/logos/mlb/`. Set `SKIP_MLB_LOGO_DOWNLOAD=true` to skip network downloads.
+
+Seed catalog: `src/persistence/seed/mlb-teams.data.ts`.
+
+### NBA seed (optional)
+
+Set `NBA_SEED_ON_STARTUP=true` in `.env` to merge the full **National Basketball Association** on server startup:
+
+- **1 league** (NBA), with logo at `/logos/leagues/nba.png`
+- **2 conferences** (Eastern, Western)
+- **6 divisions**
+- **30 teams**, each with a downloaded logo at `/logos/nba/{abbreviation}.png`
+- **30 arena venues**, each linked to a city location
+
+NBA seed also ensures countries and locations exist (including supplemental arena cities such as Brooklyn and Inglewood). It can run alongside the other league seeds — team abbreviations are scoped per league.
+
+**Download team logos manually:**
+
+```bash
+npm run download-nba-logos
+```
+
+Logos are fetched from ESPN's CDN and stored in `public/logos/nba/`. Set `SKIP_NBA_LOGO_DOWNLOAD=true` to skip network downloads.
+
+Seed catalog: `src/persistence/seed/nba-teams.data.ts`.
+
+### NHL seed (optional)
+
+Set `NHL_SEED_ON_STARTUP=true` in `.env` to merge the full **National Hockey League** on server startup:
+
+- **1 league** (NHL), with logo at `/logos/leagues/nhl.png`
+- **2 conferences** (Eastern, Western)
+- **4 divisions** (Atlantic, Metropolitan, Central, Pacific)
+- **32 teams**, each with a downloaded logo at `/logos/nhl/{abbreviation}.png`
+- **Arena venues** (shared multi-sport buildings such as TD Garden and Madison Square Garden are deduplicated), each linked to a city location
+
+NHL seed also ensures countries and locations exist (including supplemental arena cities such as Newark, Elmont, and Saint Paul). It can run alongside the other league seeds.
+
+**Download team logos manually:**
+
+```bash
+npm run download-nhl-logos
+```
+
+Logos are fetched from ESPN's CDN and stored in `public/logos/nhl/`. Set `SKIP_NHL_LOGO_DOWNLOAD=true` to skip network downloads.
+
+Seed catalog: `src/persistence/seed/nhl-teams.data.ts`.
+
+### MLS seed (optional)
+
+Set `MLS_SEED_ON_STARTUP=true` in `.env` to merge the full **Major League Soccer** on server startup:
+
+- **1 league** (MLS), with logo at `/logos/leagues/mls.png`
+- **2 conferences** (Eastern, Western)
+- **2 divisions** (one per conference — MLS has no formal divisions since 2020)
+- **30 teams**, each with a downloaded logo at `/logos/mls/{abbreviation}.png`
+- **Stadium venues** (shared multi-sport buildings such as Gillette Stadium and Lumen Field are deduplicated), each linked to a city location
+
+MLS seed also ensures countries and locations exist (including supplemental stadium cities such as Harrison, Fort Lauderdale, and Commerce City). It can run alongside the other league seeds.
+
+**Download team logos manually:**
+
+```bash
+npm run download-mls-logos
+```
+
+Logos are fetched from MLS's CDN and stored in `public/logos/mls/`. Set `SKIP_MLS_LOGO_DOWNLOAD=true` to skip network downloads.
+
+Seed catalog: `src/persistence/seed/mls-teams.data.ts`.
+
+### WNBA seed (optional)
+
+Set `WNBA_SEED_ON_STARTUP=true` in `.env` to merge the full **Women's National Basketball Association** on server startup:
+
+- **1 league** (WNBA), with logo at `/logos/leagues/wnba.png`
+- **2 conferences** (Eastern, Western)
+- **2 divisions** (one per conference)
+- **13 teams**, each with a downloaded logo at `/logos/wnba/{abbreviation}.png`
+- **Arena venues** (shared multi-sport buildings such as Barclays Center and Target Center are deduplicated), each linked to a city location
+
+WNBA seed also ensures countries and locations exist (including supplemental arena cities such as College Park, Uncasville, and Arlington). It can run alongside the other league seeds.
+
+**Download team logos manually:**
+
+```bash
+npm run download-wnba-logos
+```
+
+Logos are fetched from ESPN's CDN and stored in `public/logos/wnba/`. Set `SKIP_WNBA_LOGO_DOWNLOAD=true` to skip network downloads for both team and league logos (paths are still assigned).
+
+Seed catalog: `src/persistence/seed/wnba-teams.data.ts`.
 
 ### Future enhancements
 
@@ -243,6 +389,61 @@ A country cannot be deleted while it still has cities.
 ```
 
 `attendance` is approximate total enrollment. Every college **must** reference an existing `locationId`.
+
+### Leagues
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/leagues` | List all leagues |
+| `POST` | `/api/leagues` | Create, get, or delete (`action`: `create`, `get`, `delete`) |
+
+**Create a league:**
+
+```json
+{
+  "action": "create",
+  "name": "National Football League",
+  "abbreviation": "NFL"
+}
+```
+
+Leagues are top-level containers for professional sports teams.
+
+### Conferences
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/conferences` | List all conferences |
+| `POST` | `/api/conferences` | Create, get, delete, or list by league (`action`: `create`, `get`, `delete`, `listByLeague`) |
+
+### Divisions
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/divisions` | List all divisions |
+| `POST` | `/api/divisions` | Create, get, delete, or list by conference (`action`: `create`, `get`, `delete`, `listByConference`) |
+
+### Teams
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/teams` | List all teams |
+| `POST` | `/api/teams` | Create, get, delete, list by division, or list by league (`action`: `create`, `get`, `delete`, `listByDivision`, `listByLeague`) |
+
+**Create a team:**
+
+```json
+{
+  "action": "create",
+  "divisionId": "<division-id>",
+  "venueId": "<venue-id>",
+  "name": "Buffalo Bills",
+  "abbreviation": "BUF",
+  "logo": "/logos/nfl/buf.png"
+}
+```
+
+Every team **must** reference an existing division and home venue. A venue cannot be deleted while teams still reference it.
 
 ### Venues
 
@@ -355,6 +556,13 @@ npm run start        # Start production server
 npm test             # Run unit tests
 npm run test:watch   # Run tests in watch mode
 npm run download-flags  # Download all 200 country flag SVGs to public/flags/
+npm run download-nfl-logos  # Download all 32 NFL team logos to public/logos/nfl/
+npm run download-mlb-logos  # Download all 30 MLB team logos to public/logos/mlb/
+npm run download-nba-logos  # Download all 30 NBA team logos to public/logos/nba/
+npm run download-nhl-logos  # Download all 32 NHL team logos to public/logos/nhl/
+npm run download-mls-logos  # Download all 30 MLS team logos to public/logos/mls/
+npm run download-wnba-logos  # Download all 13 WNBA team logos to public/logos/wnba/
+npm run download-league-logos  # Download NFL/MLB/NBA/NHL/MLS/WNBA league logos to public/logos/leagues/
 npm run generate-ncaa-locations  # Regenerate NCAA campus cities and college seed data
 npm run lint         # Lint
 ```
@@ -369,6 +577,10 @@ src/
     countries/       # Nations with flag, languages, aggregated population
     locations/       # Cities belonging to a country
     colleges/        # US colleges and universities within a location
+    leagues/         # Professional sports league containers
+    conferences/     # League subdivisions
+    divisions/       # Conference subdivisions
+    teams/           # Professional franchises
     venues/          # Venues within a location
     events/          # Scheduled events at venue-local times
     weather/         # Seasonal baseline + moving weather systems

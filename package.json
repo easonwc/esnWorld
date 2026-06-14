@@ -10,6 +10,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "download-flags": "tsx scripts/download-flags.ts",
+    "download-nfl-logos": "tsx scripts/download-nfl-logos.ts",
+    "download-mlb-logos": "tsx scripts/download-mlb-logos.ts",
+    "download-nba-logos": "tsx scripts/download-nba-logos.ts",
+    "download-nhl-logos": "tsx scripts/download-nhl-logos.ts",
+    "download-mls-logos": "tsx scripts/download-mls-logos.ts",
+    "download-wnba-logos": "tsx scripts/download-wnba-logos.ts",
+    "download-league-logos": "tsx scripts/download-league-logos.ts",
     "generate-ncaa-locations": "tsx scripts/generate-ncaa-locations.ts"
   },
   "dependencies": {

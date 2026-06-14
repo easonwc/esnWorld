@@ -49,3 +49,5 @@ export interface WorldSeedResult {
   locations: LocationSeedResult | null;
   colleges: CollegeSeedResult | null;
 }
+
+export type { SportsLeagueSeedResult } from "./sports-league-types";

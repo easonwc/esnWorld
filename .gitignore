@@ -44,6 +44,34 @@ yarn-error.log*
 /public/flags/*
 !/public/flags/.gitkeep
 
+# downloaded NFL team logos (run npm run download-nfl-logos)
+/public/logos/nfl/*
+!/public/logos/nfl/.gitkeep
+
+# downloaded MLB team logos (run npm run download-mlb-logos)
+/public/logos/mlb/*
+!/public/logos/mlb/.gitkeep
+
+# downloaded NBA team logos (run npm run download-nba-logos)
+/public/logos/nba/*
+!/public/logos/nba/.gitkeep
+
+# downloaded NHL team logos (run npm run download-nhl-logos)
+/public/logos/nhl/*
+!/public/logos/nhl/.gitkeep
+
+# downloaded MLS team logos (run npm run download-mls-logos)
+/public/logos/mls/*
+!/public/logos/mls/.gitkeep
+
+# downloaded WNBA team logos (run npm run download-wnba-logos)
+/public/logos/wnba/*
+!/public/logos/wnba/.gitkeep
+
+# downloaded league logos (synced on startup with league seeds)
+/public/logos/leagues/*
+!/public/logos/leagues/.gitkeep
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
