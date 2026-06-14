@@ -1,6 +1,6 @@
 # ESN World Engine
 
-A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript**. It provides APIs for a simulated world with a UTC clock, US calendar, city locations, venues, and (planned) event scheduling.
+A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript**. It provides APIs for a simulated world with a UTC clock, US calendar, city locations, venues, events, and weather.
 
 ## Domain model
 
@@ -11,6 +11,7 @@ A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript
 | **Location** | A city in a country | New York, United States |
 | **Venue** | A place within a city | Madison Square Garden, Bethpage Black Course |
 | **Event** | A scheduled happening at a venue | Championship Final at 12:00 local, 2 hours |
+| **Weather** | Simulated conditions at a place and time | 78°F, partly cloudy, rain likely at kickoff |
 
 Locations hold the **timezone** used for local-time calculations. Venues belong to a location and inherit its timezone.
 
@@ -23,6 +24,7 @@ Locations hold the **timezone** used for local-time calculations. Venues belong 
 | **Locations** | ✅ | Cities with country, population, coordinates, and IANA timezone |
 | **Venues** | ✅ | Venues within a location (stadiums, golf courses, etc.) |
 | **Events** | ✅ | Parallel events scheduled at venue-local start times |
+| **Weather** | ✅ | Seasonal baseline + moving systems across locations |
 
 Each module follows an **inputs → transformation → outputs** model with lightweight error handling and unit tests.
 
@@ -53,6 +55,9 @@ cp .env.example .env
 |----------|---------|-------------|
 | `WORLD_CLOCK_INITIAL_ISO_UTC` | `2020-01-01T00:00:00.000Z` | World clock start time |
 | `WORLD_CLOCK_SIMULATED_MS_PER_REAL_MS` | `60` | Simulated ms advanced per real ms (60 = 1 simulated minute per real second) |
+| `WEATHER_SEED` | `42` | Seed for reproducible weather probability |
+| `WEATHER_UNITS` | `fahrenheit` | Temperature unit (`fahrenheit` or `celsius`) |
+| `WEATHER_WIND_UNITS` | `mph` | Wind speed unit (`mph` or `kph`) |
 
 ### Run
 
@@ -155,6 +160,36 @@ Local time at a venue uses the parent location's timezone.
 
 Events are stored as UTC instants derived from the venue's city timezone. Status is `upcoming`, `active`, or `ended` relative to the world clock. Multiple events can be active in parallel.
 
+### Weather
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/weather` | `getAtVenue`, `getAtLocation`, `getForEvent`, `listSystems` |
+
+Weather combines a **seasonal baseline** (latitude + day of year) with **moving systems** that propagate across the map as world time advances.
+
+**Weather for an event at kickoff:**
+
+```json
+{
+  "action": "getForEvent",
+  "eventId": "<event-id>",
+  "phase": "start"
+}
+```
+
+**Weather at a venue at a specific time:**
+
+```json
+{
+  "action": "getAtVenue",
+  "venueId": "<venue-id>",
+  "isoUtc": "2020-06-14T16:00:00.000Z"
+}
+```
+
+Venue queries use **venue coordinates**; city queries use **location coordinates**. Results are seeded and reproducible via `WEATHER_SEED`.
+
 ### Other
 
 | Method | Endpoint | Description |
@@ -171,6 +206,7 @@ Events are stored as UTC instants derived from the venue's city timezone. Status
 5. **Get local time at a venue** — `POST /api/venues` with `action: "localTime"`
 6. **Schedule an event** — `POST /api/events` with `action: "create"`
 7. **List active events** — `POST /api/events` with `action: "listActive"`
+8. **Get weather for an event** — `POST /api/weather` with `action: "getForEvent"`
 
 ## Scripts
 
@@ -193,6 +229,7 @@ src/
     locations/       # Cities with country, population, and timezone
     venues/          # Venues within a location
     events/          # Scheduled events at venue-local times
+    weather/         # Seasonal baseline + moving weather systems
   app/
     api/             # API route handlers
     api-docs/        # Interactive API explorer

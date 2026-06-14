@@ -357,6 +357,76 @@ export const apiOperations: ApiOperation[] = [
       2,
     ),
   },
+  {
+    id: "weather-at-venue",
+    tag: "Weather",
+    method: "POST",
+    path: "/api/weather",
+    summary: "Weather at venue",
+    description:
+      "Returns simulated weather at a venue using seasonal baseline plus moving systems. Uses venue coordinates and world clock by default.",
+    requestBody: JSON.stringify(
+      {
+        action: "getAtVenue",
+        venueId: "paste-venue-id-here",
+        isoUtc: "2020-06-14T16:00:00.000Z",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "weather-at-location",
+    tag: "Weather",
+    method: "POST",
+    path: "/api/weather",
+    summary: "Weather at city",
+    description: "Returns simulated weather at a city location's coordinates.",
+    requestBody: JSON.stringify(
+      {
+        action: "getAtLocation",
+        locationId: "paste-location-id-here",
+        isoUtc: "2020-06-14T16:00:00.000Z",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "weather-for-event",
+    tag: "Weather",
+    method: "POST",
+    path: "/api/weather",
+    summary: "Weather for event",
+    description:
+      "Returns probable weather at an event's venue for start or end time.",
+    requestBody: JSON.stringify(
+      {
+        action: "getForEvent",
+        eventId: "paste-event-id-here",
+        phase: "start",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "weather-list-systems",
+    tag: "Weather",
+    method: "POST",
+    path: "/api/weather",
+    summary: "List weather systems",
+    description:
+      "Debug view of moving weather system positions at a given time.",
+    requestBody: JSON.stringify(
+      {
+        action: "listSystems",
+        isoUtc: "2020-06-14T16:00:00.000Z",
+      },
+      null,
+      2,
+    ),
+  },
 ];
 
 export function buildOpenApiSpec() {
@@ -438,6 +508,11 @@ export function buildOpenApiSpec() {
         name: "Events",
         description:
           "Scheduled events at venue-local times with parallel active event support.",
+      },
+      {
+        name: "Weather",
+        description:
+          "Simulated weather from seasonal baseline and moving systems across locations.",
       },
     ],
     paths,
