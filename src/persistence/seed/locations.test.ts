@@ -62,8 +62,8 @@ describe("location seed", () => {
   });
 
   it("uses a stable merge key from city name, region, and country name", () => {
-    expect(locationMergeKey("New York", "United States")).toBe(
-      "new york||united states",
+    expect(locationMergeKey("New York", "United States", "New York")).toBe(
+      "new york|new york|united states",
     );
     expect(locationMergeKey("Columbia", "United States", "Missouri")).toBe(
       "columbia|missouri|united states",

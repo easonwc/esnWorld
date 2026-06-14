@@ -172,9 +172,9 @@ Merge behavior:
 
 Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/locations.data.ts`, `src/persistence/seed/ncaa-locations.data.ts` (auto-generated from `scripts/generate-ncaa-locations.ts`), `src/persistence/seed/tennis-golf-locations.data.ts`, and `src/persistence/seed/colleges.data.ts` (auto-generated alongside NCAA locations).
 
-The city catalog includes major world metros, NFL/NBA/MLB/NHL/MLS/WNBA markets, **209 NCAA Division I campus cities**, and **47 tennis and golf event host cities** (Grand Slams, ATP/WTA Masters staples, golf majors, and flagship PGA/DP World Tour venues). NCAA entries use plain city names with a `region` field for the US state. Schools in cities already present without a conflicting region (e.g. New York, Los Angeles, Chicago) are not duplicated.
+The city catalog includes major world metros, NFL/NBA/MLB/NHL/MLS/WNBA markets, **209 NCAA Division I campus cities**, and **47 tennis and golf event host cities** (Grand Slams, ATP/WTA Masters staples, golf majors, and flagship PGA/DP World Tour venues). **United States seed cities always include a `region` set to the state** (or District of Columbia). International cities may omit `region`.
 
-The college catalog lists **225 NCAA Division I football programs** (FBS + FCS) with approximate enrollment. Each college links to its campus city by `locationName` + `locationRegion` + `countryName`, falling back to a region-less city match when the metro is already in the world catalog (e.g. Atlanta, Houston).
+The college catalog lists **225 NCAA Division I football programs** (FBS + FCS) with approximate enrollment. Each college links to its campus city by `locationName` + `locationRegion` + `countryName`.
 
 ### Professional sports league seeds
 
@@ -393,7 +393,7 @@ A country cannot be deleted while it still has cities.
 }
 ```
 
-`population` must be a non-negative integer. Every city **must** include a valid `countryId` referencing an existing country — free-text country names are not accepted. `region` is optional and holds a state, province, or administrative subdivision (use it to distinguish cities with the same name in one country, e.g. `Columbia` in Missouri vs South Carolina). A location cannot be deleted while it still has venues or colleges.
+`population` must be a non-negative integer. Every city **must** include a valid `countryId` referencing an existing country — free-text country names are not accepted. `region` is optional when creating locations through the API; use it to distinguish cities with the same name in one country (e.g. `Columbia` in Missouri vs South Carolina). Seed data for United States cities always sets `region` to the state. A location cannot be deleted while it still has venues or colleges.
 
 ### Colleges
 

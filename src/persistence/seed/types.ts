@@ -14,7 +14,7 @@ export interface CountrySeedResult {
 export interface LocationSeedEntry {
   name: string;
   countryName: string;
-  /** State, province, or administrative region (optional) */
+  /** State, province, or administrative region. Required for United States seed cities. */
   region?: string | null;
   latitude: number;
   longitude: number;

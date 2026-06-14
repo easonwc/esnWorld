@@ -8,6 +8,7 @@ import {
 import { COLLEGE_SEED_DATA } from "./colleges.data";
 import { locationMergeKey } from "./locations";
 import type { CollegeSeedEntry, CollegeSeedResult } from "./types";
+import { requireUsSeedRegion } from "./validate-us-regions";
 
 export function collegeMergeKey(name: string): string {
   return name.trim().toLowerCase();
@@ -63,10 +64,16 @@ export async function mergeCollegeSeed(
       continue;
     }
 
+    const locationRegion = requireUsSeedRegion(
+      entry.countryName,
+      entry.locationRegion,
+      `College ${entry.name} location`,
+    );
+
     const locationKey = locationMergeKey(
       entry.locationName,
       entry.countryName,
-      entry.locationRegion,
+      locationRegion,
     );
     const location =
       locationByKey.get(locationKey) ??

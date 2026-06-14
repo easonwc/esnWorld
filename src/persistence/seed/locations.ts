@@ -11,6 +11,7 @@ import { mergeCollegeSeed } from "./colleges";
 import { mergeCountrySeed } from "./countries";
 import { LOCATION_SEED_DATA } from "./locations.data";
 import type { LocationSeedEntry, LocationSeedResult, WorldSeedResult } from "./types";
+import { requireUsSeedRegion } from "./validate-us-regions";
 
 export function locationMergeKey(
   name: string,
@@ -51,11 +52,17 @@ export async function mergeLocationSeed(
       );
     }
 
+    const region = requireUsSeedRegion(
+      entry.countryName,
+      entry.region,
+      `Seed location ${entry.name}`,
+    );
+
     const location = buildLocation(
       {
         name: entry.name,
         countryId: country.id,
-        region: entry.region ?? null,
+        region,
         latitude: entry.latitude,
         longitude: entry.longitude,
         timezone: entry.timezone,

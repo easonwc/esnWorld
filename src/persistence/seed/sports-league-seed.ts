@@ -27,6 +27,7 @@ import type {
   SportsLeagueSeedResult,
   SportsTeamSeedEntry,
 } from "./sports-league-types";
+import { requireUsSeedRegion } from "./validate-us-regions";
 
 export function venueMergeKey(locationId: string, stadiumName: string): string {
   return `${locationId}|${stadiumName.trim().toLowerCase()}`;
@@ -328,10 +329,16 @@ export async function mergeSportsLeagueSeed(
   let teamsSkipped = 0;
 
   for (const entry of catalog.teams) {
+    const locationRegion = requireUsSeedRegion(
+      entry.countryName,
+      entry.locationRegion,
+      `Team ${entry.name} location`,
+    );
+
     const location = resolveCollegeSeedLocation(
       entry.locationName,
       entry.countryName,
-      entry.locationRegion,
+      locationRegion,
       locationByKey,
     );
 
