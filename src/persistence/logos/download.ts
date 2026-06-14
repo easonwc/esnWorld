@@ -27,6 +27,8 @@ import {
   MLB_LOGO_CDN_BASE,
   MLS_LOGO_CDN_BASE,
   NBA_LOGO_CDN_BASE,
+  getNbaLogoCdnAbbreviation,
+  getNhlLogoCdnAbbreviation,
   NHL_LOGO_CDN_BASE,
   NFL_LOGO_CDN_BASE,
   WNBA_LOGO_CDN_BASE,
@@ -81,9 +83,12 @@ export async function downloadLeagueLogo(
   );
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to download league logo for ${normalized}: HTTP ${response.status}`,
-    );
+    if (options.force) {
+      throw new Error(
+        `Failed to download league logo for ${normalized}: HTTP ${response.status}`,
+      );
+    }
+    return publicPath;
   }
 
   const buffer = Buffer.from(await response.arrayBuffer());
@@ -114,9 +119,12 @@ export async function downloadNflTeamLogo(
   const response = await fetch(`${NFL_LOGO_CDN_BASE}/${normalized}`);
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to download logo for ${normalized}: HTTP ${response.status}`,
-    );
+    if (options.force) {
+      throw new Error(
+        `Failed to download logo for ${normalized}: HTTP ${response.status}`,
+      );
+    }
+    return publicPath;
   }
 
   const buffer = Buffer.from(await response.arrayBuffer());
@@ -147,9 +155,12 @@ export async function downloadMlbTeamLogo(
   const response = await fetch(`${MLB_LOGO_CDN_BASE}/${normalized}.png`);
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to download logo for ${normalized}: HTTP ${response.status}`,
-    );
+    if (options.force) {
+      throw new Error(
+        `Failed to download logo for ${normalized}: HTTP ${response.status}`,
+      );
+    }
+    return publicPath;
   }
 
   const buffer = Buffer.from(await response.arrayBuffer());
@@ -177,12 +188,17 @@ export async function downloadNbaTeamLogo(
     return publicPath;
   }
 
-  const response = await fetch(`${NBA_LOGO_CDN_BASE}/${normalized}.png`);
+  const response = await fetch(
+    `${NBA_LOGO_CDN_BASE}/${getNbaLogoCdnAbbreviation(normalized)}.png`,
+  );
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to download logo for ${normalized}: HTTP ${response.status}`,
-    );
+    if (options.force) {
+      throw new Error(
+        `Failed to download logo for ${normalized}: HTTP ${response.status}`,
+      );
+    }
+    return publicPath;
   }
 
   const buffer = Buffer.from(await response.arrayBuffer());
@@ -210,12 +226,17 @@ export async function downloadNhlTeamLogo(
     return publicPath;
   }
 
-  const response = await fetch(`${NHL_LOGO_CDN_BASE}/${normalized}.png`);
+  const response = await fetch(
+    `${NHL_LOGO_CDN_BASE}/${getNhlLogoCdnAbbreviation(normalized)}.png`,
+  );
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to download logo for ${normalized}: HTTP ${response.status}`,
-    );
+    if (options.force) {
+      throw new Error(
+        `Failed to download logo for ${normalized}: HTTP ${response.status}`,
+      );
+    }
+    return publicPath;
   }
 
   const buffer = Buffer.from(await response.arrayBuffer());
@@ -246,9 +267,12 @@ export async function downloadMlsTeamLogo(
   const response = await fetch(`${MLS_LOGO_CDN_BASE}/${normalized}.png`);
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to download logo for ${normalized}: HTTP ${response.status}`,
-    );
+    if (options.force) {
+      throw new Error(
+        `Failed to download logo for ${normalized}: HTTP ${response.status}`,
+      );
+    }
+    return publicPath;
   }
 
   const buffer = Buffer.from(await response.arrayBuffer());
@@ -279,9 +303,12 @@ export async function downloadWnbaTeamLogo(
   const response = await fetch(`${WNBA_LOGO_CDN_BASE}/${normalized}.png`);
 
   if (!response.ok) {
-    throw new Error(
-      `Failed to download logo for ${normalized}: HTTP ${response.status}`,
-    );
+    if (options.force) {
+      throw new Error(
+        `Failed to download logo for ${normalized}: HTTP ${response.status}`,
+      );
+    }
+    return publicPath;
   }
 
   const buffer = Buffer.from(await response.arrayBuffer());

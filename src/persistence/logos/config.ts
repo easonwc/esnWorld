@@ -10,8 +10,30 @@ export const MLB_LOGO_CDN_BASE =
 export const NBA_LOGO_CDN_BASE =
   "https://a.espncdn.com/i/teamlogos/nba/500";
 
+/** ESPN filename overrides when it differs from our team abbreviation. */
+export const NBA_LOGO_CDN_ALIASES: Record<string, string> = {
+  NOP: "NO",
+  UTA: "UTAH",
+};
+
+export function getNbaLogoCdnAbbreviation(abbreviation: string): string {
+  const normalized = abbreviation.trim().toUpperCase();
+  return NBA_LOGO_CDN_ALIASES[normalized] ?? normalized;
+}
+
 export const NHL_LOGO_CDN_BASE =
   "https://a.espncdn.com/i/teamlogos/nhl/500";
+
+/** ESPN filename overrides when it differs from our team abbreviation. */
+export const NHL_LOGO_CDN_ALIASES: Record<string, string> = {
+  SJS: "SJ",
+  TBL: "TB",
+};
+
+export function getNhlLogoCdnAbbreviation(abbreviation: string): string {
+  const normalized = abbreviation.trim().toUpperCase();
+  return NHL_LOGO_CDN_ALIASES[normalized] ?? normalized;
+}
 
 export const MLS_LOGO_CDN_BASE =
   "https://images.mlssoccer.com/image/upload/v1614296970/assets/logos";

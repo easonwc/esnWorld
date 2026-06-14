@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { getDatabasePath } from "./config";
+import { getDatabasePath, shouldResetDatabaseOnStartup } from "./config";
 import { runCountryLocationMigration } from "./migrations/migrate-002";
 import { runCountryIsoMigration } from "./migrations/migrate-003";
 
@@ -57,10 +57,38 @@ function runMigrations(db: Database.Database): void {
 
 const globalForDb = globalThis as typeof globalThis & {
   __worldDb?: Database.Database;
+  __databaseResetApplied?: boolean;
 };
+
+export function deleteDatabaseFiles(dbPath = getDatabasePath()): void {
+  for (const suffix of ["", "-wal", "-shm"]) {
+    const filePath = `${dbPath}${suffix}`;
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+  }
+}
+
+function resetDatabaseOnStartupIfRequested(): void {
+  if (globalForDb.__databaseResetApplied) {
+    return;
+  }
+
+  globalForDb.__databaseResetApplied = true;
+
+  if (!shouldResetDatabaseOnStartup()) {
+    return;
+  }
+
+  closeDb();
+  deleteDatabaseFiles();
+  console.info("[database] reset on startup — removed existing SQLite files");
+}
 
 export function getDb(): Database.Database {
   if (!globalForDb.__worldDb) {
+    resetDatabaseOnStartupIfRequested();
+
     const dbPath = getDatabasePath();
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 

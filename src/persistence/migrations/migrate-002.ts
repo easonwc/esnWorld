@@ -50,17 +50,28 @@ function migrateLegacyCountryNames(db: Database): void {
   }
 }
 
+function ensureRegionColumn(db: Database): void {
+  const columns = locationColumns(db);
+  if (!columns.has("region")) {
+    db.exec("ALTER TABLE locations ADD COLUMN region TEXT");
+  }
+}
+
 function rebuildLocationsWithCountryForeignKey(db: Database): void {
   const columns = locationColumns(db);
   if (!columns.has("country")) {
     return;
   }
 
+  const hasRegion = columns.has("region");
+  const regionSelect = hasRegion ? "region" : "NULL";
+
   db.exec(`
     CREATE TABLE locations_new (
       id TEXT PRIMARY KEY,
       country_id TEXT NOT NULL REFERENCES countries(id) ON DELETE RESTRICT,
       name TEXT NOT NULL,
+      region TEXT,
       latitude REAL NOT NULL,
       longitude REAL NOT NULL,
       timezone TEXT NOT NULL,
@@ -69,12 +80,13 @@ function rebuildLocationsWithCountryForeignKey(db: Database): void {
     );
 
     INSERT INTO locations_new (
-      id, country_id, name, latitude, longitude, timezone, population, created_at
+      id, country_id, name, region, latitude, longitude, timezone, population, created_at
     )
     SELECT
       id,
       country_id,
       name,
+      ${regionSelect},
       latitude,
       longitude,
       timezone,
@@ -93,6 +105,7 @@ export function runCountryLocationMigration(db: Database): void {
   ensureCountryIdColumn(db);
   migrateLegacyCountryNames(db);
   rebuildLocationsWithCountryForeignKey(db);
+  ensureRegionColumn(db);
 }
 
 export function parseCountryLanguages(raw: string): string[] {

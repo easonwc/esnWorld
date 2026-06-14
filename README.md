@@ -71,6 +71,7 @@ cp .env.example .env
 | `WEATHER_UNITS` | `fahrenheit` | Temperature unit (`fahrenheit` or `celsius`) |
 | `WEATHER_WIND_UNITS` | `mph` | Wind speed unit (`mph` or `kph`) |
 | `DATABASE_PATH` | `./data/world.db` | SQLite file for persisted world geography and sports entities |
+| `DATABASE_RESET_ON_STARTUP` | `false` | When `true`, delete the SQLite file on startup and recreate empty tables |
 | `LOCATIONS_SEED_ON_STARTUP` | `false` | When `true`, merge seed countries, cities, and colleges on server startup |
 | `NFL_SEED_ON_STARTUP` | `false` | Merge NFL league hierarchy (see [Professional sports league seeds](#professional-sports-league-seeds)) |
 | `MLB_SEED_ON_STARTUP` | `false` | Merge MLB league hierarchy |
@@ -157,7 +158,7 @@ The **calendar** is derived from world clock UTC — it has no independent state
 | World clock | World Clock | ❌ | Current UTC, running/stopped, tick progress — in-memory |
 | Weather systems | Weather | ❌ (derived) | Positions and conditions are computed from `WEATHER_SEED` + world time today; no separate store yet |
 
-On first run, the database is **empty** unless you set `LOCATIONS_SEED_ON_STARTUP=true`. Create countries and cities via the API, or enable the seed to load countries and major world cities automatically.
+On first run, the database is **empty** unless you set `LOCATIONS_SEED_ON_STARTUP=true`. To wipe an existing database and start over, set `DATABASE_RESET_ON_STARTUP=true` for one startup (then set it back to `false`). Create countries and cities via the API, or enable the seed to load countries and major world cities automatically.
 
 ### World seed (optional)
 

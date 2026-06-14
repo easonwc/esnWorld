@@ -227,7 +227,6 @@ export const apiOperations: ApiOperation[] = [
       2,
     ),
   },
-  },
   {
     id: "colleges-list",
     tag: "Colleges",
