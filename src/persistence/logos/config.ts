@@ -26,6 +26,7 @@ export const NHL_LOGO_CDN_BASE =
 
 /** ESPN filename overrides when it differs from our team abbreviation. */
 export const NHL_LOGO_CDN_ALIASES: Record<string, string> = {
+  LAK: "LA",
   SJS: "SJ",
   TBL: "TB",
 };

@@ -94,9 +94,9 @@ export async function register() {
 
       if (nhlSeed?.enabled) {
         const logoSync = await syncNhlTeamLogos(teamRepository, leagueRepository);
-        if (logoSync.downloaded > 0 || logoSync.updated > 0) {
+        if (logoSync.downloaded > 0 || logoSync.updated > 0 || logoSync.failed > 0) {
           console.info(
-            `[nhl logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)`,
+            `[nhl logos] synced ${logoSync.downloaded} new images, updated ${logoSync.updated} team record(s)${logoSync.failed > 0 ? `, ${logoSync.failed} failed` : ""}`,
           );
         }
 

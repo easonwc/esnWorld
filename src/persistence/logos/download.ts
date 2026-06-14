@@ -429,15 +429,19 @@ async function syncLeagueTeamLogos(
   let updated = 0;
 
   for (const team of teams) {
-    const existed = fs.existsSync(getLogoFilePath(team.abbreviation));
+    const logoFilePath = getLogoFilePath(team.abbreviation);
+    const existed = fs.existsSync(logoFilePath);
 
     try {
       const logoPath = await downloadLogo(team.abbreviation);
+      const saved = fs.existsSync(logoFilePath);
 
       if (existed) {
         skipped += 1;
-      } else if (shouldDownload()) {
+      } else if (saved) {
         downloaded += 1;
+      } else if (shouldDownload()) {
+        failed += 1;
       }
 
       if (team.logo !== logoPath) {
