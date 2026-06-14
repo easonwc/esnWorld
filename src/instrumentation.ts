@@ -26,12 +26,15 @@ export async function register() {
     } = await import("@/persistence/repositories");
 
     await seedWorldOnStartup();
-    const nflSeed = await seedNflOnStartup();
-    const mlbSeed = await seedMlbOnStartup();
-    const nbaSeed = await seedNbaOnStartup();
-    const nhlSeed = await seedNhlOnStartup();
-    const mlsSeed = await seedMlsOnStartup();
-    const wnbaSeed = await seedWnbaOnStartup();
+    const [nflSeed, mlbSeed, nbaSeed, nhlSeed, mlsSeed, wnbaSeed] =
+      await Promise.all([
+        seedNflOnStartup(),
+        seedMlbOnStartup(),
+        seedNbaOnStartup(),
+        seedNhlOnStartup(),
+        seedMlsOnStartup(),
+        seedWnbaOnStartup(),
+      ]);
 
     if (process.env.VITEST !== "true") {
       const sync = await syncCountryFlagImages(getDefaultCountryRepository());
