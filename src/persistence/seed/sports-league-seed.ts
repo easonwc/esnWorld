@@ -221,13 +221,11 @@ async function ensureTeam(
   location: NonNullable<Awaited<ReturnType<LocationRepository["list"]>>[number]>,
   catalog: SportsLeagueSeedCatalog,
   teamRepository: TeamRepository,
+  existingAbbreviations: Set<string>,
 ) {
-  const existing = await teamRepository.getByAbbreviation(
-    division.leagueId,
-    entry.abbreviation,
-  );
-  if (existing) {
-    return { team: existing, added: false };
+  const normalizedAbbreviation = entry.abbreviation.trim().toUpperCase();
+  if (existingAbbreviations.has(normalizedAbbreviation)) {
+    return { added: false };
   }
 
   const logo = await catalog.downloadLogo(entry.abbreviation);
@@ -255,7 +253,8 @@ async function ensureTeam(
     },
   );
   const created = await teamRepository.create(team);
-  return { team: created, added: true };
+  existingAbbreviations.add(normalizedAbbreviation);
+  return { added: true };
 }
 
 export async function mergeSportsLeagueSeed(
@@ -323,6 +322,9 @@ export async function mergeSportsLeagueSeed(
   const locationByKey = buildLocationKeyMap(locations);
   const venues = await venueRepository.list();
   const venueByKey = buildVenueKeyMap(venues);
+  const existingAbbreviations = new Set(
+    await teamRepository.listAbbreviationsByLeague(league.id),
+  );
 
   let venuesAdded = 0;
   let teamsAdded = 0;
@@ -372,6 +374,7 @@ export async function mergeSportsLeagueSeed(
       location,
       catalog,
       teamRepository,
+      existingAbbreviations,
     );
 
     if (teamWasAdded) {

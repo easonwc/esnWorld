@@ -99,6 +99,7 @@ export interface TeamRepository {
   list(): Promise<Team[]>;
   listByDivision(divisionId: string): Promise<Team[]>;
   listByLeague(leagueId: string): Promise<Team[]>;
+  listAbbreviationsByLeague(leagueId: string): Promise<ReadonlySet<string>>;
   countByDivision(divisionId: string): Promise<number>;
   countByVenue(venueId: string): Promise<number>;
   get(id: string): Promise<Team | null>;

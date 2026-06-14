@@ -97,6 +97,16 @@ export class SqliteTeamRepository implements TeamRepository {
     return rows.map(rowToTeam);
   }
 
+  async listAbbreviationsByLeague(leagueId: string): Promise<ReadonlySet<string>> {
+    const rows = this.db
+      .prepare(
+        "SELECT upper(abbreviation) AS abbreviation FROM teams WHERE league_id = ?",
+      )
+      .all(leagueId) as { abbreviation: string }[];
+
+    return new Set(rows.map((row) => row.abbreviation));
+  }
+
   async countByDivision(divisionId: string): Promise<number> {
     const row = this.db
       .prepare("SELECT COUNT(*) AS count FROM teams WHERE division_id = ?")

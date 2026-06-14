@@ -22,6 +22,14 @@ export class MemoryTeamRepository implements TeamRepository {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
+  async listAbbreviationsByLeague(leagueId: string): Promise<ReadonlySet<string>> {
+    return new Set(
+      [...this.teams.values()]
+        .filter((team) => team.leagueId === leagueId)
+        .map((team) => team.abbreviation),
+    );
+  }
+
   async countByDivision(divisionId: string): Promise<number> {
     return [...this.teams.values()].filter(
       (team) => team.divisionId === divisionId,
