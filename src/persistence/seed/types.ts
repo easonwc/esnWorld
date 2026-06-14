@@ -29,7 +29,23 @@ export interface LocationSeedResult {
   total: number;
 }
 
+export interface CollegeSeedEntry {
+  name: string;
+  locationName: string;
+  locationRegion?: string | null;
+  countryName: string;
+  attendance: number;
+}
+
+export interface CollegeSeedResult {
+  enabled: boolean;
+  added: number;
+  skipped: number;
+  total: number;
+}
+
 export interface WorldSeedResult {
   countries: CountrySeedResult | null;
   locations: LocationSeedResult | null;
+  colleges: CollegeSeedResult | null;
 }

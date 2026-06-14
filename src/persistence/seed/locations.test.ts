@@ -1,16 +1,20 @@
+import { buildCollege } from "@/modules/colleges/transform";
 import { buildLocation } from "@/modules/locations/transform";
 import {
+  MemoryCollegeRepository,
   MemoryCountryRepository,
   MemoryLocationRepository,
 } from "@/persistence/repositories";
 import { describe, expect, it } from "vitest";
+import { mergeCollegeSeed, resolveCollegeSeedLocation } from "./colleges";
+import { COLLEGE_SEED_DATA } from "./colleges.data";
 import { countryMergeKey, mergeCountrySeed } from "./countries";
 import { COUNTRY_SEED_DATA } from "./countries.data";
 import { getFlagPublicPath } from "@/persistence/flags/config";
+import { locationMergeKey, mergeLocationSeed } from "./locations";
 import { LOCATION_SEED_DATA } from "./locations.data";
 import { NCAA_LOCATION_SEED_DATA } from "./ncaa-locations.data";
 import { TENNIS_GOLF_LOCATION_SEED_DATA } from "./tennis-golf-locations.data";
-import { locationMergeKey, mergeLocationSeed } from "./locations";
 
 describe("country seed", () => {
   it("includes 200 countries", () => {
@@ -51,9 +55,10 @@ describe("country seed", () => {
 
 describe("location seed", () => {
   it("includes NCAA campus cities for FBS and FCS programs", () => {
-    expect(NCAA_LOCATION_SEED_DATA.length).toBe(208);
+    expect(NCAA_LOCATION_SEED_DATA.length).toBe(209);
     expect(TENNIS_GOLF_LOCATION_SEED_DATA.length).toBe(47);
-    expect(LOCATION_SEED_DATA.length).toBe(417);
+    expect(COLLEGE_SEED_DATA.length).toBe(225);
+    expect(LOCATION_SEED_DATA.length).toBe(419);
   });
 
   it("uses a stable merge key from city name, region, and country name", () => {
@@ -197,6 +202,60 @@ describe("location seed", () => {
         },
         "tennis-golf-seed-test-id",
         country!.name,
+      );
+    }
+  });
+
+  it("merges colleges after their locations exist", async () => {
+    const countryRepository = new MemoryCountryRepository();
+    const locationRepository = new MemoryLocationRepository();
+    const collegeRepository = new MemoryCollegeRepository();
+    const sample = COLLEGE_SEED_DATA.slice(0, 2);
+
+    await mergeCountrySeed(countryRepository);
+    await mergeLocationSeed(locationRepository, countryRepository);
+    const result = await mergeCollegeSeed(
+      collegeRepository,
+      locationRepository,
+      sample,
+    );
+
+    expect(result.added).toBe(sample.length);
+    expect(await collegeRepository.list()).toHaveLength(sample.length);
+  });
+
+  it("validates every college seed entry through buildCollege", async () => {
+    const countryRepository = new MemoryCountryRepository();
+    const locationRepository = new MemoryLocationRepository();
+
+    await mergeCountrySeed(countryRepository);
+    await mergeLocationSeed(locationRepository, countryRepository);
+    const locations = await locationRepository.list();
+    const locationByKey = new Map(
+      locations.map((location) => [
+        locationMergeKey(location.name, location.countryName, location.region),
+        location,
+      ]),
+    );
+
+    for (const entry of COLLEGE_SEED_DATA) {
+      const location = resolveCollegeSeedLocation(
+        entry.locationName,
+        entry.countryName,
+        entry.locationRegion,
+        locationByKey,
+      );
+      expect(location).toBeTruthy();
+
+      buildCollege(
+        {
+          name: entry.name,
+          locationId: location!.id,
+          attendance: entry.attendance,
+        },
+        "college-seed-test-id",
+        location!.name,
+        location!.region,
       );
     }
   });

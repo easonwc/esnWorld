@@ -1,6 +1,6 @@
 # ESN World Engine
 
-A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript**. It provides APIs for a simulated world with a UTC clock, US calendar, city locations, venues, events, and weather.
+A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript**. It provides APIs for a simulated world with a UTC clock, US calendar, city locations, colleges, venues, events, and weather.
 
 ## Domain model
 
@@ -10,11 +10,12 @@ A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript
 | **Calendar** | US Gregorian date derived from UTC | June 14, 2020 — Sunday, day 166 |
 | **Country** | A nation with ISO code, local flag image, languages, and aggregated city population | United States — `/flags/us.svg` |
 | **Location** | A city belonging to a country | New York, United States |
+| **College** | A US college or university within a city | University of Michigan (Ann Arbor, Michigan) |
 | **Venue** | A place within a city | Madison Square Garden (indoor), Bethpage Black Course (outdoor). Retractable-roof venues count as indoor. |
 | **Event** | A scheduled happening at a venue | Championship Final at 12:00 local, 2 hours |
 | **Weather** | Simulated conditions at a place and time | 78°F, partly cloudy, rain likely at kickoff |
 
-Locations hold the **timezone** used for local-time calculations. Cities belong to a **country** (flag, languages, total population from cities). Venues belong to a location and inherit its timezone.
+Locations hold the **timezone** used for local-time calculations. Cities belong to a **country** (flag, languages, total population from cities). Colleges and venues belong to a location; colleges store enrollment **attendance**, venues store coordinates and indoor/outdoor classification.
 
 ## Modules
 
@@ -24,6 +25,7 @@ Locations hold the **timezone** used for local-time calculations. Cities belong 
 | **Calendar** | ✅ | US Gregorian calendar derived from world clock UTC time |
 | **Countries** | ✅ | Nations with ISO code, local flag image, languages, and population summed from cities |
 | **Locations** | ✅ | Cities with country, population, coordinates, and IANA timezone |
+| **Colleges** | ✅ | US colleges and universities within a location (name, attendance) |
 | **Venues** | ✅ | Venues within a location (stadiums, golf courses, etc.) |
 | **Events** | ✅ | Parallel events scheduled at venue-local start times |
 | **Weather** | ✅ | Seasonal baseline + moving systems across locations |
@@ -60,7 +62,7 @@ cp .env.example .env
 | `WEATHER_SEED` | `42` | Seed for reproducible weather probability |
 | `WEATHER_UNITS` | `fahrenheit` | Temperature unit (`fahrenheit` or `celsius`) |
 | `WEATHER_WIND_UNITS` | `mph` | Wind speed unit (`mph` or `kph`) |
-| `DATABASE_PATH` | `./data/world.db` | SQLite file for persisted countries, locations, and venues |
+| `DATABASE_PATH` | `./data/world.db` | SQLite file for persisted countries, locations, colleges, and venues |
 | `LOCATIONS_SEED_ON_STARTUP` | `false` | When `true`, merge seed countries and cities on server startup (skips entries that already exist) |
 | `SKIP_FLAG_DOWNLOAD` | unset | When `true`, skip downloading flag SVGs (tests use this implicitly via Vitest) |
 
@@ -121,6 +123,7 @@ The **calendar** is derived from world clock UTC — it has no independent state
 |-------|--------|------------------|-------|
 | Countries | Countries | ✅ | Flag, languages; population summed from cities |
 | Cities | Locations | ✅ Phase 1 | SQLite via `DATABASE_PATH`; belong to a country |
+| Colleges | Colleges | ✅ Phase 1 | SQLite via `DATABASE_PATH`; belong to a location |
 | Venues | Venues | ✅ Phase 1 | SQLite via `DATABASE_PATH` |
 | Scheduled events | Events | ❌ | In-memory; lost on restart |
 | World clock | World Clock | ❌ | Current UTC, running/stopped, tick progress — in-memory |
@@ -130,21 +133,23 @@ On first run, the database is **empty** unless you set `LOCATIONS_SEED_ON_STARTU
 
 ### World seed (optional)
 
-Set `LOCATIONS_SEED_ON_STARTUP=true` in `.env` to merge **200 countries** and **417 cities** when the server starts. Countries are seeded first (ISO code, languages, local flag image), then cities are linked by country name.
+Set `LOCATIONS_SEED_ON_STARTUP=true` in `.env` to merge **200 countries**, **419 cities**, and **225 US colleges and universities** when the server starts. Countries are seeded first (ISO code, languages, local flag image), then cities are linked by country name, then colleges are linked to their campus cities.
 
 Merge behavior:
 
-- **Empty database** — all seed countries and cities are inserted.
-- **Existing database** — only entries not already present are added (countries by `name`; cities by `name` + `region` + `countryName`, case-insensitive). Nothing is overwritten or duplicated.
+- **Empty database** — all seed countries, cities, and colleges are inserted.
+- **Existing database** — only entries not already present are added (countries by `name`; cities by `name` + `region` + `countryName`; colleges by institution `name`, case-insensitive). Nothing is overwritten or duplicated.
 - **Disabled** (`false`, the default) — no seed runs; the database stays as-is.
 
-Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/locations.data.ts`, `src/persistence/seed/ncaa-locations.data.ts` (auto-generated from `scripts/generate-ncaa-locations.ts`), and `src/persistence/seed/tennis-golf-locations.data.ts`.
+Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/locations.data.ts`, `src/persistence/seed/ncaa-locations.data.ts` (auto-generated from `scripts/generate-ncaa-locations.ts`), `src/persistence/seed/tennis-golf-locations.data.ts`, and `src/persistence/seed/colleges.data.ts` (auto-generated alongside NCAA locations).
 
-The city catalog includes major world metros, all NFL/NBA/MLB/NHL markets, **208 NCAA Division I campus cities**, and **47 tennis and golf event host cities** (Grand Slams, ATP/WTA Masters staples, golf majors, and flagship PGA/DP World Tour venues). NCAA entries use plain city names with a `region` field for the US state. Schools in cities already present without a conflicting region (e.g. New York, Los Angeles, Chicago) are not duplicated.
+The city catalog includes major world metros, all NFL/NBA/MLB/NHL markets, **209 NCAA Division I campus cities**, and **47 tennis and golf event host cities** (Grand Slams, ATP/WTA Masters staples, golf majors, and flagship PGA/DP World Tour venues). NCAA entries use plain city names with a `region` field for the US state. Schools in cities already present without a conflicting region (e.g. New York, Los Angeles, Chicago) are not duplicated.
+
+The college catalog lists **225 NCAA Division I football programs** (FBS + FCS) with approximate enrollment. Each college links to its campus city by `locationName` + `locationRegion` + `countryName`, falling back to a region-less city match when the metro is already in the world catalog (e.g. Atlanta, Houston).
 
 ### Future enhancements
 
-1. ~~**Seed data**~~ — ✅ Optional country and city catalogs via `LOCATIONS_SEED_ON_STARTUP` (venue seed TBD).
+1. ~~**Seed data**~~ — ✅ Optional country, city, and college catalogs via `LOCATIONS_SEED_ON_STARTUP` (venue seed TBD).
 2. **Persist events** — Save planned and scheduled happenings (venue, local start, duration) so the event calendar survives restarts. Event *status* (`upcoming` / `active` / `ended`) stays derived from the persisted clock + stored UTC instants.
 3. **Persist world clock** — Save current simulated UTC, whether ticking is active, and enough tick metadata to resume advancement without a jump or drift after restart.
 4. **Weather and derived simulation state** — Today weather is deterministic from `WEATHER_SEED` + clock time, so persisting the clock may be sufficient. If we add non-seeded evolution, overrides, or historical snapshots (e.g. “conditions at kickoff” stored for replay), those would be saved as part of world state rather than recomputed on every read.
@@ -217,7 +222,27 @@ A country cannot be deleted while it still has cities.
 }
 ```
 
-`population` must be a non-negative integer. Every city **must** include a valid `countryId` referencing an existing country — free-text country names are not accepted. `region` is optional and holds a state, province, or administrative subdivision (use it to distinguish cities with the same name in one country, e.g. `Columbia` in Missouri vs South Carolina). A location cannot be deleted while it still has venues.
+`population` must be a non-negative integer. Every city **must** include a valid `countryId` referencing an existing country — free-text country names are not accepted. `region` is optional and holds a state, province, or administrative subdivision (use it to distinguish cities with the same name in one country, e.g. `Columbia` in Missouri vs South Carolina). A location cannot be deleted while it still has venues or colleges.
+
+### Colleges
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/colleges` | List all colleges |
+| `POST` | `/api/colleges` | Create, get, delete, or list by location (`action`: `create`, `get`, `delete`, `listByLocation`) |
+
+**Create a college within a city:**
+
+```json
+{
+  "action": "create",
+  "locationId": "<location-id>",
+  "name": "University of Michigan",
+  "attendance": 52000
+}
+```
+
+`attendance` is approximate total enrollment. Every college **must** reference an existing `locationId`.
 
 ### Venues
 
@@ -330,7 +355,7 @@ npm run start        # Start production server
 npm test             # Run unit tests
 npm run test:watch   # Run tests in watch mode
 npm run download-flags  # Download all 200 country flag SVGs to public/flags/
-npm run generate-ncaa-locations  # Regenerate NCAA campus city seed data
+npm run generate-ncaa-locations  # Regenerate NCAA campus cities and college seed data
 npm run lint         # Lint
 ```
 
@@ -343,6 +368,7 @@ src/
     calendar/        # US Gregorian calendar transforms
     countries/       # Nations with flag, languages, aggregated population
     locations/       # Cities belonging to a country
+    colleges/        # US colleges and universities within a location
     venues/          # Venues within a location
     events/          # Scheduled events at venue-local times
     weather/         # Seasonal baseline + moving weather systems

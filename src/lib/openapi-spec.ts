@@ -227,6 +227,73 @@ export const apiOperations: ApiOperation[] = [
       2,
     ),
   },
+  },
+  {
+    id: "colleges-list",
+    tag: "Colleges",
+    method: "GET",
+    path: "/api/colleges",
+    summary: "List all colleges",
+    description: "Returns all colleges and universities sorted by name.",
+  },
+  {
+    id: "colleges-create",
+    tag: "Colleges",
+    method: "POST",
+    path: "/api/colleges",
+    summary: "Create a college",
+    description:
+      "Creates a college or university within a location. locationId must reference an existing city.",
+    requestBody: JSON.stringify(
+      {
+        action: "create",
+        name: "Duke University",
+        locationId: "paste-location-id-here",
+        attendance: 17000,
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "colleges-get",
+    tag: "Colleges",
+    method: "POST",
+    path: "/api/colleges",
+    summary: "Get a college",
+    description: "Retrieves a single college by id.",
+    requestBody: JSON.stringify(
+      { action: "get", id: "paste-college-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "colleges-list-by-location",
+    tag: "Colleges",
+    method: "POST",
+    path: "/api/colleges",
+    summary: "List colleges in a location",
+    description: "Returns all colleges within a given city location.",
+    requestBody: JSON.stringify(
+      { action: "listByLocation", locationId: "paste-location-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "colleges-delete",
+    tag: "Colleges",
+    method: "POST",
+    path: "/api/colleges",
+    summary: "Delete a college",
+    description: "Removes a college by id.",
+    requestBody: JSON.stringify(
+      { action: "delete", id: "paste-college-id-here" },
+      null,
+      2,
+    ),
+  },
   {
     id: "venues-list",
     tag: "Venues",
@@ -561,6 +628,11 @@ export function buildOpenApiSpec() {
       {
         name: "Locations",
         description: "Cities belonging to a country, with coordinates and timezone.",
+      },
+      {
+        name: "Colleges",
+        description:
+          "Colleges and universities within a location, with student attendance.",
       },
       {
         name: "Venues",

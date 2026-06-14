@@ -1,4 +1,4 @@
-import type { Country } from "@/modules/countries/types";
+import type { College } from "@/modules/colleges/types";
 import type { Location } from "@/modules/locations/types";
 import type { Venue } from "@/modules/venues/types";
 
@@ -36,6 +36,16 @@ export interface VenueRepository {
   countByLocation(locationId: string): Promise<number>;
   get(id: string): Promise<Venue | null>;
   create(venue: Venue): Promise<Venue>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface CollegeRepository {
+  list(): Promise<College[]>;
+  listByLocation(locationId: string): Promise<College[]>;
+  countByLocation(locationId: string): Promise<number>;
+  get(id: string): Promise<College | null>;
+  create(college: College): Promise<College>;
   delete(id: string): Promise<boolean>;
   clear(): Promise<void>;
 }

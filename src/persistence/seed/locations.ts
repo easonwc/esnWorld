@@ -1,11 +1,13 @@
 import { buildLocation } from "@/modules/locations/transform";
 import {
+  getDefaultCollegeRepository,
   getDefaultCountryRepository,
   getDefaultLocationRepository,
   type CountryRepository,
   type LocationRepository,
 } from "@/persistence/repositories";
 import { loadLocationSeedConfig } from "./config";
+import { mergeCollegeSeed } from "./colleges";
 import { mergeCountrySeed } from "./countries";
 import { LOCATION_SEED_DATA } from "./locations.data";
 import type { LocationSeedEntry, LocationSeedResult, WorldSeedResult } from "./types";
@@ -103,6 +105,10 @@ export async function seedWorldOnStartup(): Promise<WorldSeedResult | null> {
     locationRepository,
     countryRepository,
   );
+  const colleges = await mergeCollegeSeed(
+    getDefaultCollegeRepository(),
+    locationRepository,
+  );
 
   if (countries.added > 0 || countries.skipped > 0) {
     console.info(
@@ -116,7 +122,13 @@ export async function seedWorldOnStartup(): Promise<WorldSeedResult | null> {
     );
   }
 
-  return { countries, locations };
+  if (colleges.added > 0 || colleges.skipped > 0) {
+    console.info(
+      `[colleges seed] merged ${colleges.added} new, skipped ${colleges.skipped} existing (${colleges.total} in catalog)`,
+    );
+  }
+
+  return { countries, locations, colleges };
 }
 
 /** @deprecated Use seedWorldOnStartup */

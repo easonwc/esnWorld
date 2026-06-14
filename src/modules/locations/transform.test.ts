@@ -1,4 +1,5 @@
 import { resetVenueStore, getVenueStore } from "@/modules/venues";
+import { resetCollegeStore } from "@/modules/colleges";
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   LocationErrorCodes,
@@ -77,6 +78,7 @@ describe("LocationStore", () => {
 
   beforeEach(async () => {
     resetVenueStore();
+    resetCollegeStore();
     resetLocationStore();
     resetCountryStore();
     store = resetLocationStore();
@@ -201,6 +203,29 @@ describe("LocationStore", () => {
 
     await expect(store.delete(created.id)).rejects.toThrowError(
       expect.objectContaining({ code: LocationErrorCodes.LOCATION_HAS_VENUES }),
+    );
+  });
+
+  it("prevents deleting a location that still has colleges", async () => {
+    const created = await store.create({
+      name: "Durham",
+      countryId,
+      region: "North Carolina",
+      latitude: 35.994,
+      longitude: -78.8986,
+      timezone: "America/New_York",
+      population: 278_000,
+    });
+
+    const { getCollegeStore } = await import("@/modules/colleges");
+    await getCollegeStore().create({
+      name: "Duke University",
+      locationId: created.id,
+      attendance: 17000,
+    });
+
+    await expect(store.delete(created.id)).rejects.toThrowError(
+      expect.objectContaining({ code: LocationErrorCodes.LOCATION_HAS_COLLEGES }),
     );
   });
 

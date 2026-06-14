@@ -117,6 +117,7 @@ const WORLD_LOCATION_SEED_DATA = [
   { name: "Houston", countryName: "United States", latitude: 29.7604, longitude: -95.3698, timezone: "America/Chicago", population: 7_122_000 },
   { name: "Dallas", countryName: "United States", latitude: 32.7767, longitude: -96.797, timezone: "America/Chicago", population: 7_637_000 },
   { name: "Philadelphia", countryName: "United States", latitude: 39.9526, longitude: -75.1652, timezone: "America/New_York", population: 6_245_000 },
+  { name: "Pittsburgh", countryName: "United States", latitude: 40.4406, longitude: -79.9959, timezone: "America/New_York", population: 2_370_000 },
   { name: "Miami", countryName: "United States", latitude: 25.7617, longitude: -80.1918, timezone: "America/New_York", population: 6_138_000 },
   { name: "Boston", countryName: "United States", latitude: 42.3601, longitude: -71.0589, timezone: "America/New_York", population: 4_941_000 },
   { name: "San Francisco", countryName: "United States", latitude: 37.7749, longitude: -122.4194, timezone: "America/Los_Angeles", population: 4_729_000 },

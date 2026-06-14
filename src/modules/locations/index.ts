@@ -1,5 +1,6 @@
 import { getWorldClockService } from "@/modules/world-clock";
 import { getCountryStore, CountryError } from "@/modules/countries";
+import { getCollegeStore } from "@/modules/colleges";
 import { getVenueStore } from "@/modules/venues";
 import {
   getDefaultLocationRepository,
@@ -99,6 +100,14 @@ export class LocationStore {
       throw new LocationError(
         LocationErrorCodes.LOCATION_HAS_VENUES,
         `Cannot delete location with ${venueCount} venue(s). Delete venues first.`,
+      );
+    }
+
+    const collegeCount = await getCollegeStore().countByLocation(id);
+    if (collegeCount > 0) {
+      throw new LocationError(
+        LocationErrorCodes.LOCATION_HAS_COLLEGES,
+        `Cannot delete location with ${collegeCount} college(s). Delete colleges first.`,
       );
     }
 

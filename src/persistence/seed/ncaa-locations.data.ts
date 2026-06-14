@@ -59,6 +59,7 @@ export const NCAA_LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
   { name: "Conway", region: "Arkansas", countryName: "United States", latitude: 35.0887, longitude: -92.4421, timezone: "America/Chicago", population: 65_000 },
   { name: "Conway", region: "South Carolina", countryName: "United States", latitude: 33.836, longitude: -79.0478, timezone: "America/New_York", population: 24_000 },
   { name: "Cookeville", region: "Tennessee", countryName: "United States", latitude: 36.1628, longitude: -85.5016, timezone: "America/Chicago", population: 35_000 },
+  { name: "Coral Gables", region: "Florida", countryName: "United States", latitude: 25.7215, longitude: -80.2684, timezone: "America/New_York", population: 49_000 },
   { name: "Corvallis", region: "Oregon", countryName: "United States", latitude: 44.5646, longitude: -123.262, timezone: "America/Los_Angeles", population: 58_000 },
   { name: "Cullowhee", region: "North Carolina", countryName: "United States", latitude: 35.3137, longitude: -83.1765, timezone: "America/New_York", population: 9_400 },
   { name: "Davidson", region: "North Carolina", countryName: "United States", latitude: 35.4993, longitude: -80.8484, timezone: "America/New_York", population: 13_000 },

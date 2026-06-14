@@ -10,6 +10,7 @@ const MIGRATIONS = [
   "002_countries.sql",
   "003_country_iso.sql",
   "004_location_region.sql",
+  "005_colleges.sql",
 ] as const;
 
 function runMigrations(db: Database.Database): void {
