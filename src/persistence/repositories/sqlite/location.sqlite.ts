@@ -114,6 +114,16 @@ export class SqliteLocationRepository implements LocationRepository {
     return row.total;
   }
 
+  async populationTotalsByCountry(): Promise<ReadonlyMap<string, number>> {
+    const rows = this.db
+      .prepare(
+        "SELECT country_id, COALESCE(SUM(population), 0) AS total FROM locations GROUP BY country_id",
+      )
+      .all() as { country_id: string; total: number }[];
+
+    return new Map(rows.map((row) => [row.country_id, row.total]));
+  }
+
   async clear(): Promise<void> {
     this.db.prepare("DELETE FROM locations").run();
   }

@@ -39,6 +39,19 @@ export class MemoryLocationRepository implements LocationRepository {
       .reduce((sum, location) => sum + location.population, 0);
   }
 
+  async populationTotalsByCountry(): Promise<ReadonlyMap<string, number>> {
+    const totals = new Map<string, number>();
+
+    for (const location of this.locations.values()) {
+      totals.set(
+        location.countryId,
+        (totals.get(location.countryId) ?? 0) + location.population,
+      );
+    }
+
+    return totals;
+  }
+
   async clear(): Promise<void> {
     this.locations.clear();
   }

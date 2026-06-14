@@ -50,6 +50,10 @@ export class LocationStore {
     return this.repository.sumPopulationByCountry(countryId);
   }
 
+  async populationTotalsByCountry(): Promise<ReadonlyMap<string, number>> {
+    return this.repository.populationTotalsByCountry();
+  }
+
   async create(input: {
     name: unknown;
     countryId?: unknown;

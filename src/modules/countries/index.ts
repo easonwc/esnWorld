@@ -12,7 +12,10 @@ import type { Country, CountryInput, CountryOutput } from "./types";
 export class CountryStore {
   constructor(private readonly repository: CountryRepository) {}
 
-  private async withPopulation(record: CountryRecord): Promise<Country> {
+  private toCountry(
+    record: CountryRecord,
+    population: number,
+  ): Country {
     if (!record.isoCode) {
       throw new CountryError(
         CountryErrorCodes.INVALID_ISO_CODE,
@@ -26,13 +29,25 @@ export class CountryStore {
       isoCode: record.isoCode,
       flag: record.flag,
       languages: record.languages,
-      population: await getLocationStore().sumPopulationByCountry(record.id),
+      population,
     };
+  }
+
+  private async withPopulation(record: CountryRecord): Promise<Country> {
+    return this.toCountry(
+      record,
+      await getLocationStore().sumPopulationByCountry(record.id),
+    );
   }
 
   async list(): Promise<Country[]> {
     const records = await this.repository.list();
-    return Promise.all(records.map((record) => this.withPopulation(record)));
+    const populationTotals =
+      await getLocationStore().populationTotalsByCountry();
+
+    return records.map((record) =>
+      this.toCountry(record, populationTotals.get(record.id) ?? 0),
+    );
   }
 
   async get(id: string): Promise<Country> {

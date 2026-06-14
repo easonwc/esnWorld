@@ -31,6 +31,7 @@ export interface LocationRepository {
   delete(id: string): Promise<boolean>;
   countByCountry(countryId: string): Promise<number>;
   sumPopulationByCountry(countryId: string): Promise<number>;
+  populationTotalsByCountry(): Promise<ReadonlyMap<string, number>>;
   clear(): Promise<void>;
 }
 
