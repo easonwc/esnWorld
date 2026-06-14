@@ -3,6 +3,7 @@ import {
   getDefaultCollegeRepository,
   type CollegeRepository,
 } from "@/persistence/repositories";
+import type { ListOptions } from "@/lib/pagination";
 import { CollegeError, CollegeErrorCodes } from "./errors";
 import {
   buildCollege,
@@ -14,8 +15,12 @@ import type { College, CollegeInput, CollegeOutput } from "./types";
 export class CollegeStore {
   constructor(private readonly repository: CollegeRepository) {}
 
-  async list(): Promise<College[]> {
-    return this.repository.list();
+  async list(options?: ListOptions): Promise<College[]> {
+    return this.repository.list(options);
+  }
+
+  async count(): Promise<number> {
+    return this.repository.count();
   }
 
   async listByLocation(locationId: string): Promise<College[]> {
@@ -138,8 +143,12 @@ export async function executeCollege(input: CollegeInput): Promise<CollegeOutput
   }
 }
 
-export async function listColleges(): Promise<College[]> {
-  return getCollegeStore().list();
+export async function listColleges(options?: ListOptions): Promise<College[]> {
+  return getCollegeStore().list(options);
+}
+
+export async function countColleges(): Promise<number> {
+  return getCollegeStore().count();
 }
 
 export * from "./types";

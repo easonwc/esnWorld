@@ -6,6 +6,7 @@ import {
   getDefaultLeagueRepository,
   type LeagueRepository,
 } from "@/persistence/repositories";
+import type { ListOptions } from "@/lib/pagination";
 import { LeagueError, LeagueErrorCodes } from "./errors";
 import { buildLeague, validateId } from "./transform";
 import type { League, LeagueInput, LeagueOutput } from "./types";
@@ -13,8 +14,12 @@ import type { League, LeagueInput, LeagueOutput } from "./types";
 export class LeagueStore {
   constructor(private readonly repository: LeagueRepository) {}
 
-  async list(): Promise<League[]> {
-    return this.repository.list();
+  async list(options?: ListOptions): Promise<League[]> {
+    return this.repository.list(options);
+  }
+
+  async count(): Promise<number> {
+    return this.repository.count();
   }
 
   async get(id: string): Promise<League> {
@@ -139,8 +144,12 @@ export async function executeLeague(
   }
 }
 
-export async function listLeagues(): Promise<League[]> {
-  return getLeagueStore().list();
+export async function listLeagues(options?: ListOptions): Promise<League[]> {
+  return getLeagueStore().list(options);
+}
+
+export async function countLeagues(): Promise<number> {
+  return getLeagueStore().count();
 }
 
 export * from "./types";

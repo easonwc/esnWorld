@@ -3,6 +3,11 @@ import { CollegeError, CollegeErrorCodes } from "@/modules/colleges/errors";
 import type { Database } from "better-sqlite3";
 import { SqliteError } from "better-sqlite3";
 import type { CollegeRepository } from "../types";
+import type { ListOptions } from "@/lib/pagination";
+import {
+  sqliteListBindings,
+  sqliteListSuffix,
+} from "./list-pagination";
 
 type CollegeRow = {
   id: string;
@@ -39,11 +44,20 @@ const COLLEGE_SELECT = `
 export class SqliteCollegeRepository implements CollegeRepository {
   constructor(private readonly db: Database) {}
 
-  async list(): Promise<College[]> {
+  async list(options?: ListOptions): Promise<College[]> {
     const rows = this.db
-      .prepare(`${COLLEGE_SELECT} ORDER BY c.name ASC, COALESCE(l.region, '') ASC`)
-      .all() as CollegeRow[];
+      .prepare(
+        `${COLLEGE_SELECT} ORDER BY c.name ASC, COALESCE(l.region, '') ASC${sqliteListSuffix(options)}`,
+      )
+      .all(...sqliteListBindings(options)) as CollegeRow[];
     return rows.map(rowToCollege);
+  }
+
+  async count(): Promise<number> {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS count FROM colleges")
+      .get() as { count: number };
+    return row.count;
   }
 
   async listByLocation(locationId: string): Promise<College[]> {

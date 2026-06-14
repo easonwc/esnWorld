@@ -4,6 +4,7 @@ import {
   getDefaultDivisionRepository,
   type ConferenceRepository,
 } from "@/persistence/repositories";
+import type { ListOptions } from "@/lib/pagination";
 import { ConferenceError, ConferenceErrorCodes } from "./errors";
 import {
   buildConference,
@@ -15,8 +16,12 @@ import type { Conference, ConferenceInput, ConferenceOutput } from "./types";
 export class ConferenceStore {
   constructor(private readonly repository: ConferenceRepository) {}
 
-  async list(): Promise<Conference[]> {
-    return this.repository.list();
+  async list(options?: ListOptions): Promise<Conference[]> {
+    return this.repository.list(options);
+  }
+
+  async count(): Promise<number> {
+    return this.repository.count();
   }
 
   async listByLeague(leagueId: string): Promise<Conference[]> {
@@ -156,8 +161,14 @@ export async function executeConference(
   }
 }
 
-export async function listConferences(): Promise<Conference[]> {
-  return getConferenceStore().list();
+export async function listConferences(
+  options?: ListOptions,
+): Promise<Conference[]> {
+  return getConferenceStore().list(options);
+}
+
+export async function countConferences(): Promise<number> {
+  return getConferenceStore().count();
 }
 
 export * from "./types";

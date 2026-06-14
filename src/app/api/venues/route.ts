@@ -1,6 +1,8 @@
 import { jsonResponse } from "@/lib/api-response";
+import { listGetResponse } from "@/lib/list-route";
 import { LocationError } from "@/modules/locations";
 import {
+  countVenues,
   executeVenue,
   listVenues,
   VenueError,
@@ -21,9 +23,8 @@ function errorResponse(error: VenueError | LocationError) {
   );
 }
 
-export async function GET() {
-  const venues = await listVenues();
-  return jsonResponse({ data: venues });
+export async function GET(request: Request) {
+  return listGetResponse(request, listVenues, countVenues);
 }
 
 export async function POST(request: Request) {

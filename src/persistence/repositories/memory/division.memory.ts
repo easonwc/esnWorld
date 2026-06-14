@@ -1,13 +1,19 @@
 import type { Division } from "@/modules/divisions/types";
 import type { DivisionRepository } from "../types";
+import { paginateArray, type ListOptions } from "@/lib/pagination";
 
 export class MemoryDivisionRepository implements DivisionRepository {
   private readonly divisions = new Map<string, Division>();
 
-  async list(): Promise<Division[]> {
-    return [...this.divisions.values()].sort((a, b) =>
+  async list(options?: ListOptions): Promise<Division[]> {
+    const sorted = [...this.divisions.values()].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
+    return options ? paginateArray(sorted, options) : sorted;
+  }
+
+  async count(): Promise<number> {
+    return this.divisions.size;
   }
 
   async listByLeague(leagueId: string): Promise<Division[]> {

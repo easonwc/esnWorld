@@ -1,13 +1,19 @@
 import type { Conference } from "@/modules/conferences/types";
 import type { ConferenceRepository } from "../types";
+import { paginateArray, type ListOptions } from "@/lib/pagination";
 
 export class MemoryConferenceRepository implements ConferenceRepository {
   private readonly conferences = new Map<string, Conference>();
 
-  async list(): Promise<Conference[]> {
-    return [...this.conferences.values()].sort((a, b) =>
+  async list(options?: ListOptions): Promise<Conference[]> {
+    const sorted = [...this.conferences.values()].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
+    return options ? paginateArray(sorted, options) : sorted;
+  }
+
+  async count(): Promise<number> {
+    return this.conferences.size;
   }
 
   async listByLeague(leagueId: string): Promise<Conference[]> {

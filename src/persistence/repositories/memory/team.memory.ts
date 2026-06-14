@@ -1,13 +1,19 @@
 import type { Team } from "@/modules/teams/types";
 import type { TeamRepository } from "../types";
+import { paginateArray, type ListOptions } from "@/lib/pagination";
 
 export class MemoryTeamRepository implements TeamRepository {
   private readonly teams = new Map<string, Team>();
 
-  async list(): Promise<Team[]> {
-    return [...this.teams.values()].sort((a, b) =>
+  async list(options?: ListOptions): Promise<Team[]> {
+    const sorted = [...this.teams.values()].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
+    return options ? paginateArray(sorted, options) : sorted;
+  }
+
+  async count(): Promise<number> {
+    return this.teams.size;
   }
 
   async listByDivision(divisionId: string): Promise<Team[]> {

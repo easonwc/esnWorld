@@ -5,6 +5,7 @@ import {
   type CountryRecord,
   type CountryRepository,
 } from "@/persistence/repositories";
+import type { ListOptions } from "@/lib/pagination";
 import { CountryError, CountryErrorCodes } from "./errors";
 import { buildCountry, validateId, validateIsoCode } from "./transform";
 import type { Country, CountryInput, CountryOutput } from "./types";
@@ -40,14 +41,18 @@ export class CountryStore {
     );
   }
 
-  async list(): Promise<Country[]> {
-    const records = await this.repository.list();
+  async list(options?: ListOptions): Promise<Country[]> {
+    const records = await this.repository.list(options);
     const populationTotals =
       await getLocationStore().populationTotalsByCountry();
 
     return records.map((record) =>
       this.toCountry(record, populationTotals.get(record.id) ?? 0),
     );
+  }
+
+  async count(): Promise<number> {
+    return this.repository.count();
   }
 
   async get(id: string): Promise<Country> {
@@ -169,8 +174,12 @@ export async function executeCountry(
   }
 }
 
-export async function listCountries(): Promise<Country[]> {
-  return getCountryStore().list();
+export async function listCountries(options?: ListOptions): Promise<Country[]> {
+  return getCountryStore().list(options);
+}
+
+export async function countCountries(): Promise<number> {
+  return getCountryStore().count();
 }
 
 export * from "./types";

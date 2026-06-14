@@ -3,6 +3,11 @@ import { TeamError, TeamErrorCodes } from "@/modules/teams/errors";
 import type { Database } from "better-sqlite3";
 import { SqliteError } from "better-sqlite3";
 import type { TeamRepository } from "../types";
+import type { ListOptions } from "@/lib/pagination";
+import {
+  sqliteListBindings,
+  sqliteListSuffix,
+} from "./list-pagination";
 
 type TeamRow = {
   id: string;
@@ -76,11 +81,20 @@ const TEAM_SELECT = `
 export class SqliteTeamRepository implements TeamRepository {
   constructor(private readonly db: Database) {}
 
-  async list(): Promise<Team[]> {
+  async list(options?: ListOptions): Promise<Team[]> {
     const rows = this.db
-      .prepare(`${TEAM_SELECT} ORDER BY t.name ASC`)
-      .all() as TeamRow[];
+      .prepare(
+        `${TEAM_SELECT} ORDER BY t.name ASC${sqliteListSuffix(options)}`,
+      )
+      .all(...sqliteListBindings(options)) as TeamRow[];
     return rows.map(rowToTeam);
+  }
+
+  async count(): Promise<number> {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS count FROM teams")
+      .get() as { count: number };
+    return row.count;
   }
 
   async listByDivision(divisionId: string): Promise<Team[]> {

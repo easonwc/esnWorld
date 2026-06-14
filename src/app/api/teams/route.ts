@@ -1,7 +1,9 @@
 import { jsonResponse } from "@/lib/api-response";
+import { listGetResponse } from "@/lib/list-route";
 import { DivisionError } from "@/modules/divisions";
 import { VenueError } from "@/modules/venues";
 import {
+  countTeams,
   TeamError,
   executeTeam,
   listTeams,
@@ -24,9 +26,8 @@ function errorResponse(error: TeamError | DivisionError | VenueError) {
   );
 }
 
-export async function GET() {
-  const teams = await listTeams();
-  return jsonResponse({ data: teams });
+export async function GET(request: Request) {
+  return listGetResponse(request, listTeams, countTeams);
 }
 
 export async function POST(request: Request) {

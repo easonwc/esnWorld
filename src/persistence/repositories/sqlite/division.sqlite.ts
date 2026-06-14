@@ -3,6 +3,11 @@ import { DivisionError, DivisionErrorCodes } from "@/modules/divisions/errors";
 import type { Database } from "better-sqlite3";
 import { SqliteError } from "better-sqlite3";
 import type { DivisionRepository } from "../types";
+import type { ListOptions } from "@/lib/pagination";
+import {
+  sqliteListBindings,
+  sqliteListSuffix,
+} from "./list-pagination";
 
 type DivisionRow = {
   id: string;
@@ -46,11 +51,20 @@ const DIVISION_SELECT = `
 export class SqliteDivisionRepository implements DivisionRepository {
   constructor(private readonly db: Database) {}
 
-  async list(): Promise<Division[]> {
+  async list(options?: ListOptions): Promise<Division[]> {
     const rows = this.db
-      .prepare(`${DIVISION_SELECT} ORDER BY d.name ASC`)
-      .all() as DivisionRow[];
+      .prepare(
+        `${DIVISION_SELECT} ORDER BY d.name ASC${sqliteListSuffix(options)}`,
+      )
+      .all(...sqliteListBindings(options)) as DivisionRow[];
     return rows.map(rowToDivision);
+  }
+
+  async count(): Promise<number> {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS count FROM divisions")
+      .get() as { count: number };
+    return row.count;
   }
 
   async listByLeague(leagueId: string): Promise<Division[]> {

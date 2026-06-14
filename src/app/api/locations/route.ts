@@ -1,6 +1,8 @@
 import { jsonResponse } from "@/lib/api-response";
+import { listGetResponse } from "@/lib/list-route";
 import { CountryError } from "@/modules/countries";
 import {
+  countLocations,
   executeLocation,
   listLocations,
   LocationError,
@@ -20,9 +22,8 @@ function errorResponse(error: LocationError | CountryError) {
   );
 }
 
-export async function GET() {
-  const locations = await listLocations();
-  return jsonResponse({ data: locations });
+export async function GET(request: Request) {
+  return listGetResponse(request, listLocations, countLocations);
 }
 
 export async function POST(request: Request) {

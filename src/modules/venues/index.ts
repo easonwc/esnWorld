@@ -11,6 +11,7 @@ import {
   getDefaultTeamRepository,
   type VenueRepository,
 } from "@/persistence/repositories";
+import type { ListOptions } from "@/lib/pagination";
 import { VenueError, VenueErrorCodes } from "./errors";
 import { buildVenue, validateId, validateLocationId } from "./transform";
 import type {
@@ -23,8 +24,12 @@ import type {
 export class VenueStore {
   constructor(private readonly repository: VenueRepository) {}
 
-  async list(): Promise<Venue[]> {
-    return this.repository.list();
+  async list(options?: ListOptions): Promise<Venue[]> {
+    return this.repository.list(options);
+  }
+
+  async count(): Promise<number> {
+    return this.repository.count();
   }
 
   async listByLocation(locationId: string): Promise<Venue[]> {
@@ -172,8 +177,12 @@ export async function executeVenue(input: VenueInput): Promise<VenueOutput> {
   }
 }
 
-export async function listVenues(): Promise<Venue[]> {
-  return getVenueStore().list();
+export async function listVenues(options?: ListOptions): Promise<Venue[]> {
+  return getVenueStore().list(options);
+}
+
+export async function countVenues(): Promise<number> {
+  return getVenueStore().count();
 }
 
 export * from "./types";

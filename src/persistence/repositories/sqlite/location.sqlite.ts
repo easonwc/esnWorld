@@ -2,6 +2,11 @@ import type { Location } from "@/modules/locations/types";
 import { LocationError, LocationErrorCodes } from "@/modules/locations/errors";
 import Database, { SqliteError } from "better-sqlite3";
 import type { LocationRepository } from "../types";
+import type { ListOptions } from "@/lib/pagination";
+import {
+  sqliteListBindings,
+  sqliteListSuffix,
+} from "./list-pagination";
 
 type LocationRow = {
   id: string;
@@ -47,11 +52,20 @@ const LOCATION_SELECT = `
 export class SqliteLocationRepository implements LocationRepository {
   constructor(private readonly db: Database.Database) {}
 
-  async list(): Promise<Location[]> {
+  async list(options?: ListOptions): Promise<Location[]> {
     const rows = this.db
-      .prepare(`${LOCATION_SELECT} ORDER BY l.name ASC, COALESCE(l.region, '') ASC`)
-      .all() as LocationRow[];
+      .prepare(
+        `${LOCATION_SELECT} ORDER BY l.name ASC, COALESCE(l.region, '') ASC${sqliteListSuffix(options)}`,
+      )
+      .all(...sqliteListBindings(options)) as LocationRow[];
     return rows.map(rowToLocation);
+  }
+
+  async count(): Promise<number> {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS count FROM locations")
+      .get() as { count: number };
+    return row.count;
   }
 
   async get(id: string): Promise<Location | null> {

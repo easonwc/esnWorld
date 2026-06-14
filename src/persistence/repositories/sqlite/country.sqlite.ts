@@ -6,6 +6,11 @@ import {
 import type { CountryRecord } from "../types";
 import type { CountryRepository } from "../types";
 import type { Database } from "better-sqlite3";
+import type { ListOptions } from "@/lib/pagination";
+import {
+  sqliteListBindings,
+  sqliteListSuffix,
+} from "./list-pagination";
 
 type CountryRow = {
   id: string;
@@ -31,11 +36,20 @@ const COUNTRY_SELECT =
 export class SqliteCountryRepository implements CountryRepository {
   constructor(private readonly db: Database) {}
 
-  async list(): Promise<CountryRecord[]> {
+  async list(options?: ListOptions): Promise<CountryRecord[]> {
     const rows = this.db
-      .prepare(`${COUNTRY_SELECT} ORDER BY name ASC`)
-      .all() as CountryRow[];
+      .prepare(
+        `${COUNTRY_SELECT} ORDER BY name ASC${sqliteListSuffix(options)}`,
+      )
+      .all(...sqliteListBindings(options)) as CountryRow[];
     return rows.map(rowToCountryRecord);
+  }
+
+  async count(): Promise<number> {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS count FROM countries")
+      .get() as { count: number };
+    return row.count;
   }
 
   async get(id: string): Promise<CountryRecord | null> {

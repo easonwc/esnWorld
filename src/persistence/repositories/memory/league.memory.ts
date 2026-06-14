@@ -1,13 +1,19 @@
 import type { League } from "@/modules/leagues/types";
 import type { LeagueRepository } from "../types";
+import { paginateArray, type ListOptions } from "@/lib/pagination";
 
 export class MemoryLeagueRepository implements LeagueRepository {
   private readonly leagues = new Map<string, League>();
 
-  async list(): Promise<League[]> {
-    return [...this.leagues.values()].sort((a, b) =>
+  async list(options?: ListOptions): Promise<League[]> {
+    const sorted = [...this.leagues.values()].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
+    return options ? paginateArray(sorted, options) : sorted;
+  }
+
+  async count(): Promise<number> {
+    return this.leagues.size;
   }
 
   async get(id: string): Promise<League | null> {

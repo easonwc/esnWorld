@@ -3,6 +3,11 @@ import { ConferenceError, ConferenceErrorCodes } from "@/modules/conferences/err
 import type { Database } from "better-sqlite3";
 import { SqliteError } from "better-sqlite3";
 import type { ConferenceRepository } from "../types";
+import type { ListOptions } from "@/lib/pagination";
+import {
+  sqliteListBindings,
+  sqliteListSuffix,
+} from "./list-pagination";
 
 type ConferenceRow = {
   id: string;
@@ -36,11 +41,20 @@ const CONFERENCE_SELECT = `
 export class SqliteConferenceRepository implements ConferenceRepository {
   constructor(private readonly db: Database) {}
 
-  async list(): Promise<Conference[]> {
+  async list(options?: ListOptions): Promise<Conference[]> {
     const rows = this.db
-      .prepare(`${CONFERENCE_SELECT} ORDER BY c.name ASC`)
-      .all() as ConferenceRow[];
+      .prepare(
+        `${CONFERENCE_SELECT} ORDER BY c.name ASC${sqliteListSuffix(options)}`,
+      )
+      .all(...sqliteListBindings(options)) as ConferenceRow[];
     return rows.map(rowToConference);
+  }
+
+  async count(): Promise<number> {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS count FROM conferences")
+      .get() as { count: number };
+    return row.count;
   }
 
   async listByLeague(leagueId: string): Promise<Conference[]> {

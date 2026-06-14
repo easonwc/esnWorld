@@ -1,6 +1,11 @@
 import type { Venue } from "@/modules/venues/types";
 import type { Database } from "better-sqlite3";
 import type { VenueRepository } from "../types";
+import type { ListOptions } from "@/lib/pagination";
+import {
+  sqliteListBindings,
+  sqliteListSuffix,
+} from "./list-pagination";
 
 type VenueRow = {
   id: string;
@@ -25,13 +30,20 @@ function rowToVenue(row: VenueRow): Venue {
 export class SqliteVenueRepository implements VenueRepository {
   constructor(private readonly db: Database) {}
 
-  async list(): Promise<Venue[]> {
+  async list(options?: ListOptions): Promise<Venue[]> {
     const rows = this.db
       .prepare(
-        "SELECT id, location_id, name, latitude, longitude, is_indoor FROM venues ORDER BY name ASC",
+        `SELECT id, location_id, name, latitude, longitude, is_indoor FROM venues ORDER BY name ASC${sqliteListSuffix(options)}`,
       )
-      .all() as VenueRow[];
+      .all(...sqliteListBindings(options)) as VenueRow[];
     return rows.map(rowToVenue);
+  }
+
+  async count(): Promise<number> {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS count FROM venues")
+      .get() as { count: number };
+    return row.count;
   }
 
   async listByLocation(locationId: string): Promise<Venue[]> {

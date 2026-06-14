@@ -1,6 +1,8 @@
 import { jsonResponse } from "@/lib/api-response";
+import { listGetResponse } from "@/lib/list-route";
 import {
   CountryError,
+  countCountries,
   executeCountry,
   listCountries,
   type CountryInput,
@@ -21,9 +23,8 @@ function errorResponse(error: CountryError | LocationError) {
   );
 }
 
-export async function GET() {
-  const countries = await listCountries();
-  return jsonResponse({ data: countries });
+export async function GET(request: Request) {
+  return listGetResponse(request, listCountries, countCountries);
 }
 
 export async function POST(request: Request) {

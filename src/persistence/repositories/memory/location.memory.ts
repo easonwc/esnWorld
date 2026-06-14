@@ -1,17 +1,23 @@
 import type { Location } from "@/modules/locations/types";
 import type { LocationRepository } from "../types";
+import { paginateArray, type ListOptions } from "@/lib/pagination";
 
 export class MemoryLocationRepository implements LocationRepository {
   private readonly locations = new Map<string, Location>();
 
-  async list(): Promise<Location[]> {
-    return [...this.locations.values()].sort((a, b) => {
+  async list(options?: ListOptions): Promise<Location[]> {
+    const sorted = [...this.locations.values()].sort((a, b) => {
       const byName = a.name.localeCompare(b.name);
       if (byName !== 0) {
         return byName;
       }
       return (a.region ?? "").localeCompare(b.region ?? "");
     });
+    return options ? paginateArray(sorted, options) : sorted;
+  }
+
+  async count(): Promise<number> {
+    return this.locations.size;
   }
 
   async get(id: string): Promise<Location | null> {

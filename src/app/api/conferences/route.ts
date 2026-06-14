@@ -1,6 +1,8 @@
 import { jsonResponse } from "@/lib/api-response";
+import { listGetResponse } from "@/lib/list-route";
 import {
   ConferenceError,
+  countConferences,
   executeConference,
   listConferences,
   type ConferenceInput,
@@ -21,9 +23,8 @@ function errorResponse(error: ConferenceError | LeagueError) {
   );
 }
 
-export async function GET() {
-  const conferences = await listConferences();
-  return jsonResponse({ data: conferences });
+export async function GET(request: Request) {
+  return listGetResponse(request, listConferences, countConferences);
 }
 
 export async function POST(request: Request) {

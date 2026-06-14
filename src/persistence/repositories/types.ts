@@ -5,6 +5,7 @@ import type { League } from "@/modules/leagues/types";
 import type { Location } from "@/modules/locations/types";
 import type { Team } from "@/modules/teams/types";
 import type { Venue } from "@/modules/venues/types";
+import type { ListOptions } from "@/lib/pagination";
 
 export interface CountryRecord {
   id: string;
@@ -15,7 +16,8 @@ export interface CountryRecord {
 }
 
 export interface CountryRepository {
-  list(): Promise<CountryRecord[]>;
+  list(options?: ListOptions): Promise<CountryRecord[]>;
+  count(): Promise<number>;
   get(id: string): Promise<CountryRecord | null>;
   getByName(name: string): Promise<CountryRecord | null>;
   create(country: CountryRecord): Promise<CountryRecord>;
@@ -25,7 +27,8 @@ export interface CountryRepository {
 }
 
 export interface LocationRepository {
-  list(): Promise<Location[]>;
+  list(options?: ListOptions): Promise<Location[]>;
+  count(): Promise<number>;
   get(id: string): Promise<Location | null>;
   create(location: Location): Promise<Location>;
   delete(id: string): Promise<boolean>;
@@ -36,7 +39,8 @@ export interface LocationRepository {
 }
 
 export interface VenueRepository {
-  list(): Promise<Venue[]>;
+  list(options?: ListOptions): Promise<Venue[]>;
+  count(): Promise<number>;
   listByLocation(locationId: string): Promise<Venue[]>;
   countByLocation(locationId: string): Promise<number>;
   get(id: string): Promise<Venue | null>;
@@ -46,7 +50,8 @@ export interface VenueRepository {
 }
 
 export interface CollegeRepository {
-  list(): Promise<College[]>;
+  list(options?: ListOptions): Promise<College[]>;
+  count(): Promise<number>;
   listByLocation(locationId: string): Promise<College[]>;
   countByLocation(locationId: string): Promise<number>;
   get(id: string): Promise<College | null>;
@@ -56,7 +61,8 @@ export interface CollegeRepository {
 }
 
 export interface LeagueRepository {
-  list(): Promise<League[]>;
+  list(options?: ListOptions): Promise<League[]>;
+  count(): Promise<number>;
   get(id: string): Promise<League | null>;
   getByName(name: string): Promise<League | null>;
   getByAbbreviation(abbreviation: string): Promise<League | null>;
@@ -67,7 +73,8 @@ export interface LeagueRepository {
 }
 
 export interface ConferenceRepository {
-  list(): Promise<Conference[]>;
+  list(options?: ListOptions): Promise<Conference[]>;
+  count(): Promise<number>;
   listByLeague(leagueId: string): Promise<Conference[]>;
   countByLeague(leagueId: string): Promise<number>;
   get(id: string): Promise<Conference | null>;
@@ -81,7 +88,8 @@ export interface ConferenceRepository {
 }
 
 export interface DivisionRepository {
-  list(): Promise<Division[]>;
+  list(options?: ListOptions): Promise<Division[]>;
+  count(): Promise<number>;
   listByLeague(leagueId: string): Promise<Division[]>;
   listByConference(conferenceId: string): Promise<Division[]>;
   countByConference(conferenceId: string): Promise<number>;
@@ -96,7 +104,8 @@ export interface DivisionRepository {
 }
 
 export interface TeamRepository {
-  list(): Promise<Team[]>;
+  list(options?: ListOptions): Promise<Team[]>;
+  count(): Promise<number>;
   listByDivision(divisionId: string): Promise<Team[]>;
   listByLeague(leagueId: string): Promise<Team[]>;
   listAbbreviationsByLeague(leagueId: string): Promise<ReadonlySet<string>>;

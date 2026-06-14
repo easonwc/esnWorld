@@ -5,6 +5,7 @@ import {
   getDefaultTeamRepository,
   type TeamRepository,
 } from "@/persistence/repositories";
+import type { ListOptions } from "@/lib/pagination";
 import { TeamError, TeamErrorCodes } from "./errors";
 import {
   buildTeam,
@@ -17,8 +18,12 @@ import type { Team, TeamInput, TeamOutput } from "./types";
 export class TeamStore {
   constructor(private readonly repository: TeamRepository) {}
 
-  async list(): Promise<Team[]> {
-    return this.repository.list();
+  async list(options?: ListOptions): Promise<Team[]> {
+    return this.repository.list(options);
+  }
+
+  async count(): Promise<number> {
+    return this.repository.count();
   }
 
   async listByDivision(divisionId: string): Promise<Team[]> {
@@ -179,8 +184,12 @@ export async function executeTeam(input: TeamInput): Promise<TeamOutput> {
   }
 }
 
-export async function listTeams(): Promise<Team[]> {
-  return getTeamStore().list();
+export async function listTeams(options?: ListOptions): Promise<Team[]> {
+  return getTeamStore().list(options);
+}
+
+export async function countTeams(): Promise<number> {
+  return getTeamStore().count();
 }
 
 export * from "./types";

@@ -1,17 +1,23 @@
 import type { College } from "@/modules/colleges/types";
 import type { CollegeRepository } from "../types";
+import { paginateArray, type ListOptions } from "@/lib/pagination";
 
 export class MemoryCollegeRepository implements CollegeRepository {
   private readonly colleges = new Map<string, College>();
 
-  async list(): Promise<College[]> {
-    return [...this.colleges.values()].sort((a, b) => {
+  async list(options?: ListOptions): Promise<College[]> {
+    const sorted = [...this.colleges.values()].sort((a, b) => {
       const byName = a.name.localeCompare(b.name);
       if (byName !== 0) {
         return byName;
       }
       return (a.locationName ?? "").localeCompare(b.locationName ?? "");
     });
+    return options ? paginateArray(sorted, options) : sorted;
+  }
+
+  async count(): Promise<number> {
+    return this.colleges.size;
   }
 
   async listByLocation(locationId: string): Promise<College[]> {

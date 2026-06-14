@@ -1,5 +1,7 @@
 import { jsonResponse } from "@/lib/api-response";
+import { listGetResponse } from "@/lib/list-route";
 import {
+  countLeagues,
   LeagueError,
   executeLeague,
   listLeagues,
@@ -17,9 +19,8 @@ function errorResponse(error: LeagueError) {
   );
 }
 
-export async function GET() {
-  const leagues = await listLeagues();
-  return jsonResponse({ data: leagues });
+export async function GET(request: Request) {
+  return listGetResponse(request, listLeagues, countLeagues);
 }
 
 export async function POST(request: Request) {

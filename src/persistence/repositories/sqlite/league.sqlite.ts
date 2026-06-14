@@ -1,6 +1,11 @@
 import type { League } from "@/modules/leagues/types";
 import type { LeagueRepository } from "../types";
 import type { Database } from "better-sqlite3";
+import type { ListOptions } from "@/lib/pagination";
+import {
+  sqliteListBindings,
+  sqliteListSuffix,
+} from "./list-pagination";
 
 type LeagueRow = {
   id: string;
@@ -23,11 +28,18 @@ const LEAGUE_SELECT = "SELECT id, name, abbreviation, logo FROM leagues";
 export class SqliteLeagueRepository implements LeagueRepository {
   constructor(private readonly db: Database) {}
 
-  async list(): Promise<League[]> {
+  async list(options?: ListOptions): Promise<League[]> {
     const rows = this.db
-      .prepare(`${LEAGUE_SELECT} ORDER BY name ASC`)
-      .all() as LeagueRow[];
+      .prepare(`${LEAGUE_SELECT} ORDER BY name ASC${sqliteListSuffix(options)}`)
+      .all(...sqliteListBindings(options)) as LeagueRow[];
     return rows.map(rowToLeague);
+  }
+
+  async count(): Promise<number> {
+    const row = this.db
+      .prepare("SELECT COUNT(*) AS count FROM leagues")
+      .get() as { count: number };
+    return row.count;
   }
 
   async get(id: string): Promise<League | null> {

@@ -6,6 +6,7 @@ import {
   getDefaultLocationRepository,
   type LocationRepository,
 } from "@/persistence/repositories";
+import type { ListOptions } from "@/lib/pagination";
 import { LocationError, LocationErrorCodes } from "./errors";
 import {
   buildLocation,
@@ -25,8 +26,12 @@ import type {
 export class LocationStore {
   constructor(private readonly repository: LocationRepository) {}
 
-  async list(): Promise<Location[]> {
-    return this.repository.list();
+  async list(options?: ListOptions): Promise<Location[]> {
+    return this.repository.list(options);
+  }
+
+  async count(): Promise<number> {
+    return this.repository.count();
   }
 
   async get(id: string): Promise<Location> {
@@ -196,8 +201,12 @@ export async function executeLocation(
   }
 }
 
-export async function listLocations(): Promise<Location[]> {
-  return getLocationStore().list();
+export async function listLocations(options?: ListOptions): Promise<Location[]> {
+  return getLocationStore().list(options);
+}
+
+export async function countLocations(): Promise<number> {
+  return getLocationStore().count();
 }
 
 export * from "./types";

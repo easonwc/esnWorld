@@ -1,6 +1,7 @@
 import { getWorldClockService } from "@/modules/world-clock";
 import { getLocationStore, parseIsoUtc } from "@/modules/locations";
 import { getVenueStore, VenueError } from "@/modules/venues";
+import { paginateArray, type ListOptions } from "@/lib/pagination";
 import { EventError, EventErrorCodes } from "./errors";
 import {
   buildEventRecord,
@@ -51,10 +52,15 @@ async function toEventOutput(
 export class EventStore {
   private readonly events = new Map<string, EventRecord>();
 
-  list(): EventRecord[] {
-    return [...this.events.values()].sort((a, b) =>
+  list(options?: ListOptions): EventRecord[] {
+    const sorted = [...this.events.values()].sort((a, b) =>
       a.isoUtcStart.localeCompare(b.isoUtcStart),
     );
+    return options ? paginateArray(sorted, options) : sorted;
+  }
+
+  count(): number {
+    return this.events.size;
   }
 
   async listByVenue(venueId: string): Promise<EventRecord[]> {
@@ -199,12 +205,19 @@ export async function executeEvent(input: EventInput): Promise<EventsOutput> {
   }
 }
 
-export async function listEvents(atIsoUtc?: string): Promise<EventOutput[]> {
+export async function listEvents(
+  atIsoUtc?: string,
+  options?: ListOptions,
+): Promise<EventOutput[]> {
   const store = getEventStore();
   const isoUtc = resolveIsoUtc(atIsoUtc);
   return Promise.all(
-    store.list().map((event) => toEventOutput(event, isoUtc)),
+    store.list(options).map((event) => toEventOutput(event, isoUtc)),
   );
+}
+
+export async function countEvents(): Promise<number> {
+  return getEventStore().count();
 }
 
 export * from "./types";

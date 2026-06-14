@@ -103,7 +103,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/countries",
     summary: "List all countries",
     description:
-      "Returns all countries sorted by name. Population is the sum of all city populations in that country.",
+      "Returns all countries sorted by name. Population is the sum of all city populations in that country. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "countries-create",
@@ -157,7 +157,8 @@ export const apiOperations: ApiOperation[] = [
     method: "GET",
     path: "/api/locations",
     summary: "List all locations",
-    description: "Returns all city locations sorted by name.",
+    description:
+      "Returns all city locations sorted by name. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "locations-create",
@@ -233,7 +234,8 @@ export const apiOperations: ApiOperation[] = [
     method: "GET",
     path: "/api/colleges",
     summary: "List all colleges",
-    description: "Returns all colleges and universities sorted by name.",
+    description:
+      "Returns all colleges and universities sorted by name. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "colleges-create",
@@ -300,7 +302,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/leagues",
     summary: "List all leagues",
     description:
-      "Returns all professional sports leagues sorted by name. Leagues contain conferences, divisions, and teams.",
+      "Returns all professional sports leagues sorted by name. Leagues contain conferences, divisions, and teams. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "leagues-create",
@@ -393,7 +395,8 @@ export const apiOperations: ApiOperation[] = [
     method: "GET",
     path: "/api/conferences",
     summary: "List all conferences",
-    description: "Returns all conferences sorted by name.",
+    description:
+      "Returns all conferences sorted by name. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "conferences-create",
@@ -459,7 +462,8 @@ export const apiOperations: ApiOperation[] = [
     method: "GET",
     path: "/api/divisions",
     summary: "List all divisions",
-    description: "Returns all divisions sorted by name.",
+    description:
+      "Returns all divisions sorted by name. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "divisions-create",
@@ -539,7 +543,8 @@ export const apiOperations: ApiOperation[] = [
     method: "GET",
     path: "/api/teams",
     summary: "List all teams",
-    description: "Returns all professional sports teams sorted by name.",
+    description:
+      "Returns all professional sports teams sorted by name. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "teams-create",
@@ -620,7 +625,8 @@ export const apiOperations: ApiOperation[] = [
     method: "GET",
     path: "/api/venues",
     summary: "List all venues",
-    description: "Returns all venues sorted by name.",
+    description:
+      "Returns all venues sorted by name. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "venues-create",
@@ -707,7 +713,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/events",
     summary: "List all events",
     description:
-      "Returns all events with status computed from the current world clock time.",
+      "Returns all events with status computed from the current world clock time. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "events-create",

@@ -1,13 +1,19 @@
 import type { CountryRecord } from "../types";
 import type { CountryRepository } from "../types";
+import { paginateArray, type ListOptions } from "@/lib/pagination";
 
 export class MemoryCountryRepository implements CountryRepository {
   private readonly countries = new Map<string, CountryRecord>();
 
-  async list(): Promise<CountryRecord[]> {
-    return [...this.countries.values()].sort((a, b) =>
+  async list(options?: ListOptions): Promise<CountryRecord[]> {
+    const sorted = [...this.countries.values()].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
+    return options ? paginateArray(sorted, options) : sorted;
+  }
+
+  async count(): Promise<number> {
+    return this.countries.size;
   }
 
   async get(id: string): Promise<CountryRecord | null> {

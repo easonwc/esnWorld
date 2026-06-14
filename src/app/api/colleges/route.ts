@@ -1,8 +1,10 @@
 import { jsonResponse } from "@/lib/api-response";
+import { listGetResponse } from "@/lib/list-route";
 import {
+  CollegeError,
+  countColleges,
   executeCollege,
   listColleges,
-  CollegeError,
   type CollegeInput,
 } from "@/modules/colleges";
 import { LocationError } from "@/modules/locations";
@@ -21,9 +23,8 @@ function errorResponse(error: CollegeError | LocationError) {
   );
 }
 
-export async function GET() {
-  const colleges = await listColleges();
-  return jsonResponse({ data: colleges });
+export async function GET(request: Request) {
+  return listGetResponse(request, listColleges, countColleges);
 }
 
 export async function POST(request: Request) {

@@ -5,6 +5,7 @@ import {
   getDefaultTeamRepository,
   type DivisionRepository,
 } from "@/persistence/repositories";
+import type { ListOptions } from "@/lib/pagination";
 import { DivisionError, DivisionErrorCodes } from "./errors";
 import {
   buildDivision,
@@ -17,8 +18,12 @@ import type { Division, DivisionInput, DivisionOutput } from "./types";
 export class DivisionStore {
   constructor(private readonly repository: DivisionRepository) {}
 
-  async list(): Promise<Division[]> {
-    return this.repository.list();
+  async list(options?: ListOptions): Promise<Division[]> {
+    return this.repository.list(options);
+  }
+
+  async count(): Promise<number> {
+    return this.repository.count();
   }
 
   async listByConference(conferenceId: string): Promise<Division[]> {
@@ -178,8 +183,12 @@ export async function executeDivision(
   }
 }
 
-export async function listDivisions(): Promise<Division[]> {
-  return getDivisionStore().list();
+export async function listDivisions(options?: ListOptions): Promise<Division[]> {
+  return getDivisionStore().list(options);
+}
+
+export async function countDivisions(): Promise<number> {
+  return getDivisionStore().count();
 }
 
 export * from "./types";

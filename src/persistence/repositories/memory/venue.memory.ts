@@ -1,13 +1,19 @@
 import type { Venue } from "@/modules/venues/types";
 import type { VenueRepository } from "../types";
+import { paginateArray, type ListOptions } from "@/lib/pagination";
 
 export class MemoryVenueRepository implements VenueRepository {
   private readonly venues = new Map<string, Venue>();
 
-  async list(): Promise<Venue[]> {
-    return [...this.venues.values()].sort((a, b) =>
+  async list(options?: ListOptions): Promise<Venue[]> {
+    const sorted = [...this.venues.values()].sort((a, b) =>
       a.name.localeCompare(b.name),
     );
+    return options ? paginateArray(sorted, options) : sorted;
+  }
+
+  async count(): Promise<number> {
+    return this.venues.size;
   }
 
   async listByLocation(locationId: string): Promise<Venue[]> {
