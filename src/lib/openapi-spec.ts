@@ -256,6 +256,107 @@ export const apiOperations: ApiOperation[] = [
       2,
     ),
   },
+  {
+    id: "events-list",
+    tag: "Events",
+    method: "GET",
+    path: "/api/events",
+    summary: "List all events",
+    description:
+      "Returns all events with status computed from the current world clock time.",
+  },
+  {
+    id: "events-create",
+    tag: "Events",
+    method: "POST",
+    path: "/api/events",
+    summary: "Create an event",
+    description:
+      "Schedules an event at a venue-local start time. Duration is in minutes. Multiple events can run in parallel.",
+    requestBody: JSON.stringify(
+      {
+        action: "create",
+        name: "Championship Final",
+        venueId: "paste-venue-id-here",
+        localStart: {
+          year: 2020,
+          month: 6,
+          day: 14,
+          hour: 12,
+          minute: 0,
+        },
+        durationMinutes: 120,
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "events-get",
+    tag: "Events",
+    method: "POST",
+    path: "/api/events",
+    summary: "Get an event",
+    description: "Retrieves a single event by id with current status.",
+    requestBody: JSON.stringify(
+      { action: "get", id: "paste-event-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "events-list-by-venue",
+    tag: "Events",
+    method: "POST",
+    path: "/api/events",
+    summary: "List events by venue",
+    description: "Returns all events scheduled at a specific venue.",
+    requestBody: JSON.stringify(
+      { action: "listByVenue", venueId: "paste-venue-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "events-list-active",
+    tag: "Events",
+    method: "POST",
+    path: "/api/events",
+    summary: "List active events",
+    description:
+      "Returns events currently in progress based on the world clock. Supports parallel active events.",
+    requestBody: JSON.stringify({ action: "listActive" }, null, 2),
+  },
+  {
+    id: "events-list-at-time",
+    tag: "Events",
+    method: "POST",
+    path: "/api/events",
+    summary: "List active events at a specific time",
+    description:
+      "Returns events in progress at a given UTC time. Uses world clock if isoUtc is omitted.",
+    requestBody: JSON.stringify(
+      {
+        action: "listAtTime",
+        isoUtc: "2020-06-14T17:00:00.000Z",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "events-delete",
+    tag: "Events",
+    method: "POST",
+    path: "/api/events",
+    summary: "Delete an event",
+    description: "Removes an event by id.",
+    requestBody: JSON.stringify(
+      { action: "delete", id: "paste-event-id-here" },
+      null,
+      2,
+    ),
+  },
 ];
 
 export function buildOpenApiSpec() {
@@ -332,6 +433,11 @@ export function buildOpenApiSpec() {
       {
         name: "Venues",
         description: "Venues within a location, such as stadiums or golf courses.",
+      },
+      {
+        name: "Events",
+        description:
+          "Scheduled events at venue-local times with parallel active event support.",
       },
     ],
     paths,

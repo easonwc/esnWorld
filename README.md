@@ -10,6 +10,7 @@ A server-side World Engine built with **Next.js**, **Node.js**, and **TypeScript
 | **Calendar** | US Gregorian date derived from UTC | June 14, 2020 — Sunday, day 166 |
 | **Location** | A city in a country | New York, United States |
 | **Venue** | A place within a city | Madison Square Garden, Bethpage Black Course |
+| **Event** | A scheduled happening at a venue | Championship Final at 12:00 local, 2 hours |
 
 Locations hold the **timezone** used for local-time calculations. Venues belong to a location and inherit its timezone.
 
@@ -21,7 +22,7 @@ Locations hold the **timezone** used for local-time calculations. Venues belong 
 | **Calendar** | ✅ | US Gregorian calendar derived from world clock UTC time |
 | **Locations** | ✅ | Cities with country, population, coordinates, and IANA timezone |
 | **Venues** | ✅ | Venues within a location (stadiums, golf courses, etc.) |
-| **Events** | 🔜 | Parallel events scheduled at venue-local times |
+| **Events** | ✅ | Parallel events scheduled at venue-local start times |
 
 Each module follows an **inputs → transformation → outputs** model with lightweight error handling and unit tests.
 
@@ -127,6 +128,33 @@ Open [http://localhost:3000/api-docs](http://localhost:3000/api-docs) for the in
 
 Local time at a venue uses the parent location's timezone.
 
+### Events
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/events` | List all events (status from world clock) |
+| `POST` | `/api/events` | Create, get, delete, list by venue, or list active (`action`: `create`, `get`, `delete`, `listByVenue`, `listActive`, `listAtTime`) |
+
+**Schedule an event at venue-local time:**
+
+```json
+{
+  "action": "create",
+  "name": "Championship Final",
+  "venueId": "<venue-id>",
+  "localStart": {
+    "year": 2020,
+    "month": 6,
+    "day": 14,
+    "hour": 12,
+    "minute": 0
+  },
+  "durationMinutes": 120
+}
+```
+
+Events are stored as UTC instants derived from the venue's city timezone. Status is `upcoming`, `active`, or `ended` relative to the world clock. Multiple events can be active in parallel.
+
 ### Other
 
 | Method | Endpoint | Description |
@@ -141,6 +169,8 @@ Local time at a venue uses the parent location's timezone.
 3. **Create venues** in that city — `POST /api/venues` with `action: "create"`
 4. **Check the calendar** — `GET /api/calendar`
 5. **Get local time at a venue** — `POST /api/venues` with `action: "localTime"`
+6. **Schedule an event** — `POST /api/events` with `action: "create"`
+7. **List active events** — `POST /api/events` with `action: "listActive"`
 
 ## Scripts
 
@@ -162,6 +192,7 @@ src/
     calendar/        # US Gregorian calendar transforms
     locations/       # Cities with country, population, and timezone
     venues/          # Venues within a location
+    events/          # Scheduled events at venue-local times
   app/
     api/             # API route handlers
     api-docs/        # Interactive API explorer

@@ -1,5 +1,5 @@
 import { LocationError, LocationErrorCodes } from "./errors";
-import type { LocalTimeParts, Location } from "./types";
+import type { LocalDateTimeInput, LocalTimeParts, Location } from "./types";
 
 const ISO_UTC_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?Z$/;
@@ -217,4 +217,44 @@ export function utcToLocalTime(isoUtc: string, timezone: string): LocalTimeParts
     weekday: WEEKDAY_TO_INDEX[weekdayName] ?? 0,
     weekdayName,
   };
+}
+
+export function localTimeToIsoUtc(
+  local: LocalDateTimeInput,
+  timezone: string,
+): string {
+  validateTimezone(timezone);
+
+  const second = local.second ?? 0;
+  let utcMs = Date.UTC(
+    local.year,
+    local.month - 1,
+    local.day,
+    local.hour,
+    local.minute,
+    second,
+  );
+
+  for (let i = 0; i < 4; i++) {
+    const converted = utcToLocalTime(new Date(utcMs).toISOString(), timezone);
+    const target = Date.UTC(
+      local.year,
+      local.month - 1,
+      local.day,
+      local.hour,
+      local.minute,
+      second,
+    );
+    const actual = Date.UTC(
+      converted.year,
+      converted.month - 1,
+      converted.day,
+      converted.hour,
+      converted.minute,
+      converted.second,
+    );
+    utcMs += target - actual;
+  }
+
+  return new Date(utcMs).toISOString();
 }

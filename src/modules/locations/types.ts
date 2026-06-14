@@ -57,6 +57,16 @@ export interface LocalTimeParts {
   weekdayName: string;
 }
 
+/** Civil datetime without weekday — used for local scheduling input */
+export interface LocalDateTimeInput {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+  second?: number;
+}
+
 export interface LocationLocalTimeOutput {
   locationId: string;
   locationName: string;

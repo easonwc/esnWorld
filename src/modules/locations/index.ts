@@ -145,6 +145,7 @@ export * from "./types";
 export * from "./errors";
 export {
   buildLocation,
+  localTimeToIsoUtc,
   parseIsoUtc,
   utcToLocalTime,
   validateCountry,
