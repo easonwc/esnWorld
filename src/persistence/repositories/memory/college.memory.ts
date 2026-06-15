@@ -41,6 +41,13 @@ export class MemoryCollegeRepository implements CollegeRepository {
     return college;
   }
 
+  async updateLogo(id: string, logo: string): Promise<void> {
+    const college = this.colleges.get(id);
+    if (college) {
+      this.colleges.set(id, { ...college, logo });
+    }
+  }
+
   async delete(id: string): Promise<boolean> {
     return this.colleges.delete(id);
   }

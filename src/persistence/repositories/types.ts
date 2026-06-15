@@ -56,6 +56,7 @@ export interface CollegeRepository {
   countByLocation(locationId: string): Promise<number>;
   get(id: string): Promise<College | null>;
   create(college: College): Promise<College>;
+  updateLogo(id: string, logo: string): Promise<void>;
   delete(id: string): Promise<boolean>;
   clear(): Promise<void>;
 }

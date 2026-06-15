@@ -8,6 +8,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { CollegeSeedEntry, LocationSeedEntry } from "../src/persistence/seed/types";
 import { NCAA_SCHOOLS } from "./ncaa-schools-source";
+import { COLLEGE_ESPN_LOGO_IDS } from "../src/persistence/logos/college-espn-ids";
 
 type Campus = readonly [
   city: string,
@@ -337,7 +338,9 @@ function formatCollegeEntry(entry: CollegeSeedEntry): string {
   const region = entry.locationRegion
     ? `locationRegion: ${JSON.stringify(entry.locationRegion)}, `
     : "";
-  return `  { name: ${JSON.stringify(entry.name)}, locationName: ${JSON.stringify(entry.locationName)}, ${region}countryName: "United States", attendance: ${formatPopulation(entry.attendance)} },`;
+  const espnId =
+    entry.espnId !== undefined ? `espnId: ${entry.espnId}, ` : "";
+  return `  { name: ${JSON.stringify(entry.name)}, locationName: ${JSON.stringify(entry.locationName)}, ${region}countryName: "United States", attendance: ${formatPopulation(entry.attendance)}, ${espnId}},`;
 }
 
 function buildCollegeSeedEntries(): CollegeSeedEntry[] {
@@ -347,6 +350,7 @@ function buildCollegeSeedEntries(): CollegeSeedEntry[] {
     locationRegion: state,
     countryName: "United States",
     attendance,
+    espnId: COLLEGE_ESPN_LOGO_IDS[name],
   })).sort((a, b) => a.name.localeCompare(b.name));
 }
 

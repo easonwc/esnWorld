@@ -235,7 +235,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/colleges",
     summary: "List all colleges",
     description:
-      "Returns all colleges and universities sorted by name. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
+      "Returns all colleges and universities sorted by name. Each college includes a logo path (e.g. /logos/ncaa/{espnId}.png) when mapped. Optional query params: limit (default 100, max 500) and offset (default 0). When provided, the response includes pagination metadata.",
   },
   {
     id: "colleges-create",
@@ -958,7 +958,7 @@ export function buildOpenApiSpec() {
       {
         name: "Colleges",
         description:
-          "Colleges and universities within a location, with student attendance.",
+          "Colleges and universities within a location, with student attendance and optional NCAA logo path.",
       },
       {
         name: "Leagues",

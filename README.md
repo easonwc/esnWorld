@@ -86,10 +86,11 @@ cp .env.example .env
 | `NHL_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download NHL team and league logos on startup |
 | `MLS_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download MLS team and league logos on startup |
 | `WNBA_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download WNBA team and league logos on startup |
+| `COLLEGE_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download NCAA college logos on startup |
 
 League seed flags are independent — enable any combination. Each seed also merges countries and supplemental stadium cities as needed, so they can run without `LOCATIONS_SEED_ON_STARTUP` (though enabling both is recommended for a complete world).
 
-League seeds assign logo paths but do **not** download images unless the matching `{LEAGUE}_LOGO_DOWNLOAD_ON_STARTUP=true`.
+League seeds assign logo paths but do **not** download images unless the matching `{LEAGUE}_LOGO_DOWNLOAD_ON_STARTUP=true`. College seeds assign logo paths but do **not** download images unless `COLLEGE_LOGO_DOWNLOAD_ON_STARTUP=true`.
 
 ### Country flag images
 
@@ -174,7 +175,25 @@ Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/l
 
 The city catalog includes major world metros, NFL/NBA/MLB/NHL/MLS/WNBA markets, **209 NCAA Division I campus cities**, and **47 tennis and golf event host cities** (Grand Slams, ATP/WTA Masters staples, golf majors, and flagship PGA/DP World Tour venues). **United States seed cities always include a `region` set to the state** (or District of Columbia). International cities may omit `region`.
 
-The college catalog lists **225 NCAA Division I football programs** (FBS + FCS) with approximate enrollment. Each college links to its campus city by `locationName` + `locationRegion` + `countryName`.
+The college catalog lists **225 NCAA Division I football programs** (FBS + FCS) with approximate enrollment. Each college links to its campus city by `locationName` + `locationRegion` + `countryName`. Colleges with a known ESPN team id also get a logo path at `/logos/ncaa/{espnId}.png` (224 of 225 schools; Washington and Lee University has no ESPN mapping).
+
+#### College logos
+
+On server startup, the college seed assigns logo paths on college records. **Network downloads are off by default.** Set `COLLEGE_LOGO_DOWNLOAD_ON_STARTUP=true` to fetch images during startup, or use `npm run download-college-logos` anytime.
+
+When downloads are enabled:
+
+1. **College logos** are saved to `public/logos/ncaa/` as `{espnId}.png` and stored on each college record.
+
+Logo source: [ESPN CDN](https://a.espncdn.com/i/teamlogos/ncaa/500/{espnId}.png). ESPN ids are mapped in `src/persistence/logos/college-espn-ids.ts` (regenerate with `npm run generate-college-espn-ids`).
+
+Downloaded images are gitignored; each machine fetches its own copy. Vitest always skips downloads. Paths are assigned even when downloads are disabled.
+
+**Download college logos manually:**
+
+```bash
+npm run download-college-logos  # 224 NCAA colleges with ESPN ids
+```
 
 ### Professional sports league seeds
 
@@ -413,7 +432,7 @@ A country cannot be deleted while it still has cities.
 }
 ```
 
-`attendance` is approximate total enrollment. Every college **must** reference an existing `locationId`.
+`attendance` is approximate total enrollment. Every college **must** reference an existing `locationId`. College responses include a `logo` path (empty string when no logo is mapped).
 
 ### Leagues
 
@@ -614,8 +633,10 @@ npm run download-nba-logos  # Download all 30 NBA team logos to public/logos/nba
 npm run download-nhl-logos  # Download all 32 NHL team logos to public/logos/nhl/
 npm run download-mls-logos  # Download all 30 MLS team logos to public/logos/mls/
 npm run download-wnba-logos  # Download all 13 WNBA team logos to public/logos/wnba/
+npm run download-college-logos  # Download NCAA college logos to public/logos/ncaa/
 npm run download-league-logos  # Download NFL/MLB/NBA/NHL/MLS/WNBA league logos to public/logos/leagues/
 npm run generate-ncaa-locations  # Regenerate NCAA campus cities and college seed data
+npm run generate-college-espn-ids  # Regenerate ESPN id map for college logos
 npm run lint         # Lint
 ```
 

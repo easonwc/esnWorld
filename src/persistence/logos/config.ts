@@ -45,6 +45,9 @@ export const WNBA_LOGO_CDN_BASE =
 export const LEAGUE_LOGO_CDN_BASE =
   "https://a.espncdn.com/i/teamlogos/leagues/500";
 
+export const NCAA_COLLEGE_LOGO_CDN_BASE =
+  "https://a.espncdn.com/i/teamlogos/ncaa/500";
+
 export function getNflLogosDirectory(): string {
   return path.resolve(process.cwd(), "public", "logos", "nfl");
 }
@@ -73,6 +76,10 @@ export function getLeagueLogosDirectory(): string {
   return path.resolve(process.cwd(), "public", "logos", "leagues");
 }
 
+export function getNcaaCollegeLogosDirectory(): string {
+  return path.resolve(process.cwd(), "public", "logos", "ncaa");
+}
+
 export function getNflLogoPublicPath(abbreviation: string): string {
   return `/logos/nfl/${abbreviation.trim().toLowerCase()}.png`;
 }
@@ -99,6 +106,10 @@ export function getWnbaLogoPublicPath(abbreviation: string): string {
 
 export function getLeagueLogoPublicPath(abbreviation: string): string {
   return `/logos/leagues/${abbreviation.trim().toLowerCase()}.png`;
+}
+
+export function getCollegeLogoPublicPath(espnId: number): string {
+  return `/logos/ncaa/${espnId}.png`;
 }
 
 export function getNflLogoFilePath(abbreviation: string): string {
@@ -148,6 +159,10 @@ export function getLeagueLogoFilePath(abbreviation: string): string {
     getLeagueLogosDirectory(),
     `${abbreviation.trim().toLowerCase()}.png`,
   );
+}
+
+export function getCollegeLogoFilePath(espnId: number): string {
+  return path.join(getNcaaCollegeLogosDirectory(), `${espnId}.png`);
 }
 
 export function shouldDownloadNflLogos(
@@ -200,6 +215,15 @@ export function shouldDownloadWnbaLogos(
 ): boolean {
   return isAssetDownloadEnabled(
     process.env.WNBA_LOGO_DOWNLOAD_ON_STARTUP,
+    options,
+  );
+}
+
+export function shouldDownloadCollegeLogos(
+  options: AssetDownloadOptions = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.COLLEGE_LOGO_DOWNLOAD_ON_STARTUP,
     options,
   );
 }

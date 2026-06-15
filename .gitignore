@@ -68,6 +68,10 @@ yarn-error.log*
 /public/logos/wnba/*
 !/public/logos/wnba/.gitkeep
 
+# downloaded NCAA college logos (run npm run download-college-logos)
+/public/logos/ncaa/*
+!/public/logos/ncaa/.gitkeep
+
 # downloaded league logos (synced on startup with league seeds)
 /public/logos/leagues/*
 !/public/logos/leagues/.gitkeep

@@ -15,6 +15,7 @@ const MIGRATIONS = [
   "007_nfl_structure.sql",
   "008_team_league_scope.sql",
   "009_league_logos.sql",
+  "010_college_logos.sql",
 ] as const;
 
 function runMigrations(db: Database.Database): void {

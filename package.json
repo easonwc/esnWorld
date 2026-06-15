@@ -16,7 +16,9 @@
     "download-nhl-logos": "tsx scripts/download-nhl-logos.ts",
     "download-mls-logos": "tsx scripts/download-mls-logos.ts",
     "download-wnba-logos": "tsx scripts/download-wnba-logos.ts",
+    "download-college-logos": "tsx scripts/download-college-logos.ts",
     "download-league-logos": "tsx scripts/download-league-logos.ts",
+    "generate-college-espn-ids": "tsx scripts/generate-college-espn-ids.ts",
     "generate-ncaa-locations": "tsx scripts/generate-ncaa-locations.ts"
   },
   "dependencies": {

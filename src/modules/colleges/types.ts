@@ -36,6 +36,7 @@ export interface College {
   locationName: string;
   locationRegion: string | null;
   attendance: number;
+  logo: string;
 }
 
 export type CollegeOutput =

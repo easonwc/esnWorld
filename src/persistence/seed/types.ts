@@ -35,6 +35,7 @@ export interface CollegeSeedEntry {
   locationRegion?: string | null;
   countryName: string;
   attendance: number;
+  espnId?: number;
 }
 
 export interface CollegeSeedResult {

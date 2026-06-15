@@ -1,4 +1,6 @@
 import { buildCollege } from "@/modules/colleges/transform";
+import { getCollegeLogoPublicPath } from "@/persistence/logos/config";
+import { COLLEGE_ESPN_LOGO_IDS } from "@/persistence/logos/college-espn-ids";
 import {
   getDefaultCollegeRepository,
   getDefaultLocationRepository,
@@ -12,6 +14,11 @@ import { requireUsSeedRegion } from "./validate-us-regions";
 
 export function collegeMergeKey(name: string): string {
   return name.trim().toLowerCase();
+}
+
+export function resolveCollegeSeedLogo(name: string): string {
+  const espnId = COLLEGE_ESPN_LOGO_IDS[name];
+  return espnId ? getCollegeLogoPublicPath(espnId) : "";
 }
 
 export function resolveCollegeSeedLocation<
@@ -96,6 +103,9 @@ export async function mergeCollegeSeed(
       crypto.randomUUID(),
       location.name,
       location.region,
+      entry.espnId
+        ? getCollegeLogoPublicPath(entry.espnId)
+        : resolveCollegeSeedLogo(entry.name),
     );
     await collegeRepository.create(college);
     existingKeys.add(key);

@@ -59,6 +59,7 @@ export function buildCollege(
   id: string,
   locationName: string,
   locationRegion: string | null,
+  logo = "",
 ): College {
   return {
     id,
@@ -67,5 +68,6 @@ export function buildCollege(
     locationName: locationName.trim(),
     locationRegion,
     attendance: validateAttendance(input.attendance),
+    logo,
   };
 }

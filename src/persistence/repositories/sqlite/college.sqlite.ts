@@ -16,6 +16,7 @@ type CollegeRow = {
   location_region: string | null;
   name: string;
   attendance: number;
+  logo: string;
 };
 
 function rowToCollege(row: CollegeRow): College {
@@ -26,6 +27,7 @@ function rowToCollege(row: CollegeRow): College {
     locationName: row.location_name,
     locationRegion: row.location_region,
     attendance: row.attendance,
+    logo: row.logo,
   };
 }
 
@@ -36,7 +38,8 @@ const COLLEGE_SELECT = `
     l.name AS location_name,
     l.region AS location_region,
     c.name,
-    c.attendance
+    c.attendance,
+    c.logo
   FROM colleges c
   INNER JOIN locations l ON l.id = c.location_id
 `;
@@ -87,10 +90,16 @@ export class SqliteCollegeRepository implements CollegeRepository {
     try {
       this.db
         .prepare(
-          `INSERT INTO colleges (id, location_id, name, attendance)
-           VALUES (?, ?, ?, ?)`,
+          `INSERT INTO colleges (id, location_id, name, attendance, logo)
+           VALUES (?, ?, ?, ?, ?)`,
         )
-        .run(college.id, college.locationId, college.name, college.attendance);
+        .run(
+          college.id,
+          college.locationId,
+          college.name,
+          college.attendance,
+          college.logo,
+        );
     } catch (error) {
       if (error instanceof SqliteError && error.code === "SQLITE_CONSTRAINT_FOREIGNKEY") {
         throw new CollegeError(
@@ -102,6 +111,10 @@ export class SqliteCollegeRepository implements CollegeRepository {
     }
 
     return (await this.get(college.id)) ?? college;
+  }
+
+  async updateLogo(id: string, logo: string): Promise<void> {
+    this.db.prepare("UPDATE colleges SET logo = ? WHERE id = ?").run(logo, id);
   }
 
   async delete(id: string): Promise<boolean> {

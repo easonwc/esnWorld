@@ -11,6 +11,7 @@ export async function register() {
       "@/persistence/flags/download"
     );
     const {
+      syncCollegeLogos,
       syncLeagueEntityLogo,
       syncMlbTeamLogos,
       syncMlsTeamLogos,
@@ -20,6 +21,7 @@ export async function register() {
       syncWnbaTeamLogos,
     } = await import("@/persistence/logos/download");
     const {
+      getDefaultCollegeRepository,
       getDefaultCountryRepository,
       getDefaultLeagueRepository,
       getDefaultTeamRepository,
@@ -41,6 +43,15 @@ export async function register() {
       if (sync.downloaded > 0 || sync.updated > 0) {
         console.info(
           `[flags] synced ${sync.downloaded} new images, updated ${sync.updated} country record(s)`,
+        );
+      }
+
+      const collegeLogoSync = await syncCollegeLogos(
+        getDefaultCollegeRepository(),
+      );
+      if (collegeLogoSync.downloaded > 0 || collegeLogoSync.updated > 0) {
+        console.info(
+          `[college logos] synced ${collegeLogoSync.downloaded} new images, updated ${collegeLogoSync.updated} college record(s)`,
         );
       }
 

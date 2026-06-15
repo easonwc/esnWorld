@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import type { AssetDownloadOptions } from "@/persistence/env";
-import type { LeagueRepository, TeamRepository } from "@/persistence/repositories";
+import type { LeagueRepository, TeamRepository, CollegeRepository } from "@/persistence/repositories";
+import { COLLEGE_ESPN_LOGO_IDS } from "./college-espn-ids";
 import {
   getLeagueLogoFilePath,
   getLeagueLogoPublicPath,
@@ -23,6 +24,9 @@ import {
   getWnbaLogoFilePath,
   getWnbaLogoPublicPath,
   getWnbaLogosDirectory,
+  getCollegeLogoFilePath,
+  getCollegeLogoPublicPath,
+  getNcaaCollegeLogosDirectory,
   LEAGUE_LOGO_CDN_BASE,
   MLB_LOGO_CDN_BASE,
   MLS_LOGO_CDN_BASE,
@@ -31,7 +35,9 @@ import {
   getNhlLogoCdnAbbreviation,
   NHL_LOGO_CDN_BASE,
   NFL_LOGO_CDN_BASE,
+  NCAA_COLLEGE_LOGO_CDN_BASE,
   WNBA_LOGO_CDN_BASE,
+  shouldDownloadCollegeLogos,
   shouldDownloadLeagueLogo,
   shouldDownloadMlbLogos,
   shouldDownloadMlsLogos,
@@ -606,4 +612,125 @@ export async function syncLeagueEntityLogo(
   } catch {
     return { downloaded: 0, skipped: 0, failed: 1, updated: 0 };
   }
+}
+
+function normalizeEspnId(espnId: number): number {
+  if (!Number.isInteger(espnId) || espnId <= 0) {
+    throw new Error(`espnId must be a positive integer, received: ${espnId}`);
+  }
+  return espnId;
+}
+
+export async function downloadCollegeLogo(
+  espnId: number,
+  options: AssetDownloadOptions = {},
+): Promise<string> {
+  const normalized = normalizeEspnId(espnId);
+  const publicPath = getCollegeLogoPublicPath(normalized);
+
+  if (!shouldDownloadCollegeLogos(options)) {
+    return publicPath;
+  }
+
+  const logosDir = getNcaaCollegeLogosDirectory();
+  fs.mkdirSync(logosDir, { recursive: true });
+
+  const filePath = getCollegeLogoFilePath(normalized);
+  if (fs.existsSync(filePath)) {
+    return publicPath;
+  }
+
+  const response = await fetch(
+    `${NCAA_COLLEGE_LOGO_CDN_BASE}/${normalized}.png`,
+  );
+
+  if (!response.ok) {
+    if (options.force) {
+      throw new Error(
+        `Failed to download college logo for ${normalized}: HTTP ${response.status}`,
+      );
+    }
+    return publicPath;
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  fs.writeFileSync(filePath, buffer);
+
+  return publicPath;
+}
+
+export async function downloadSeedCollegeLogos(
+  espnIds: readonly number[],
+): Promise<LeagueLogoDownloadResult> {
+  const result: LeagueLogoDownloadResult = {
+    downloaded: 0,
+    skipped: 0,
+    failed: 0,
+  };
+
+  await runWithConcurrency(espnIds, LOGO_DOWNLOAD_CONCURRENCY, async (espnId) => {
+    const filePath = getCollegeLogoFilePath(espnId);
+
+    if (fs.existsSync(filePath)) {
+      result.skipped += 1;
+      return;
+    }
+
+    try {
+      await downloadCollegeLogo(espnId, { force: true });
+      result.downloaded += 1;
+    } catch {
+      result.failed += 1;
+    }
+  });
+
+  return result;
+}
+
+export async function syncCollegeLogos(
+  repository: CollegeRepository,
+): Promise<LeagueLogoSyncResult> {
+  if (!shouldDownloadCollegeLogos()) {
+    return { downloaded: 0, skipped: 0, failed: 0, updated: 0 };
+  }
+
+  const colleges = await repository.list();
+  const result: LeagueLogoSyncResult = {
+    downloaded: 0,
+    skipped: 0,
+    failed: 0,
+    updated: 0,
+  };
+
+  await runWithConcurrency(colleges, LOGO_DOWNLOAD_CONCURRENCY, async (college) => {
+    const espnId = COLLEGE_ESPN_LOGO_IDS[college.name];
+    if (!espnId) {
+      return;
+    }
+
+    const logoFilePath = getCollegeLogoFilePath(espnId);
+    const existed = fs.existsSync(logoFilePath);
+
+    try {
+      const logoPath = await downloadCollegeLogo(espnId);
+      const saved = fs.existsSync(logoFilePath);
+
+      if (existed) {
+        result.skipped += 1;
+      } else if (saved) {
+        result.downloaded += 1;
+      } else {
+        result.failed += 1;
+      }
+
+      if (college.logo !== logoPath) {
+        await repository.updateLogo(college.id, logoPath);
+        result.updated += 1;
+      }
+    } catch {
+      result.failed += 1;
+    }
+  });
+
+  return result;
 }

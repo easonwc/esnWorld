@@ -105,5 +105,22 @@ describe("buildCollege", () => {
     expect(college.name).toBe("Duke University");
     expect(college.locationName).toBe("Durham");
     expect(college.locationRegion).toBe("North Carolina");
+    expect(college.logo).toBe("");
+  });
+
+  it("accepts an optional logo path", () => {
+    const college = buildCollege(
+      {
+        name: "Duke University",
+        locationId: "location-id",
+        attendance: 17000,
+      },
+      "test-id",
+      "Durham",
+      "North Carolina",
+      "/logos/ncaa/150.png",
+    );
+
+    expect(college.logo).toBe("/logos/ncaa/150.png");
   });
 });
