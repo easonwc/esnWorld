@@ -722,7 +722,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/events",
     summary: "Create an event",
     description:
-      "Schedules an event at a venue-local start time. Duration is in minutes. Multiple events can run in parallel.",
+      "Schedules an event at a venue-local start time. Duration is in minutes. Optional parentId links a child event that must use the same venue and fit within the parent's time window. Overlapping events at the same venue are rejected unless one is an ancestor of the other.",
     requestBody: JSON.stringify(
       {
         action: "create",
@@ -747,7 +747,8 @@ export const apiOperations: ApiOperation[] = [
     method: "POST",
     path: "/api/events",
     summary: "Get an event",
-    description: "Retrieves a single event by id with current status.",
+    description:
+      "Retrieves a single event by id with current status, parentId, and direct childIds.",
     requestBody: JSON.stringify(
       { action: "get", id: "paste-event-id-here" },
       null,
@@ -763,6 +764,20 @@ export const apiOperations: ApiOperation[] = [
     description: "Returns all events scheduled at a specific venue.",
     requestBody: JSON.stringify(
       { action: "listByVenue", venueId: "paste-venue-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "events-list-children",
+    tag: "Events",
+    method: "POST",
+    path: "/api/events",
+    summary: "List child events",
+    description:
+      "Returns direct child events for a parent event, sorted by start time.",
+    requestBody: JSON.stringify(
+      { action: "listChildren", parentId: "paste-parent-event-id-here" },
       null,
       2,
     ),
@@ -800,7 +815,8 @@ export const apiOperations: ApiOperation[] = [
     method: "POST",
     path: "/api/events",
     summary: "Delete an event",
-    description: "Removes an event by id.",
+    description:
+      "Removes an event by id and cascades deletion to all descendant child events.",
     requestBody: JSON.stringify(
       { action: "delete", id: "paste-event-id-here" },
       null,
@@ -986,7 +1002,7 @@ export function buildOpenApiSpec() {
       {
         name: "Events",
         description:
-          "Scheduled events at venue-local times with parallel active event support.",
+          "Scheduled events at venue-local times. Events may form a parent-child hierarchy; child events share the parent's venue and must fall within its time window.",
       },
       {
         name: "Weather",

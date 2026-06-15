@@ -3,6 +3,7 @@ export type EventAction =
   | "get"
   | "delete"
   | "listByVenue"
+  | "listChildren"
   | "listActive"
   | "listAtTime";
 
@@ -24,6 +25,8 @@ export interface EventCreateInput {
   /** Start time in the venue's local timezone */
   localStart: EventLocalStartInput;
   durationMinutes: number;
+  /** When set, venue and time window must fit within the parent event */
+  parentId?: string;
 }
 
 export interface EventGetInput {
@@ -41,6 +44,11 @@ export interface EventListByVenueInput {
   venueId: string;
 }
 
+export interface EventListChildrenInput {
+  action: "listChildren";
+  parentId: string;
+}
+
 export interface EventListActiveInput {
   action: "listActive";
 }
@@ -56,6 +64,7 @@ export type EventInput =
   | EventGetInput
   | EventDeleteInput
   | EventListByVenueInput
+  | EventListChildrenInput
   | EventListActiveInput
   | EventListAtTimeInput;
 
@@ -63,6 +72,7 @@ export interface EventRecord {
   id: string;
   name: string;
   venueId: string;
+  parentId: string | null;
   isoUtcStart: string;
   durationMinutes: number;
   isoUtcEnd: string;
@@ -80,6 +90,8 @@ export interface EventOutput {
   id: string;
   name: string;
   venueId: string;
+  parentId: string | null;
+  childIds: string[];
   venueName: string;
   isIndoor: boolean;
   weatherApplies: boolean;

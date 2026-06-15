@@ -18,6 +18,38 @@ export function validateId(id: unknown): string {
   return id.trim();
 }
 
+export function validateOptionalParentId(parentId: unknown): string | null {
+  if (parentId === undefined || parentId === null) {
+    return null;
+  }
+
+  return validateId(parentId);
+}
+
+export function validateChildWithinParent(
+  child: Pick<EventRecord, "venueId" | "isoUtcStart" | "isoUtcEnd">,
+  parent: EventRecord,
+): void {
+  if (child.venueId !== parent.venueId) {
+    throw new EventError(
+      EventErrorCodes.PARENT_VENUE_MISMATCH,
+      "Child event venue must match parent event venue",
+    );
+  }
+
+  const childStart = Date.parse(child.isoUtcStart);
+  const childEnd = Date.parse(child.isoUtcEnd);
+  const parentStart = Date.parse(parent.isoUtcStart);
+  const parentEnd = Date.parse(parent.isoUtcEnd);
+
+  if (childStart < parentStart || childEnd > parentEnd) {
+    throw new EventError(
+      EventErrorCodes.PARENT_TIME_CONTAINMENT,
+      "Child event must start and end within the parent event time window",
+    );
+  }
+}
+
 export function validateVenueId(venueId: unknown): string {
   if (typeof venueId !== "string" || venueId.trim().length === 0) {
     throw new EventError(
@@ -127,6 +159,7 @@ export function buildEventRecord(
     venueId: unknown;
     localStart: unknown;
     durationMinutes: unknown;
+    parentId?: unknown;
   },
   timezone: string,
   id: string,
@@ -142,6 +175,7 @@ export function buildEventRecord(
     id,
     name: validateEventName(input.name),
     venueId: validateVenueId(input.venueId),
+    parentId: validateOptionalParentId(input.parentId),
     localStart: {
       year: localStart.year,
       month: localStart.month,
@@ -154,6 +188,64 @@ export function buildEventRecord(
     durationMinutes,
     isoUtcEnd,
   };
+}
+
+export function eventsOverlap(
+  left: Pick<EventRecord, "isoUtcStart" | "isoUtcEnd">,
+  right: Pick<EventRecord, "isoUtcStart" | "isoUtcEnd">,
+): boolean {
+  const leftStart = Date.parse(left.isoUtcStart);
+  const leftEnd = Date.parse(left.isoUtcEnd);
+  const rightStart = Date.parse(right.isoUtcStart);
+  const rightEnd = Date.parse(right.isoUtcEnd);
+
+  return leftStart < rightEnd && rightStart < leftEnd;
+}
+
+export function collectAncestorIds(
+  event: Pick<EventRecord, "parentId">,
+  eventsById: ReadonlyMap<string, EventRecord>,
+): Set<string> {
+  const ancestors = new Set<string>();
+  let parentId = event.parentId;
+
+  while (parentId) {
+    ancestors.add(parentId);
+    const parent = eventsById.get(parentId);
+    if (!parent) {
+      break;
+    }
+    parentId = parent.parentId;
+  }
+
+  return ancestors;
+}
+
+export function assertNoVenueScheduleConflict(
+  newEvent: EventRecord,
+  eventsAtVenue: readonly EventRecord[],
+  eventsById: ReadonlyMap<string, EventRecord>,
+): void {
+  const ancestorIds = collectAncestorIds(newEvent, eventsById);
+
+  for (const existing of eventsAtVenue) {
+    if (existing.id === newEvent.id) {
+      continue;
+    }
+
+    if (!eventsOverlap(newEvent, existing)) {
+      continue;
+    }
+
+    if (ancestorIds.has(existing.id)) {
+      continue;
+    }
+
+    throw new EventError(
+      EventErrorCodes.VENUE_SCHEDULE_CONFLICT,
+      `Venue is already scheduled for "${existing.name}" during this time window`,
+    );
+  }
 }
 
 export function isEventActiveAt(

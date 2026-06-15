@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 function errorResponse(error: EventError | LocationError | VenueError) {
   const status =
     error.code === "EVENT_NOT_FOUND" ||
+    error.code === "PARENT_NOT_FOUND" ||
     error.code === "VENUE_NOT_FOUND" ||
     error.code === "LOCATION_NOT_FOUND"
       ? 404
