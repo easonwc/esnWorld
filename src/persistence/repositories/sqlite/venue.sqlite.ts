@@ -14,7 +14,11 @@ type VenueRow = {
   latitude: number;
   longitude: number;
   is_indoor: number;
+  scheduling_mode: Venue["schedulingMode"];
 };
+
+const VENUE_COLUMNS =
+  "id, location_id, name, latitude, longitude, is_indoor, scheduling_mode";
 
 function rowToVenue(row: VenueRow): Venue {
   return {
@@ -24,6 +28,7 @@ function rowToVenue(row: VenueRow): Venue {
     latitude: row.latitude,
     longitude: row.longitude,
     isIndoor: row.is_indoor === 1,
+    schedulingMode: row.scheduling_mode,
   };
 }
 
@@ -33,7 +38,7 @@ export class SqliteVenueRepository implements VenueRepository {
   async list(options?: ListOptions): Promise<Venue[]> {
     const rows = this.db
       .prepare(
-        `SELECT id, location_id, name, latitude, longitude, is_indoor FROM venues ORDER BY name ASC${sqliteListSuffix(options)}`,
+        `SELECT ${VENUE_COLUMNS} FROM venues ORDER BY name ASC${sqliteListSuffix(options)}`,
       )
       .all(...sqliteListBindings(options)) as VenueRow[];
     return rows.map(rowToVenue);
@@ -49,7 +54,7 @@ export class SqliteVenueRepository implements VenueRepository {
   async listByLocation(locationId: string): Promise<Venue[]> {
     const rows = this.db
       .prepare(
-        `SELECT id, location_id, name, latitude, longitude, is_indoor
+        `SELECT ${VENUE_COLUMNS}
          FROM venues
          WHERE location_id = ?
          ORDER BY name ASC`,
@@ -67,9 +72,7 @@ export class SqliteVenueRepository implements VenueRepository {
 
   async get(id: string): Promise<Venue | null> {
     const row = this.db
-      .prepare(
-        "SELECT id, location_id, name, latitude, longitude, is_indoor FROM venues WHERE id = ?",
-      )
+      .prepare(`SELECT ${VENUE_COLUMNS} FROM venues WHERE id = ?`)
       .get(id) as VenueRow | undefined;
     return row ? rowToVenue(row) : null;
   }
@@ -77,8 +80,9 @@ export class SqliteVenueRepository implements VenueRepository {
   async create(venue: Venue): Promise<Venue> {
     this.db
       .prepare(
-        `INSERT INTO venues (id, location_id, name, latitude, longitude, is_indoor)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO venues (
+          id, location_id, name, latitude, longitude, is_indoor, scheduling_mode
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         venue.id,
@@ -87,6 +91,7 @@ export class SqliteVenueRepository implements VenueRepository {
         venue.latitude,
         venue.longitude,
         venue.isIndoor ? 1 : 0,
+        venue.schedulingMode ?? "exclusive",
       );
     return venue;
   }

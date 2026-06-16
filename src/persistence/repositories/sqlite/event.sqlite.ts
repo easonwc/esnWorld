@@ -11,6 +11,7 @@ type EventRow = {
   id: string;
   parent_id: string | null;
   venue_id: string;
+  venue_resource_id: string | null;
   name: string;
   local_start_year: number;
   local_start_month: number;
@@ -27,6 +28,7 @@ const EVENT_COLUMNS = `
   id,
   parent_id,
   venue_id,
+  venue_resource_id,
   name,
   local_start_year,
   local_start_month,
@@ -44,6 +46,7 @@ function rowToEvent(row: EventRow): EventRecord {
     id: row.id,
     parentId: row.parent_id,
     venueId: row.venue_id,
+    venueResourceId: row.venue_resource_id,
     name: row.name,
     localStart: {
       year: row.local_start_year,
@@ -128,6 +131,7 @@ export class SqliteEventRepository implements EventRepository {
           id,
           parent_id,
           venue_id,
+          venue_resource_id,
           name,
           local_start_year,
           local_start_month,
@@ -138,12 +142,13 @@ export class SqliteEventRepository implements EventRepository {
           iso_utc_start,
           iso_utc_end,
           duration_minutes
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         event.id,
         event.parentId,
         event.venueId,
+        event.venueResourceId,
         event.name,
         event.localStart.year,
         event.localStart.month,
@@ -165,6 +170,7 @@ export class SqliteEventRepository implements EventRepository {
          SET
            parent_id = ?,
            venue_id = ?,
+           venue_resource_id = ?,
            name = ?,
            local_start_year = ?,
            local_start_month = ?,
@@ -180,6 +186,7 @@ export class SqliteEventRepository implements EventRepository {
       .run(
         event.parentId,
         event.venueId,
+        event.venueResourceId,
         event.name,
         event.localStart.year,
         event.localStart.month,

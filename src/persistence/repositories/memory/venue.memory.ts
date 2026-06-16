@@ -33,8 +33,12 @@ export class MemoryVenueRepository implements VenueRepository {
   }
 
   async create(venue: Venue): Promise<Venue> {
-    this.venues.set(venue.id, venue);
-    return venue;
+    const record: Venue = {
+      ...venue,
+      schedulingMode: venue.schedulingMode ?? "exclusive",
+    };
+    this.venues.set(record.id, record);
+    return record;
   }
 
   async delete(id: string): Promise<boolean> {

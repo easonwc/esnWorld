@@ -28,6 +28,8 @@ export interface EventCreateInput {
   durationMinutes: number;
   /** When set, venue and time window must fit within the parent event */
   parentId?: string;
+  /** Schedulable unit within a multi_resource venue (court, tee group, etc.) */
+  venueResourceId?: string;
 }
 
 export interface EventGetInput {
@@ -82,6 +84,7 @@ export interface EventRecord {
   id: string;
   name: string;
   venueId: string;
+  venueResourceId: string | null;
   parentId: string | null;
   isoUtcStart: string;
   durationMinutes: number;
@@ -100,6 +103,8 @@ export interface EventOutput {
   id: string;
   name: string;
   venueId: string;
+  venueResourceId: string | null;
+  venueResourceName: string | null;
   parentId: string | null;
   childIds: string[];
   venueName: string;

@@ -6,6 +6,7 @@ import {
 } from "@/modules/locations";
 import { EventError, EventErrorCodes } from "./errors";
 import type { EventLocalStartInput, EventRecord, EventStatus } from "./types";
+import type { VenueSchedulingMode } from "@/modules/venues/types";
 
 export function validateId(id: unknown): string {
   if (typeof id !== "string" || id.trim().length === 0) {
@@ -48,6 +49,16 @@ export function validateChildWithinParent(
       "Child event must start and end within the parent event time window",
     );
   }
+}
+
+export function validateOptionalVenueResourceId(
+  venueResourceId: unknown,
+): string | null {
+  if (venueResourceId === undefined || venueResourceId === null) {
+    return null;
+  }
+
+  return validateId(venueResourceId);
 }
 
 export function validateVenueId(venueId: unknown): string {
@@ -160,6 +171,7 @@ export function buildEventRecord(
     localStart: unknown;
     durationMinutes: unknown;
     parentId?: unknown;
+    venueResourceId?: unknown;
   },
   timezone: string,
   id: string,
@@ -175,6 +187,7 @@ export function buildEventRecord(
     id,
     name: validateEventName(input.name),
     venueId: validateVenueId(input.venueId),
+    venueResourceId: validateOptionalVenueResourceId(input.venueResourceId),
     parentId: validateOptionalParentId(input.parentId),
     localStart: {
       year: localStart.year,
@@ -312,6 +325,7 @@ export function assertNoVenueScheduleConflict(
   event: EventRecord,
   eventsAtVenue: readonly EventRecord[],
   eventsById: ReadonlyMap<string, EventRecord>,
+  venueSchedulingMode: VenueSchedulingMode,
   additionalExemptIds: ReadonlySet<string> = new Set(),
 ): void {
   const ancestorIds = collectAncestorIds(event, eventsById);
@@ -320,6 +334,56 @@ export function assertNoVenueScheduleConflict(
     ...ancestorIds,
     ...additionalExemptIds,
   ]);
+
+  if (venueSchedulingMode === "multi_resource") {
+    if (event.venueResourceId) {
+      for (const existing of eventsAtVenue) {
+        if (!existing.venueResourceId) {
+          continue;
+        }
+        if (existing.venueResourceId !== event.venueResourceId) {
+          continue;
+        }
+        if (exemptIds.has(existing.id)) {
+          continue;
+        }
+        if (!eventsOverlap(event, existing)) {
+          continue;
+        }
+
+        throw new EventError(
+          EventErrorCodes.VENUE_SCHEDULE_CONFLICT,
+          `Venue resource is already scheduled for "${existing.name}" during this time window`,
+        );
+      }
+      return;
+    }
+
+    for (const existing of eventsAtVenue) {
+      if (exemptIds.has(existing.id)) {
+        continue;
+      }
+      if (existing.venueResourceId) {
+        continue;
+      }
+      if (!eventsOverlap(event, existing)) {
+        continue;
+      }
+
+      throw new EventError(
+        EventErrorCodes.VENUE_SCHEDULE_CONFLICT,
+        `Venue is already scheduled for "${existing.name}" during this time window`,
+      );
+    }
+    return;
+  }
+
+  if (event.venueResourceId) {
+    throw new EventError(
+      EventErrorCodes.VENUE_RESOURCE_NOT_ALLOWED,
+      "venueResourceId is only supported for multi_resource venues",
+    );
+  }
 
   for (const existing of eventsAtVenue) {
     if (exemptIds.has(existing.id)) {

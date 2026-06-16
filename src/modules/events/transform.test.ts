@@ -646,3 +646,201 @@ describe("EventStore", () => {
     });
   });
 });
+
+describe("multi_resource venue scheduling", () => {
+  let store: EventStore;
+  let locationId: string;
+  let multiVenueId: string;
+  let court17Id: string;
+  let court18Id: string;
+
+  beforeEach(async () => {
+    await resetWorldFixtures();
+    resetEventStore();
+    resetVenueStore();
+
+    const country = await seedUnitedStatesCountry();
+    const location = await seedNewYorkLocation(country.id);
+    locationId = location.id;
+
+    const venueStore = resetVenueStore();
+    multiVenueId = (
+      await venueStore.create({
+        locationId: location.id,
+        name: "USTA Billie Jean King National Tennis Center",
+        latitude: 40.75,
+        longitude: -73.84,
+        isIndoor: false,
+        schedulingMode: "multi_resource",
+      })
+    ).id;
+
+    court17Id = (
+      await venueStore.createResource({
+        venueId: multiVenueId,
+        name: "Court 17",
+        resourceType: "court",
+      })
+    ).id;
+
+    court18Id = (
+      await venueStore.createResource({
+        venueId: multiVenueId,
+        name: "Court 18",
+        resourceType: "court",
+      })
+    ).id;
+
+    store = resetEventStore();
+  });
+
+  it("allows parallel matches on different resources at the same time", async () => {
+    const tournament = await store.create({
+      name: "US Open",
+      venueId: multiVenueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 6 * 24 * 60,
+    });
+
+    await store.create({
+      name: "Match A",
+      venueId: multiVenueId,
+      parentId: tournament.id,
+      venueResourceId: court17Id,
+      localStart: { year: 2020, month: 6, day: 10, hour: 11, minute: 0 },
+      durationMinutes: 120,
+    });
+
+    await store.create({
+      name: "Match B",
+      venueId: multiVenueId,
+      parentId: tournament.id,
+      venueResourceId: court18Id,
+      localStart: { year: 2020, month: 6, day: 10, hour: 11, minute: 0 },
+      durationMinutes: 120,
+    });
+
+    expect(await store.count()).toBe(3);
+  });
+
+  it("rejects overlapping events on the same resource", async () => {
+    const tournament = await store.create({
+      name: "US Open",
+      venueId: multiVenueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 6 * 24 * 60,
+    });
+
+    await store.create({
+      name: "Match A",
+      venueId: multiVenueId,
+      parentId: tournament.id,
+      venueResourceId: court17Id,
+      localStart: { year: 2020, month: 6, day: 10, hour: 11, minute: 0 },
+      durationMinutes: 120,
+    });
+
+    await expect(
+      store.create({
+        name: "Match B",
+        venueId: multiVenueId,
+        parentId: tournament.id,
+        venueResourceId: court17Id,
+        localStart: { year: 2020, month: 6, day: 10, hour: 12, minute: 0 },
+        durationMinutes: 120,
+      }),
+    ).rejects.toThrowError(
+      expect.objectContaining({ code: EventErrorCodes.VENUE_SCHEDULE_CONFLICT }),
+    );
+  });
+
+  it("allows a container event to overlap resource-bound leaves", async () => {
+    const tournament = await store.create({
+      name: "US Open",
+      venueId: multiVenueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 6 * 24 * 60,
+    });
+
+    await store.create({
+      name: "Match A",
+      venueId: multiVenueId,
+      parentId: tournament.id,
+      venueResourceId: court17Id,
+      localStart: { year: 2020, month: 6, day: 10, hour: 11, minute: 0 },
+      durationMinutes: 120,
+    });
+
+    await store.create({
+      name: "Round 1",
+      venueId: multiVenueId,
+      parentId: tournament.id,
+      localStart: { year: 2020, month: 6, day: 10, hour: 11, minute: 0 },
+      durationMinutes: 12 * 60,
+    });
+
+    expect(await store.count()).toBe(3);
+  });
+
+  it("rejects overlapping container events that are not ancestors", async () => {
+    await store.create({
+      name: "US Open",
+      venueId: multiVenueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 6 * 24 * 60,
+    });
+
+    await expect(
+      store.create({
+        name: "Charity Concert",
+        venueId: multiVenueId,
+        localStart: { year: 2020, month: 6, day: 12, hour: 18, minute: 0 },
+        durationMinutes: 180,
+      }),
+    ).rejects.toThrowError(
+      expect.objectContaining({ code: EventErrorCodes.VENUE_SCHEDULE_CONFLICT }),
+    );
+  });
+
+  it("rejects venueResourceId on exclusive venues", async () => {
+    const exclusiveVenueId = (
+      await getVenueStore().create({
+        locationId,
+        name: "Madison Square Garden",
+        latitude: 40.7505,
+        longitude: -73.9934,
+        isIndoor: true,
+      })
+    ).id;
+
+    await expect(
+      store.create({
+        name: "Final",
+        venueId: exclusiveVenueId,
+        venueResourceId: court17Id,
+        localStart: { year: 2020, month: 6, day: 14, hour: 12, minute: 0 },
+        durationMinutes: 120,
+      }),
+    ).rejects.toThrowError(
+      expect.objectContaining({
+        code: EventErrorCodes.VENUE_RESOURCE_NOT_ALLOWED,
+      }),
+    );
+  });
+
+  it("includes venueResourceName on event output", async () => {
+    const event = await store.create({
+      name: "Match A",
+      venueId: multiVenueId,
+      venueResourceId: court17Id,
+      localStart: { year: 2020, month: 6, day: 10, hour: 11, minute: 0 },
+      durationMinutes: 120,
+    });
+
+    const output = await executeEvent({ action: "get", id: event.id });
+    expect(output).toMatchObject({
+      venueResourceId: court17Id,
+      venueResourceName: "Court 17",
+    });
+  });
+});

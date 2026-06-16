@@ -5,7 +5,7 @@ import type { EventRecord } from "@/modules/events/types";
 import type { League } from "@/modules/leagues/types";
 import type { Location } from "@/modules/locations/types";
 import type { Team } from "@/modules/teams/types";
-import type { Venue } from "@/modules/venues/types";
+import type { Venue, VenueResource, VenueResourceType } from "@/modules/venues/types";
 import type { ListOptions } from "@/lib/pagination";
 
 export interface CountryRecord {
@@ -46,6 +46,14 @@ export interface VenueRepository {
   countByLocation(locationId: string): Promise<number>;
   get(id: string): Promise<Venue | null>;
   create(venue: Venue): Promise<Venue>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface VenueResourceRepository {
+  listByVenue(venueId: string): Promise<VenueResource[]>;
+  get(id: string): Promise<VenueResource | null>;
+  create(resource: VenueResource): Promise<VenueResource>;
   delete(id: string): Promise<boolean>;
   clear(): Promise<void>;
 }

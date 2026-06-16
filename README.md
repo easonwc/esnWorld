@@ -83,6 +83,7 @@ cp .env.example .env
 | `NHL_SEED_ON_STARTUP` | `false` | Merge NHL league hierarchy |
 | `MLS_SEED_ON_STARTUP` | `false` | Merge MLS league hierarchy |
 | `WNBA_SEED_ON_STARTUP` | `false` | Merge WNBA league hierarchy |
+| `TENNIS_GOLF_VENUES_SEED_ON_STARTUP` | `false` | Merge tennis/golf `multi_resource` venues with courts or tee groups (requires host cities — enable `LOCATIONS_SEED_ON_STARTUP` first) |
 | `FLAG_DOWNLOAD_ON_STARTUP` | `false` | Download country flag SVGs on server startup |
 | `NFL_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download NFL team and league logos on startup |
 | `MLB_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download MLB team and league logos on startup |
@@ -181,7 +182,7 @@ Merge behavior:
 - **Existing database** — only entries not already present are added (countries by `name`; cities by `name` + `region` + `countryName`; colleges by institution `name`, case-insensitive). Nothing is overwritten or duplicated.
 - **Disabled** (`false`, the default) — no seed runs; the database stays as-is.
 
-Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/locations.data.ts`, `src/persistence/seed/ncaa-locations.data.ts` (auto-generated from `scripts/generate-ncaa-locations.ts`), `src/persistence/seed/tennis-golf-locations.data.ts`, and `src/persistence/seed/colleges.data.ts` (auto-generated alongside NCAA locations).
+Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/locations.data.ts`, `src/persistence/seed/ncaa-locations.data.ts` (auto-generated from `scripts/generate-ncaa-locations.ts`), `src/persistence/seed/tennis-golf-locations.data.ts`, `src/persistence/seed/tennis-golf-venues.data.ts`, and `src/persistence/seed/colleges.data.ts` (auto-generated alongside NCAA locations).
 
 The city catalog includes major world metros, NFL/NBA/MLB/NHL/MLS/WNBA markets, **209 NCAA Division I campus cities**, and **47 tennis and golf event host cities** (Grand Slams, ATP/WTA Masters staples, golf majors, and flagship PGA/DP World Tour venues). **United States seed cities always include a `region` set to the state** (or District of Columbia). International cities may omit `region`.
 
@@ -347,9 +348,22 @@ WNBA seed also ensures countries and locations exist (including supplemental are
 
 Seed catalog: `src/persistence/seed/wnba-teams.data.ts`.
 
+### Tennis and golf venue seed (optional)
+
+Set `TENNIS_GOLF_VENUES_SEED_ON_STARTUP=true` in `.env` to merge **59** `multi_resource` venues for professional tennis and golf:
+
+- **33 tennis complexes** — four Grand Slams, Masters 1000 and tour staples from the tennis/golf city catalog, plus Miami, Cincinnati, Rome, Madrid, Shanghai, Beijing, Montreal, and Toronto
+- **26 golf courses** — majors, PGA/DP World Tour flagships, Open Championship rotation venues, and Ryder Cup hosts from the tennis/golf city catalog
+
+Each tennis venue gets a **full numbered court set** (`Court 1` … `Court N`, sized per facility). Each golf venue gets **30 tee groups** (`Tee Group 1` … `Tee Group 30`) for a full tournament field. Weather stays holistic at the venue level.
+
+Host cities must already exist in the database — enable `LOCATIONS_SEED_ON_STARTUP=true` first (or create cities via the API). The seed is idempotent: existing venues and resources are skipped.
+
+Seed catalog: `src/persistence/seed/tennis-golf-venues.data.ts`.
+
 ### Future enhancements
 
-1. ~~**Seed data**~~ — ✅ Optional country, city, and college catalogs via `LOCATIONS_SEED_ON_STARTUP`; optional NFL, MLB, NBA, NHL, MLS, and WNBA league seeds with team and league logos.
+1. ~~**Seed data**~~ — ✅ Optional country, city, and college catalogs via `LOCATIONS_SEED_ON_STARTUP`; optional NFL, MLB, NBA, NHL, MLS, and WNBA league seeds with team and league logos; optional tennis/golf `multi_resource` venues via `TENNIS_GOLF_VENUES_SEED_ON_STARTUP`.
 2. **Persist events** — Save planned and scheduled happenings (venue, local start, duration) so the event calendar survives restarts. Event *status* (`upcoming` / `active` / `ended`) stays derived from the persisted clock + stored UTC instants.
 3. **Persist world clock** — Save current simulated UTC, whether ticking is active, and enough tick metadata to resume advancement without a jump or drift after restart.
 4. **Weather and derived simulation state** — Today weather is deterministic from `WEATHER_SEED` + clock time, so persisting the clock may be sufficient. If we add non-seeded evolution, overrides, or historical snapshots (e.g. “conditions at kickoff” stored for replay), those would be saved as part of world state rather than recomputed on every read.
@@ -531,7 +545,7 @@ Every team **must** reference an existing division and home venue. A venue canno
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/venues` | List all venues |
-| `POST` | `/api/venues` | Create, get, delete, list by location, or get local time (`action`: `create`, `get`, `delete`, `listByLocation`, `localTime`) |
+| `POST` | `/api/venues` | Create, get, delete, list by location, local time, or manage resources (`action`: `create`, `get`, `delete`, `listByLocation`, `localTime`, `createResource`, `listResources`, `getResource`, `deleteResource`) |
 
 **Create a venue within a city:**
 
@@ -542,13 +556,32 @@ Every team **must** reference an existing division and home venue. A venue canno
   "name": "Madison Square Garden",
   "latitude": 40.7505,
   "longitude": -73.9934,
-  "isIndoor": true
+  "isIndoor": true,
+  "schedulingMode": "exclusive"
 }
 ```
 
 Local time at a venue uses the parent location's timezone.
 
 **Indoor vs outdoor:** Set `isIndoor: true` for venues where weather does not affect events — including fully indoor arenas and **retractable-roof venues** (hybrid venues count as indoor in this simulation). Use `isIndoor: false` for outdoor-only venues such as open-air stadiums and golf courses.
+
+**Scheduling modes:**
+
+- `exclusive` (default) — one booking at a time for the whole venue. Stadiums and arenas use this mode.
+- `multi_resource` — parallel bookings via schedulable **venue resources** (courts, tee groups, lanes). Weather remains holistic at the venue level.
+
+**Create a resource on a multi_resource venue:**
+
+```json
+{
+  "action": "createResource",
+  "venueId": "<venue-id>",
+  "name": "Court 17",
+  "resourceType": "court"
+}
+```
+
+Resource types: `court`, `tee_group`, `lane`, `generic`.
 
 ### Events
 
@@ -576,6 +609,8 @@ Local time at a venue uses the parent location's timezone.
 ```
 
 Events are stored as UTC instants derived from the venue's city timezone. Status is `upcoming`, `active`, or `ended` relative to the world clock. Multiple events can be active in parallel.
+
+On **exclusive** venues, overlapping unrelated events at the same venue are rejected unless one is an ancestor of the other. On **multi_resource** venues, optional `venueResourceId` binds a leaf event to a specific resource; parallel matches on different resources are allowed, while container events (no `venueResourceId`) only conflict with other containers.
 
 ### Weather
 

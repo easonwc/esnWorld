@@ -20,6 +20,7 @@ import { SqliteCountryRepository } from "./repositories/sqlite/country.sqlite";
 import { SqliteEventRepository } from "./repositories/sqlite/event.sqlite";
 import { SqliteLocationRepository } from "./repositories/sqlite/location.sqlite";
 import { SqliteVenueRepository } from "./repositories/sqlite/venue.sqlite";
+import { SqliteVenueResourceRepository } from "./repositories/sqlite/venue-resource.sqlite";
 
 async function seedVenueFixture() {
   const db = getDb();
@@ -53,6 +54,7 @@ async function seedVenueFixture() {
     latitude: 40.75,
     longitude: -73.99,
     isIndoor: false,
+    schedulingMode: "exclusive",
   });
 
   return {
@@ -68,7 +70,10 @@ function wireSqliteWorldStores(
   venueRepository: SqliteVenueRepository,
 ): void {
   resetLocationStore(locationRepository);
-  resetVenueStore(venueRepository);
+  resetVenueStore(
+    venueRepository,
+    new SqliteVenueResourceRepository(getDb()),
+  );
 }
 
 describe("persistence tiers integration", () => {
@@ -163,11 +168,9 @@ describe("persistence tiers integration", () => {
       new SqliteLocationRepository(getDb()),
       new SqliteVenueRepository(getDb()),
     );
-
-    const db = getDb();
-    expect(await new SqliteCountryRepository(db).count()).toBe(1);
-    expect(await new SqliteEventRepository(db).count()).toBe(0);
-    expect(loadWorldClockTickerState(db)).toBeNull();
+    expect(await new SqliteCountryRepository(getDb()).count()).toBe(1);
+    expect(await new SqliteEventRepository(getDb()).count()).toBe(0);
+    expect(loadWorldClockTickerState(getDb())).toBeNull();
   });
 
   it("clears world and session tiers when WORLD_DATABASE_RESET_ON_STARTUP=true", async () => {

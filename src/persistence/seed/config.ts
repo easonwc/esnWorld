@@ -28,6 +28,10 @@ export interface WnbaSeedConfig {
   enabled: boolean;
 }
 
+export interface TennisGolfVenueSeedConfig {
+  enabled: boolean;
+}
+
 export function loadLocationSeedConfig(
   env: NodeJS.ProcessEnv = process.env,
 ): LocationSeedConfig {
@@ -81,5 +85,13 @@ export function loadWnbaSeedConfig(
 ): WnbaSeedConfig {
   return {
     enabled: parseBoolean(env.WNBA_SEED_ON_STARTUP, false),
+  };
+}
+
+export function loadTennisGolfVenueSeedConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): TennisGolfVenueSeedConfig {
+  return {
+    enabled: parseBoolean(env.TENNIS_GOLF_VENUES_SEED_ON_STARTUP, false),
   };
 }

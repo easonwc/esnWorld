@@ -7,6 +7,9 @@ export async function register() {
     const { seedNhlOnStartup } = await import("@/persistence/seed/nhl");
     const { seedMlsOnStartup } = await import("@/persistence/seed/mls");
     const { seedWnbaOnStartup } = await import("@/persistence/seed/wnba");
+    const { seedTennisGolfVenuesOnStartup } = await import(
+      "@/persistence/seed/tennis-golf-venues"
+    );
     const { syncCountryFlagImages } = await import(
       "@/persistence/flags/download"
     );
@@ -28,7 +31,7 @@ export async function register() {
     } = await import("@/persistence/repositories");
 
     await seedWorldOnStartup();
-    const [nflSeed, mlbSeed, nbaSeed, nhlSeed, mlsSeed, wnbaSeed] =
+    const [nflSeed, mlbSeed, nbaSeed, nhlSeed, mlsSeed, wnbaSeed, tennisGolfVenueSeed] =
       await Promise.all([
         seedNflOnStartup(),
         seedMlbOnStartup(),
@@ -36,6 +39,7 @@ export async function register() {
         seedNhlOnStartup(),
         seedMlsOnStartup(),
         seedWnbaOnStartup(),
+        seedTennisGolfVenuesOnStartup(),
       ]);
 
     if (process.env.VITEST !== "true") {
@@ -216,6 +220,12 @@ export async function register() {
     if (wnbaSeed?.enabled) {
       console.info(
         `[wnba seed] league ${wnbaSeed.leagueAdded ? "created" : "exists"}, ${wnbaSeed.conferencesAdded} conferences, ${wnbaSeed.divisionsAdded} divisions, ${wnbaSeed.venuesAdded} venues, ${wnbaSeed.teamsAdded} teams added (${wnbaSeed.teamsSkipped} skipped)`,
+      );
+    }
+
+    if (tennisGolfVenueSeed?.enabled) {
+      console.info(
+        `[tennis/golf venues seed] ${tennisGolfVenueSeed.venuesAdded} venues added, ${tennisGolfVenueSeed.venuesSkipped} venues skipped, ${tennisGolfVenueSeed.resourcesAdded} resources added, ${tennisGolfVenueSeed.resourcesSkipped} resources skipped${tennisGolfVenueSeed.venuesMissingLocation > 0 ? `, ${tennisGolfVenueSeed.venuesMissingLocation} venues missing host cities (enable LOCATIONS_SEED_ON_STARTUP)` : ""}`,
       );
     }
   }

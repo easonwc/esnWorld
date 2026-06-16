@@ -1,6 +1,6 @@
 import { getWorldClockService } from "@/modules/world-clock";
 import { getLocationStore, parseIsoUtc } from "@/modules/locations";
-import { getVenueStore, VenueError } from "@/modules/venues";
+import { getVenueStore, VenueError, VenueErrorCodes } from "@/modules/venues";
 import {
   getDefaultEventRepository,
   type EventRepository,
@@ -41,11 +41,18 @@ async function toEventOutput(
   const venue = await getVenueStore().get(event.venueId);
   const location = await getLocationStore().get(venue.locationId);
   const children = await store.listDirectChildren(event.id);
+  const venueResource = event.venueResourceId
+    ? await getVenueStore()
+        .getResource(event.venueResourceId)
+        .catch(() => null)
+    : null;
 
   return {
     id: event.id,
     name: event.name,
     venueId: venue.id,
+    venueResourceId: event.venueResourceId,
+    venueResourceName: venueResource?.name ?? null,
     parentId: event.parentId,
     childIds: children.map((child) => child.id),
     venueName: venue.name,
@@ -124,6 +131,7 @@ export class EventStore {
     localStart: unknown;
     durationMinutes: unknown;
     parentId?: unknown;
+    venueResourceId?: unknown;
   }): Promise<EventRecord> {
     const venueId = validateVenueId(input.venueId);
     let venue;
@@ -143,6 +151,39 @@ export class EventStore {
     const location = await getLocationStore().get(venue.locationId);
     const id = crypto.randomUUID();
     const event = buildEventRecord(input, location.timezone, id);
+
+    if (venue.schedulingMode === "exclusive" && event.venueResourceId) {
+      throw new EventError(
+        EventErrorCodes.VENUE_RESOURCE_NOT_ALLOWED,
+        "venueResourceId is only supported for multi_resource venues",
+      );
+    }
+
+    if (event.venueResourceId) {
+      let resource;
+
+      try {
+        resource = await getVenueStore().getResource(event.venueResourceId);
+      } catch (error) {
+        if (
+          error instanceof VenueError &&
+          error.code === VenueErrorCodes.RESOURCE_NOT_FOUND
+        ) {
+          throw new EventError(
+            EventErrorCodes.VENUE_RESOURCE_NOT_FOUND,
+            `Venue resource not found: ${event.venueResourceId}`,
+          );
+        }
+        throw error;
+      }
+
+      if (resource.venueId !== venue.id) {
+        throw new EventError(
+          EventErrorCodes.VENUE_RESOURCE_VENUE_MISMATCH,
+          "Venue resource must belong to the event venue",
+        );
+      }
+    }
 
     if (event.parentId) {
       let parent: EventRecord;
@@ -164,7 +205,12 @@ export class EventStore {
 
     const eventsAtVenue = await this.repository.listByVenue(event.venueId);
     const eventsById = await this.buildEventsById();
-    assertNoVenueScheduleConflict(event, eventsAtVenue, eventsById);
+    assertNoVenueScheduleConflict(
+      event,
+      eventsAtVenue,
+      eventsById,
+      venue.schedulingMode,
+    );
 
     await this.repository.create(event);
     return event;
@@ -216,10 +262,12 @@ export class EventStore {
 
       const eventsAtVenue = await this.repository.listByVenue(updated.venueId);
       const eventsById = await this.buildEventsById();
+      const venue = await getVenueStore().get(updated.venueId);
       assertNoVenueScheduleConflict(
         updated,
         eventsAtVenue,
         eventsById,
+        venue.schedulingMode,
         collectDescendantIds(id, eventsById),
       );
     }

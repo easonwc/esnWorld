@@ -8,6 +8,7 @@ import { MemoryLeagueRepository } from "./memory/league.memory";
 import { MemoryLocationRepository } from "./memory/location.memory";
 import { MemoryTeamRepository } from "./memory/team.memory";
 import { MemoryVenueRepository } from "./memory/venue.memory";
+import { MemoryVenueResourceRepository } from "./memory/venue-resource.memory";
 import { SqliteCollegeRepository } from "./sqlite/college.sqlite";
 import { SqliteConferenceRepository } from "./sqlite/conference.sqlite";
 import { SqliteCountryRepository } from "./sqlite/country.sqlite";
@@ -17,15 +18,18 @@ import { SqliteLeagueRepository } from "./sqlite/league.sqlite";
 import { SqliteLocationRepository } from "./sqlite/location.sqlite";
 import { SqliteTeamRepository } from "./sqlite/team.sqlite";
 import { SqliteVenueRepository } from "./sqlite/venue.sqlite";
+import { SqliteVenueResourceRepository } from "./sqlite/venue-resource.sqlite";
 import type {
   CollegeRepository,
   ConferenceRepository,
   CountryRepository,
   DivisionRepository,
+  EventRepository,
   LeagueRepository,
   LocationRepository,
   TeamRepository,
   VenueRepository,
+  VenueResourceRepository,
 } from "./types";
 
 function useMemoryRepositories(): boolean {
@@ -88,6 +92,13 @@ function createVenueRepository(): VenueRepository {
   return new SqliteVenueRepository(getDb());
 }
 
+function createVenueResourceRepository(): VenueResourceRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryVenueResourceRepository();
+  }
+  return new SqliteVenueResourceRepository(getDb());
+}
+
 function createCountryRepository(): CountryRepository {
   if (useMemoryRepositories()) {
     return new MemoryCountryRepository();
@@ -127,6 +138,10 @@ export function getDefaultVenueRepository(): VenueRepository {
   return createVenueRepository();
 }
 
+export function getDefaultVenueResourceRepository(): VenueResourceRepository {
+  return createVenueResourceRepository();
+}
+
 export function getDefaultCountryRepository(): CountryRepository {
   return createCountryRepository();
 }
@@ -140,6 +155,7 @@ export { MemoryLeagueRepository } from "./memory/league.memory";
 export { MemoryLocationRepository } from "./memory/location.memory";
 export { MemoryTeamRepository } from "./memory/team.memory";
 export { MemoryVenueRepository } from "./memory/venue.memory";
+export { MemoryVenueResourceRepository } from "./memory/venue-resource.memory";
 export type {
   CollegeRepository,
   ConferenceRepository,
@@ -151,4 +167,5 @@ export type {
   LocationRepository,
   TeamRepository,
   VenueRepository,
+  VenueResourceRepository,
 } from "./types";

@@ -5,7 +5,20 @@
  * - Retractable-roof / hybrid → isIndoor: true (treated as indoor)
  */
 
-export type VenueAction = "create" | "get" | "delete" | "listByLocation" | "localTime";
+export type VenueSchedulingMode = "exclusive" | "multi_resource";
+
+export type VenueResourceType = "court" | "tee_group" | "lane" | "generic";
+
+export type VenueAction =
+  | "create"
+  | "get"
+  | "delete"
+  | "listByLocation"
+  | "localTime"
+  | "createResource"
+  | "listResources"
+  | "getResource"
+  | "deleteResource";
 
 export interface VenueCreateInput {
   action: "create";
@@ -15,6 +28,11 @@ export interface VenueCreateInput {
   longitude: number;
   /** Whether the venue is indoors. Retractable-roof venues count as indoor for this simulation. */
   isIndoor: boolean;
+  /**
+   * exclusive — one booking at a time for the whole venue (default).
+   * multi_resource — parallel bookings via venue resources (courts, tee groups).
+   */
+  schedulingMode?: VenueSchedulingMode;
 }
 
 export interface VenueGetInput {
@@ -38,12 +56,38 @@ export interface VenueLocalTimeInput {
   isoUtc?: string;
 }
 
+export interface VenueCreateResourceInput {
+  action: "createResource";
+  venueId: string;
+  name: string;
+  resourceType?: VenueResourceType;
+}
+
+export interface VenueListResourcesInput {
+  action: "listResources";
+  venueId: string;
+}
+
+export interface VenueGetResourceInput {
+  action: "getResource";
+  id: string;
+}
+
+export interface VenueDeleteResourceInput {
+  action: "deleteResource";
+  id: string;
+}
+
 export type VenueInput =
   | VenueCreateInput
   | VenueGetInput
   | VenueDeleteInput
   | VenueListByLocationInput
-  | VenueLocalTimeInput;
+  | VenueLocalTimeInput
+  | VenueCreateResourceInput
+  | VenueListResourcesInput
+  | VenueGetResourceInput
+  | VenueDeleteResourceInput;
 
 export interface Venue {
   id: string;
@@ -52,6 +96,14 @@ export interface Venue {
   latitude: number;
   longitude: number;
   isIndoor: boolean;
+  schedulingMode: VenueSchedulingMode;
+}
+
+export interface VenueResource {
+  id: string;
+  venueId: string;
+  name: string;
+  resourceType: VenueResourceType;
 }
 
 import type { LocalTimeParts } from "@/modules/locations";
@@ -70,5 +122,7 @@ export interface VenueLocalTimeOutput {
 export type VenueOutput =
   | Venue
   | Venue[]
+  | VenueResource
+  | VenueResource[]
   | VenueLocalTimeOutput
   | { deleted: true; id: string };

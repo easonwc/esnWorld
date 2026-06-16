@@ -10,6 +10,7 @@ export const WORLD_TIER_TABLES = [
   "conferences",
   "leagues",
   "colleges",
+  "venue_resources",
   "venues",
   "locations",
   "countries",

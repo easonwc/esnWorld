@@ -635,7 +635,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/venues",
     summary: "Create a venue",
     description:
-      "Creates a venue within a location (e.g. stadium, golf course). Requires isIndoor: true for indoor or retractable-roof venues, false for outdoor-only.",
+      "Creates a venue within a location (e.g. stadium, golf course). Requires isIndoor: true for indoor or retractable-roof venues, false for outdoor-only. Optional schedulingMode: exclusive (default) or multi_resource for parallel bookings via venue resources.",
     requestBody: JSON.stringify(
       {
         action: "create",
@@ -644,6 +644,7 @@ export const apiOperations: ApiOperation[] = [
         latitude: 40.7505,
         longitude: -73.9934,
         isIndoor: true,
+        schedulingMode: "exclusive",
       },
       null,
       2,
@@ -707,6 +708,64 @@ export const apiOperations: ApiOperation[] = [
     ),
   },
   {
+    id: "venues-create-resource",
+    tag: "Venues",
+    method: "POST",
+    path: "/api/venues",
+    summary: "Create a venue resource",
+    description:
+      "Adds a schedulable resource (court, tee group, lane, or generic) to a multi_resource venue.",
+    requestBody: JSON.stringify(
+      {
+        action: "createResource",
+        venueId: "paste-venue-id-here",
+        name: "Court 17",
+        resourceType: "court",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "venues-list-resources",
+    tag: "Venues",
+    method: "POST",
+    path: "/api/venues",
+    summary: "List venue resources",
+    description: "Returns all resources for a multi_resource venue.",
+    requestBody: JSON.stringify(
+      { action: "listResources", venueId: "paste-venue-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "venues-get-resource",
+    tag: "Venues",
+    method: "POST",
+    path: "/api/venues",
+    summary: "Get a venue resource",
+    description: "Retrieves a single venue resource by id.",
+    requestBody: JSON.stringify(
+      { action: "getResource", id: "paste-resource-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "venues-delete-resource",
+    tag: "Venues",
+    method: "POST",
+    path: "/api/venues",
+    summary: "Delete a venue resource",
+    description: "Removes a venue resource by id.",
+    requestBody: JSON.stringify(
+      { action: "deleteResource", id: "paste-resource-id-here" },
+      null,
+      2,
+    ),
+  },
+  {
     id: "events-list",
     tag: "Events",
     method: "GET",
@@ -722,12 +781,13 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/events",
     summary: "Create an event",
     description:
-      "Schedules an event at a venue-local start time. Duration is in minutes. Optional parentId links a child event that must use the same venue and fit within the parent's time window. Overlapping events at the same venue are rejected unless one is an ancestor of the other.",
+      "Schedules an event at a venue-local start time. Duration is in minutes. Optional parentId links a child event that must use the same venue and fit within the parent's time window. Optional venueResourceId binds a leaf event to a resource on multi_resource venues. Overlapping events at the same venue are rejected unless one is an ancestor of the other; on multi_resource venues, resource-bound events only conflict on the same resource, and container events (no venueResourceId) only conflict with other containers.",
     requestBody: JSON.stringify(
       {
         action: "create",
         name: "Championship Final",
         venueId: "paste-venue-id-here",
+        venueResourceId: "paste-resource-id-here",
         localStart: {
           year: 2020,
           month: 6,
@@ -1022,12 +1082,13 @@ export function buildOpenApiSpec() {
       },
       {
         name: "Venues",
-        description: "Venues within a location, such as stadiums or golf courses.",
+        description:
+          "Venues within a location. Supports exclusive (whole-venue) or multi_resource scheduling with courts, tee groups, and other bookable resources.",
       },
       {
         name: "Events",
         description:
-          "Scheduled events at venue-local times. Events may form a parent-child hierarchy; child events share the parent's venue and must fall within its time window.",
+          "Scheduled events at venue-local times. Events may form a parent-child hierarchy; optional venueResourceId binds leaves to a resource on multi_resource venues.",
       },
       {
         name: "Weather",

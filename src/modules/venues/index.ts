@@ -7,22 +7,44 @@ import {
   utcToLocalTime,
 } from "@/modules/locations";
 import {
-  getDefaultVenueRepository,
   getDefaultTeamRepository,
+  getDefaultVenueRepository,
+  getDefaultVenueResourceRepository,
   type VenueRepository,
+  type VenueResourceRepository,
 } from "@/persistence/repositories";
 import type { ListOptions } from "@/lib/pagination";
 import { VenueError, VenueErrorCodes } from "./errors";
-import { buildVenue, validateId, validateLocationId } from "./transform";
+import {
+  buildVenue,
+  validateId,
+  validateLocationId,
+  validateResourceType,
+} from "./transform";
 import type {
   Venue,
   VenueInput,
   VenueLocalTimeOutput,
   VenueOutput,
+  VenueResource,
 } from "./types";
 
+function validateVenueIdInput(venueId: unknown): string {
+  if (typeof venueId !== "string" || venueId.trim().length === 0) {
+    throw new VenueError(
+      VenueErrorCodes.MISSING_VENUE_ID,
+      "venueId is required",
+    );
+  }
+
+  return venueId.trim();
+}
+
 export class VenueStore {
-  constructor(private readonly repository: VenueRepository) {}
+  constructor(
+    private readonly repository: VenueRepository,
+    private readonly resourceRepository: VenueResourceRepository,
+  ) {}
 
   async list(options?: ListOptions): Promise<Venue[]> {
     return this.repository.list(options);
@@ -61,6 +83,7 @@ export class VenueStore {
     latitude: unknown;
     longitude: unknown;
     isIndoor: unknown;
+    schedulingMode?: unknown;
   }): Promise<Venue> {
     const venueId = crypto.randomUUID();
     const venue = buildVenue(input, venueId);
@@ -103,6 +126,61 @@ export class VenueStore {
     return { deleted: true, id };
   }
 
+  async createResource(input: {
+    venueId: unknown;
+    name: unknown;
+    resourceType?: unknown;
+  }): Promise<VenueResource> {
+    const venueId = validateVenueIdInput(input.venueId);
+    const venue = await this.get(venueId);
+
+    if (venue.schedulingMode !== "multi_resource") {
+      throw new VenueError(
+        VenueErrorCodes.INVALID_SCHEDULING_MODE,
+        "Venue resources can only be added to multi_resource venues",
+      );
+    }
+
+    const resource: VenueResource = {
+      id: crypto.randomUUID(),
+      venueId: venue.id,
+      name: validateResourceName(input.name),
+      resourceType: validateResourceType(input.resourceType),
+    };
+
+    return this.resourceRepository.create(resource);
+  }
+
+  async listResources(venueId: string): Promise<VenueResource[]> {
+    await this.get(validateVenueIdInput(venueId));
+    return this.resourceRepository.listByVenue(venueId);
+  }
+
+  async getResource(id: string): Promise<VenueResource> {
+    const resource = await this.resourceRepository.get(validateId(id));
+    if (!resource) {
+      throw new VenueError(
+        VenueErrorCodes.RESOURCE_NOT_FOUND,
+        `Venue resource not found: ${id}`,
+      );
+    }
+    return resource;
+  }
+
+  async deleteResource(id: string): Promise<{ deleted: true; id: string }> {
+    const normalizedId = validateId(id);
+    const resource = await this.resourceRepository.get(normalizedId);
+    if (!resource) {
+      throw new VenueError(
+        VenueErrorCodes.RESOURCE_NOT_FOUND,
+        `Venue resource not found: ${normalizedId}`,
+      );
+    }
+
+    await this.resourceRepository.delete(normalizedId);
+    return { deleted: true, id: normalizedId };
+  }
+
   async getLocalTime(
     id: string,
     isoUtc?: string,
@@ -127,8 +205,19 @@ export class VenueStore {
   }
 
   async clear(): Promise<void> {
+    await this.resourceRepository.clear();
     await this.repository.clear();
   }
+}
+
+function validateResourceName(name: unknown): string {
+  if (typeof name !== "string" || name.trim().length === 0) {
+    throw new VenueError(
+      VenueErrorCodes.INVALID_NAME,
+      "name is required",
+    );
+  }
+  return name.trim();
 }
 
 const globalForVenues = globalThis as typeof globalThis & {
@@ -137,13 +226,22 @@ const globalForVenues = globalThis as typeof globalThis & {
 
 export function getVenueStore(): VenueStore {
   if (!globalForVenues.__venueStore) {
-    globalForVenues.__venueStore = new VenueStore(getDefaultVenueRepository());
+    globalForVenues.__venueStore = new VenueStore(
+      getDefaultVenueRepository(),
+      getDefaultVenueResourceRepository(),
+    );
   }
   return globalForVenues.__venueStore;
 }
 
-export function resetVenueStore(repository?: VenueRepository): VenueStore {
-  const store = new VenueStore(repository ?? getDefaultVenueRepository());
+export function resetVenueStore(
+  repository?: VenueRepository,
+  resourceRepository?: VenueResourceRepository,
+): VenueStore {
+  const store = new VenueStore(
+    repository ?? getDefaultVenueRepository(),
+    resourceRepository ?? getDefaultVenueResourceRepository(),
+  );
   globalForVenues.__venueStore = store;
   return store;
 }
@@ -167,6 +265,18 @@ export async function executeVenue(input: VenueInput): Promise<VenueOutput> {
     case "localTime":
       return store.getLocalTime(validateId(input.id), input.isoUtc);
 
+    case "createResource":
+      return store.createResource(input);
+
+    case "listResources":
+      return store.listResources(validateVenueIdInput(input.venueId));
+
+    case "getResource":
+      return store.getResource(validateId(input.id));
+
+    case "deleteResource":
+      return store.deleteResource(validateId(input.id));
+
     default: {
       const unknownAction = (input as { action: string }).action;
       throw new VenueError(
@@ -187,4 +297,11 @@ export async function countVenues(): Promise<number> {
 
 export * from "./types";
 export * from "./errors";
-export { buildVenue, validateId, validateIsIndoor, validateLocationId } from "./transform";
+export {
+  buildVenue,
+  validateId,
+  validateIsIndoor,
+  validateLocationId,
+  validateResourceType,
+  validateSchedulingMode,
+} from "./transform";
