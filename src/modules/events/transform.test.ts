@@ -285,10 +285,10 @@ describe("EventStore", () => {
       durationMinutes: 4 * 60,
     });
 
-    store.delete(parent.id);
+    await store.delete(parent.id);
 
-    expect(store.count()).toBe(0);
-    expect(() => store.get(session.id)).toThrowError(
+    expect(await store.count()).toBe(0);
+    await expect(store.get(session.id)).rejects.toThrowError(
       expect.objectContaining({ code: EventErrorCodes.EVENT_NOT_FOUND }),
     );
   });
@@ -328,7 +328,7 @@ describe("EventStore", () => {
       durationMinutes: 120,
     });
 
-    const active = store.listActiveAt("2020-06-14T16:30:00.000Z");
+    const active = await store.listActiveAt("2020-06-14T16:30:00.000Z");
     expect(active.map((e) => e.name)).toEqual([
       "US Open",
       "Round 1 Afternoon",
@@ -445,7 +445,7 @@ describe("EventStore", () => {
       durationMinutes: 12 * 60,
     });
 
-    expect(store.count()).toBe(3);
+    expect(await store.count()).toBe(3);
   });
 
   it("lists events by venue", async () => {
@@ -485,5 +485,164 @@ describe("EventStore", () => {
     ).rejects.toThrowError(
       expect.objectContaining({ code: EventErrorCodes.INVALID_DURATION }),
     );
+  });
+
+  it("renames an event without schedule validation", async () => {
+    const event = await store.create({
+      name: "US Open",
+      venueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 24 * 60,
+    });
+
+    const updated = await store.update({
+      id: event.id,
+      name: "US Open Championship",
+    });
+
+    expect(updated.name).toBe("US Open Championship");
+    expect(updated.isoUtcStart).toBe(event.isoUtcStart);
+    expect(updated.durationMinutes).toBe(event.durationMinutes);
+  });
+
+  it("reschedules a child event to a new day", async () => {
+    const parent = await store.create({
+      name: "US Open",
+      venueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 6 * 24 * 60,
+    });
+
+    const round2 = await store.create({
+      name: "Round 2",
+      venueId,
+      parentId: parent.id,
+      localStart: { year: 2020, month: 6, day: 11, hour: 7, minute: 0 },
+      durationMinutes: 12 * 60,
+    });
+
+    const updated = await store.update({
+      id: round2.id,
+      localStart: { year: 2020, month: 6, day: 12, hour: 7, minute: 0 },
+    });
+
+    expect(updated.isoUtcStart).toBe("2020-06-12T11:00:00.000Z");
+  });
+
+  it("extends a parent event when children still fit", async () => {
+    const parent = await store.create({
+      name: "US Open",
+      venueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 5 * 24 * 60,
+    });
+
+    await store.create({
+      name: "Round 4",
+      venueId,
+      parentId: parent.id,
+      localStart: { year: 2020, month: 6, day: 14, hour: 7, minute: 0 },
+      durationMinutes: 12 * 60,
+    });
+
+    const updated = await store.update({
+      id: parent.id,
+      durationMinutes: 6 * 24 * 60,
+    });
+
+    expect(updated.durationMinutes).toBe(6 * 24 * 60);
+  });
+
+  it("rejects shrinking a parent below its children", async () => {
+    const parent = await store.create({
+      name: "US Open",
+      venueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 6 * 24 * 60,
+    });
+
+    await store.create({
+      name: "Round 4",
+      venueId,
+      parentId: parent.id,
+      localStart: { year: 2020, month: 6, day: 14, hour: 7, minute: 0 },
+      durationMinutes: 12 * 60,
+    });
+
+    await expect(
+      store.update({
+        id: parent.id,
+        durationMinutes: 3 * 24 * 60,
+      }),
+    ).rejects.toThrowError(
+      expect.objectContaining({ code: EventErrorCodes.CHILD_TIME_CONTAINMENT }),
+    );
+  });
+
+  it("rejects rescheduling a child into a sibling overlap", async () => {
+    const parent = await store.create({
+      name: "US Open",
+      venueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 6 * 24 * 60,
+    });
+
+    await store.create({
+      name: "Round 1",
+      venueId,
+      parentId: parent.id,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 12 * 60,
+    });
+
+    const round2 = await store.create({
+      name: "Round 2",
+      venueId,
+      parentId: parent.id,
+      localStart: { year: 2020, month: 6, day: 11, hour: 7, minute: 0 },
+      durationMinutes: 12 * 60,
+    });
+
+    await expect(
+      store.update({
+        id: round2.id,
+        localStart: { year: 2020, month: 6, day: 10, hour: 11, minute: 0 },
+      }),
+    ).rejects.toThrowError(
+      expect.objectContaining({ code: EventErrorCodes.VENUE_SCHEDULE_CONFLICT }),
+    );
+  });
+
+  it("rejects an empty update", async () => {
+    const event = await store.create({
+      name: "US Open",
+      venueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 24 * 60,
+    });
+
+    await expect(store.update({ id: event.id })).rejects.toThrowError(
+      expect.objectContaining({ code: EventErrorCodes.EMPTY_UPDATE }),
+    );
+  });
+
+  it("updates through executeEvent", async () => {
+    const event = await store.create({
+      name: "US Open",
+      venueId,
+      localStart: { year: 2020, month: 6, day: 10, hour: 7, minute: 0 },
+      durationMinutes: 24 * 60,
+    });
+
+    const output = await executeEvent({
+      action: "update",
+      id: event.id,
+      name: "124th US Open",
+    });
+
+    expect(output).toMatchObject({
+      id: event.id,
+      name: "124th US Open",
+    });
   });
 });

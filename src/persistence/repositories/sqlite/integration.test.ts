@@ -67,6 +67,7 @@ describe("sqlite repository integration", () => {
     expect(tableNames).toContain("countries");
     expect(tableNames).toContain("locations");
     expect(tableNames).toContain("teams");
+    expect(tableNames).toContain("events");
     expect(tableNames).toContain("schema_migrations");
   });
 

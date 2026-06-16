@@ -1,9 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
-import { getDatabasePath, shouldResetDatabaseOnStartup } from "./config";
+import {
+  getDatabasePath,
+  shouldFullResetDatabaseOnStartup,
+  shouldResetSessionOnStartup,
+  shouldResetWorldDatabaseOnStartup,
+} from "./config";
 import { runCountryLocationMigration } from "./migrations/migrate-002";
 import { runCountryIsoMigration } from "./migrations/migrate-003";
+import { clearSessionTier, clearWorldTier } from "./tiers";
 
 const MIGRATIONS = [
   "001_initial.sql",
@@ -16,6 +22,8 @@ const MIGRATIONS = [
   "008_team_league_scope.sql",
   "009_league_logos.sql",
   "010_college_logos.sql",
+  "011_events.sql",
+  "012_world_clock_state.sql",
 ] as const;
 
 function runMigrations(db: Database.Database): void {
@@ -70,25 +78,60 @@ export function deleteDatabaseFiles(dbPath = getDatabasePath()): void {
   }
 }
 
-function resetDatabaseOnStartupIfRequested(): void {
+function applyStartupResetsIfRequested(): void {
   if (globalForDb.__databaseResetApplied) {
     return;
   }
 
   globalForDb.__databaseResetApplied = true;
 
-  if (!shouldResetDatabaseOnStartup()) {
+  const dbPath = getDatabasePath();
+
+  if (shouldFullResetDatabaseOnStartup()) {
+    closeDb();
+    if (fs.existsSync(dbPath)) {
+      deleteDatabaseFiles(dbPath);
+      console.info("[database] full reset on startup — removed SQLite files");
+    }
+    return;
+  }
+
+  const worldReset = shouldResetWorldDatabaseOnStartup();
+  const sessionReset = shouldResetSessionOnStartup();
+
+  if (!worldReset && !sessionReset) {
+    return;
+  }
+
+  if (!fs.existsSync(dbPath)) {
     return;
   }
 
   closeDb();
-  deleteDatabaseFiles();
-  console.info("[database] reset on startup — removed existing SQLite files");
+
+  const db = new Database(dbPath);
+  db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
+  runMigrations(db);
+
+  if (worldReset) {
+    clearWorldTier(db);
+    console.info(
+      "[database] world tier reset on startup — cleared geography, sports structure, and session state",
+    );
+  } else {
+    clearSessionTier(db);
+    console.info(
+      "[database] session tier reset on startup — cleared events and simulation state",
+    );
+  }
+
+  db.close();
 }
 
 export function getDb(): Database.Database {
   if (!globalForDb.__worldDb) {
-    resetDatabaseOnStartupIfRequested();
+    applyStartupResetsIfRequested();
 
     const dbPath = getDatabasePath();
     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -108,4 +151,9 @@ export function closeDb(): void {
     globalForDb.__worldDb.close();
     globalForDb.__worldDb = undefined;
   }
+}
+
+/** Test-only helper to re-run startup reset handlers. */
+export function resetDatabaseStartupStateForTests(): void {
+  globalForDb.__databaseResetApplied = false;
 }

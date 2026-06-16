@@ -756,6 +756,31 @@ export const apiOperations: ApiOperation[] = [
     ),
   },
   {
+    id: "events-update",
+    tag: "Events",
+    method: "POST",
+    path: "/api/events",
+    summary: "Update an event",
+    description:
+      "Updates an event by id. Supports patch semantics: provide any of name, localStart, and durationMinutes. Schedule changes re-run parent, child, and venue conflict validation.",
+    requestBody: JSON.stringify(
+      {
+        action: "update",
+        id: "paste-event-id-here",
+        localStart: {
+          year: 2020,
+          month: 6,
+          day: 11,
+          hour: 7,
+          minute: 0,
+        },
+        durationMinutes: 720,
+      },
+      null,
+      2,
+    ),
+  },
+  {
     id: "events-list-by-venue",
     tag: "Events",
     method: "POST",

@@ -190,6 +190,93 @@ export function buildEventRecord(
   };
 }
 
+export function applyEventScheduleUpdate(
+  existing: EventRecord,
+  input: {
+    name?: unknown;
+    localStart?: unknown;
+    durationMinutes?: unknown;
+  },
+  timezone: string,
+): EventRecord {
+  const name =
+    input.name !== undefined
+      ? validateEventName(input.name)
+      : existing.name;
+
+  const localStartInput =
+    input.localStart !== undefined
+      ? validateLocalStart(input.localStart)
+      : existing.localStart;
+
+  const durationMinutes =
+    input.durationMinutes !== undefined
+      ? validateDurationMinutes(input.durationMinutes)
+      : existing.durationMinutes;
+
+  const isoUtcStart = localTimeToIsoUtc(localStartInput, timezone);
+  const isoUtcEnd = new Date(
+    Date.parse(isoUtcStart) + durationMinutes * 60_000,
+  ).toISOString();
+
+  return {
+    ...existing,
+    name,
+    localStart: {
+      year: localStartInput.year,
+      month: localStartInput.month,
+      day: localStartInput.day,
+      hour: localStartInput.hour,
+      minute: localStartInput.minute,
+      second: localStartInput.second ?? 0,
+    },
+    durationMinutes,
+    isoUtcStart,
+    isoUtcEnd,
+  };
+}
+
+export function collectDescendantIds(
+  eventId: string,
+  eventsById: ReadonlyMap<string, EventRecord>,
+): Set<string> {
+  const descendants = new Set<string>();
+  const queue = [eventId];
+
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+
+    for (const event of eventsById.values()) {
+      if (event.parentId === currentId && !descendants.has(event.id)) {
+        descendants.add(event.id);
+        queue.push(event.id);
+      }
+    }
+  }
+
+  return descendants;
+}
+
+export function assertParentContainsChildren(
+  parent: EventRecord,
+  children: readonly EventRecord[],
+): void {
+  const parentStart = Date.parse(parent.isoUtcStart);
+  const parentEnd = Date.parse(parent.isoUtcEnd);
+
+  for (const child of children) {
+    const childStart = Date.parse(child.isoUtcStart);
+    const childEnd = Date.parse(child.isoUtcEnd);
+
+    if (childStart < parentStart || childEnd > parentEnd) {
+      throw new EventError(
+        EventErrorCodes.CHILD_TIME_CONTAINMENT,
+        `Cannot reschedule parent: child "${child.name}" would fall outside the new window`,
+      );
+    }
+  }
+}
+
 export function eventsOverlap(
   left: Pick<EventRecord, "isoUtcStart" | "isoUtcEnd">,
   right: Pick<EventRecord, "isoUtcStart" | "isoUtcEnd">,
@@ -222,22 +309,24 @@ export function collectAncestorIds(
 }
 
 export function assertNoVenueScheduleConflict(
-  newEvent: EventRecord,
+  event: EventRecord,
   eventsAtVenue: readonly EventRecord[],
   eventsById: ReadonlyMap<string, EventRecord>,
+  additionalExemptIds: ReadonlySet<string> = new Set(),
 ): void {
-  const ancestorIds = collectAncestorIds(newEvent, eventsById);
+  const ancestorIds = collectAncestorIds(event, eventsById);
+  const exemptIds = new Set([
+    event.id,
+    ...ancestorIds,
+    ...additionalExemptIds,
+  ]);
 
   for (const existing of eventsAtVenue) {
-    if (existing.id === newEvent.id) {
+    if (exemptIds.has(existing.id)) {
       continue;
     }
 
-    if (!eventsOverlap(newEvent, existing)) {
-      continue;
-    }
-
-    if (ancestorIds.has(existing.id)) {
+    if (!eventsOverlap(event, existing)) {
       continue;
     }
 

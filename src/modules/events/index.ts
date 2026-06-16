@@ -1,14 +1,22 @@
 import { getWorldClockService } from "@/modules/world-clock";
 import { getLocationStore, parseIsoUtc } from "@/modules/locations";
 import { getVenueStore, VenueError } from "@/modules/venues";
+import {
+  getDefaultEventRepository,
+  type EventRepository,
+} from "@/persistence/repositories";
 import { paginateArray, type ListOptions } from "@/lib/pagination";
 import { EventError, EventErrorCodes } from "./errors";
 import {
+  applyEventScheduleUpdate,
   assertNoVenueScheduleConflict,
+  assertParentContainsChildren,
   buildEventRecord,
+  collectDescendantIds,
   computeEventStatus,
   isEventActiveAt,
   validateChildWithinParent,
+  validateEventName,
   validateId,
   validateVenueId,
 } from "./transform";
@@ -32,13 +40,14 @@ async function toEventOutput(
 ): Promise<EventOutput> {
   const venue = await getVenueStore().get(event.venueId);
   const location = await getLocationStore().get(venue.locationId);
+  const children = await store.listDirectChildren(event.id);
 
   return {
     id: event.id,
     name: event.name,
     venueId: venue.id,
     parentId: event.parentId,
-    childIds: store.listDirectChildren(event.id).map((child) => child.id),
+    childIds: children.map((child) => child.id),
     venueName: venue.name,
     isIndoor: venue.isIndoor,
     weatherApplies: !venue.isIndoor,
@@ -55,64 +64,49 @@ async function toEventOutput(
 }
 
 export class EventStore {
-  private readonly events = new Map<string, EventRecord>();
+  constructor(private readonly repository: EventRepository) {}
 
-  list(options?: ListOptions): EventRecord[] {
-    const sorted = [...this.events.values()].sort((a, b) =>
-      a.isoUtcStart.localeCompare(b.isoUtcStart),
-    );
-    return options ? paginateArray(sorted, options) : sorted;
+  async list(options?: ListOptions): Promise<EventRecord[]> {
+    return this.repository.list(options);
   }
 
-  count(): number {
-    return this.events.size;
+  async count(): Promise<number> {
+    return this.repository.count();
   }
 
-  listDirectChildren(parentId: string): EventRecord[] {
+  async listDirectChildren(parentId: string): Promise<EventRecord[]> {
     const id = validateId(parentId);
-    this.get(id);
-
-    return [...this.events.values()]
-      .filter((event) => event.parentId === id)
-      .sort((a, b) => a.isoUtcStart.localeCompare(b.isoUtcStart));
+    await this.get(id);
+    return this.repository.listDirectChildren(id);
   }
 
-  private collectDescendantIds(id: string): string[] {
-    const descendantIds: string[] = [];
-    const queue = [id];
+  private async buildEventsById(): Promise<Map<string, EventRecord>> {
+    const events = await this.repository.list();
+    return new Map(events.map((event) => [event.id, event]));
+  }
 
-    while (queue.length > 0) {
-      const currentId = queue.shift()!;
-
-      for (const event of this.events.values()) {
-        if (event.parentId === currentId) {
-          descendantIds.push(event.id);
-          queue.push(event.id);
-        }
-      }
-    }
-
-    return descendantIds;
+  private async collectDescendantIds(id: string): Promise<string[]> {
+    const eventsById = await this.buildEventsById();
+    return [...collectDescendantIds(id, eventsById)];
   }
 
   async listByVenue(venueId: string): Promise<EventRecord[]> {
     const id = validateVenueId(venueId);
     await getVenueStore().get(id);
-
-    return this.list().filter((event) => event.venueId === id);
+    return this.repository.listByVenue(id);
   }
 
-  listActiveAt(isoUtc: string): EventRecord[] {
-    return this.list().filter((event) => isEventActiveAt(event, isoUtc));
+  async listActiveAt(isoUtc: string): Promise<EventRecord[]> {
+    return this.repository.listActiveAt(isoUtc);
   }
 
-  countByVenue(venueId: string): number {
-    return [...this.events.values()].filter((e) => e.venueId === venueId)
-      .length;
+  async countByVenue(venueId: string): Promise<number> {
+    const events = await this.repository.listByVenue(venueId);
+    return events.length;
   }
 
-  get(id: string): EventRecord {
-    const event = this.events.get(id);
+  async get(id: string): Promise<EventRecord> {
+    const event = await this.repository.get(validateId(id));
 
     if (!event) {
       throw new EventError(
@@ -154,7 +148,7 @@ export class EventStore {
       let parent: EventRecord;
 
       try {
-        parent = this.get(event.parentId);
+        parent = await this.get(event.parentId);
       } catch (error) {
         if (error instanceof EventError) {
           throw new EventError(
@@ -168,35 +162,86 @@ export class EventStore {
       validateChildWithinParent(event, parent);
     }
 
-    const eventsAtVenue = [...this.events.values()].filter(
-      (existing) => existing.venueId === event.venueId,
-    );
-    assertNoVenueScheduleConflict(event, eventsAtVenue, this.events);
+    const eventsAtVenue = await this.repository.listByVenue(event.venueId);
+    const eventsById = await this.buildEventsById();
+    assertNoVenueScheduleConflict(event, eventsAtVenue, eventsById);
 
-    this.events.set(id, event);
+    await this.repository.create(event);
     return event;
   }
 
-  delete(id: string): { deleted: true; id: string } {
-    validateId(id);
+  async update(input: {
+    id: unknown;
+    name?: unknown;
+    localStart?: unknown;
+    durationMinutes?: unknown;
+  }): Promise<EventRecord> {
+    const id = validateId(input.id);
+    const existing = await this.get(id);
+    const scheduleChanging =
+      input.localStart !== undefined || input.durationMinutes !== undefined;
+    const nameChanging = input.name !== undefined;
 
-    if (!this.events.has(id)) {
+    if (!scheduleChanging && !nameChanging) {
       throw new EventError(
-        EventErrorCodes.EVENT_NOT_FOUND,
-        `Event not found: ${id}`,
+        EventErrorCodes.EMPTY_UPDATE,
+        "At least one of name, localStart, or durationMinutes must be provided",
       );
     }
 
-    for (const descendantId of this.collectDescendantIds(id)) {
-      this.events.delete(descendantId);
+    let updated = existing;
+
+    if (scheduleChanging) {
+      const venue = await getVenueStore().get(existing.venueId);
+      const location = await getLocationStore().get(venue.locationId);
+      updated = applyEventScheduleUpdate(existing, input, location.timezone);
+    } else {
+      updated = {
+        ...existing,
+        name: validateEventName(input.name),
+      };
     }
 
-    this.events.delete(id);
-    return { deleted: true, id };
+    if (scheduleChanging) {
+      if (updated.parentId) {
+        validateChildWithinParent(updated, await this.get(updated.parentId));
+      }
+
+      const descendants = await Promise.all(
+        (await this.collectDescendantIds(id)).map((descendantId) =>
+          this.get(descendantId),
+        ),
+      );
+      assertParentContainsChildren(updated, descendants);
+
+      const eventsAtVenue = await this.repository.listByVenue(updated.venueId);
+      const eventsById = await this.buildEventsById();
+      assertNoVenueScheduleConflict(
+        updated,
+        eventsAtVenue,
+        eventsById,
+        collectDescendantIds(id, eventsById),
+      );
+    }
+
+    await this.repository.update(updated);
+    return updated;
   }
 
-  clear(): void {
-    this.events.clear();
+  async delete(id: string): Promise<{ deleted: true; id: string }> {
+    const normalizedId = validateId(id);
+    await this.get(normalizedId);
+
+    for (const descendantId of await this.collectDescendantIds(normalizedId)) {
+      await this.repository.delete(descendantId);
+    }
+
+    await this.repository.delete(normalizedId);
+    return { deleted: true, id: normalizedId };
+  }
+
+  async clear(): Promise<void> {
+    await this.repository.clear();
   }
 }
 
@@ -206,13 +251,13 @@ const globalForEvents = globalThis as typeof globalThis & {
 
 export function getEventStore(): EventStore {
   if (!globalForEvents.__eventStore) {
-    globalForEvents.__eventStore = new EventStore();
+    globalForEvents.__eventStore = new EventStore(getDefaultEventRepository());
   }
   return globalForEvents.__eventStore;
 }
 
-export function resetEventStore(): EventStore {
-  const store = new EventStore();
+export function resetEventStore(repository?: EventRepository): EventStore {
+  const store = new EventStore(repository ?? getDefaultEventRepository());
   globalForEvents.__eventStore = store;
   return store;
 }
@@ -230,7 +275,16 @@ export async function executeEvent(input: EventInput): Promise<EventsOutput> {
     }
 
     case "get":
-      return toEventOutput(store.get(validateId(input.id)), atIsoUtc, store);
+      return toEventOutput(
+        await store.get(validateId(input.id)),
+        atIsoUtc,
+        store,
+      );
+
+    case "update": {
+      const event = await store.update(input);
+      return toEventOutput(event, atIsoUtc, store);
+    }
 
     case "delete":
       return store.delete(validateId(input.id));
@@ -244,23 +298,23 @@ export async function executeEvent(input: EventInput): Promise<EventsOutput> {
 
     case "listChildren":
       return Promise.all(
-        store
-          .listDirectChildren(validateId(input.parentId))
-          .map((event) => toEventOutput(event, atIsoUtc, store)),
+        (await store.listDirectChildren(validateId(input.parentId))).map(
+          (event) => toEventOutput(event, atIsoUtc, store),
+        ),
       );
 
     case "listActive":
       return Promise.all(
-        store
-          .listActiveAt(atIsoUtc)
-          .map((event) => toEventOutput(event, atIsoUtc, store)),
+        (await store.listActiveAt(atIsoUtc)).map((event) =>
+          toEventOutput(event, atIsoUtc, store),
+        ),
       );
 
     case "listAtTime":
       return Promise.all(
-        store
-          .listActiveAt(atIsoUtc)
-          .map((event) => toEventOutput(event, atIsoUtc, store)),
+        (await store.listActiveAt(atIsoUtc)).map((event) =>
+          toEventOutput(event, atIsoUtc, store),
+        ),
       );
 
     default: {
@@ -280,7 +334,9 @@ export async function listEvents(
   const store = getEventStore();
   const isoUtc = resolveIsoUtc(atIsoUtc);
   return Promise.all(
-    store.list(options).map((event) => toEventOutput(event, isoUtc, store)),
+    (await store.list(options)).map((event) =>
+      toEventOutput(event, isoUtc, store),
+    ),
   );
 }
 
@@ -291,9 +347,12 @@ export async function countEvents(): Promise<number> {
 export * from "./types";
 export * from "./errors";
 export {
+  applyEventScheduleUpdate,
   assertNoVenueScheduleConflict,
+  assertParentContainsChildren,
   buildEventRecord,
   collectAncestorIds,
+  collectDescendantIds,
   computeEventStatus,
   eventsOverlap,
   isEventActiveAt,

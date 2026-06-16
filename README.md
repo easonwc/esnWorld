@@ -71,7 +71,11 @@ cp .env.example .env
 | `WEATHER_UNITS` | `fahrenheit` | Temperature unit (`fahrenheit` or `celsius`) |
 | `WEATHER_WIND_UNITS` | `mph` | Wind speed unit (`mph` or `kph`) |
 | `DATABASE_PATH` | `./data/world.db` | SQLite file for persisted world geography and sports entities |
-| `DATABASE_RESET_ON_STARTUP` | `false` | When `true`, delete the SQLite file on startup and recreate empty tables |
+| `DATABASE_PATH` | `./data/world.db` | SQLite database path |
+| `WORLD_DATABASE_RESET_ON_STARTUP` | `false` | Truncate world-tier tables on startup (also clears session tier first) |
+| `DATABASE_RESET_ON_STARTUP` | `false` | Deprecated alias for `WORLD_DATABASE_RESET_ON_STARTUP` |
+| `SESSION_RESET_ON_STARTUP` | `false` | Truncate session-tier tables only (events, world clock state) |
+| `FULL_DATABASE_RESET_ON_STARTUP` | `false` | Delete the SQLite file entirely on startup |
 | `LOCATIONS_SEED_ON_STARTUP` | `false` | When `true`, merge seed countries, cities, and colleges on server startup |
 | `NFL_SEED_ON_STARTUP` | `false` | Merge NFL league hierarchy (see [Professional sports league seeds](#professional-sports-league-seeds)) |
 | `MLB_SEED_ON_STARTUP` | `false` | Merge MLB league hierarchy |
@@ -155,11 +159,17 @@ The **calendar** is derived from world clock UTC — it has no independent state
 | Divisions | Divisions | ✅ Phase 1 | SQLite via `DATABASE_PATH`; belong to a conference |
 | Teams | Teams | ✅ Phase 1 | SQLite via `DATABASE_PATH`; belong to a division and home venue |
 | Venues | Venues | ✅ Phase 1 | SQLite via `DATABASE_PATH` |
-| Scheduled events | Events | ❌ | In-memory; lost on restart |
-| World clock | World Clock | ❌ | Current UTC, running/stopped, tick progress — in-memory |
+| Scheduled events | Events | ✅ | SQLite session tier; hierarchy + venue conflict rules |
+| World clock | World Clock | ✅ (session tier) | Ticker state persisted in SQLite; status still derived |
 | Weather systems | Weather | ❌ (derived) | Positions and conditions are computed from `WEATHER_SEED` + world time today; no separate store yet |
 
-On first run, the database is **empty** unless you set `LOCATIONS_SEED_ON_STARTUP=true`. To wipe an existing database and start over, set `DATABASE_RESET_ON_STARTUP=true` for one startup (then set it back to `false`). Create countries and cities via the API, or enable the seed to load countries and major world cities automatically.
+On first run, the database is **empty** unless you set `LOCATIONS_SEED_ON_STARTUP=true`. Persistence splits into two tiers in one SQLite file:
+
+- **World tier** — countries, cities, colleges, venues, leagues, teams (rarely reset). Use `WORLD_DATABASE_RESET_ON_STARTUP=true` for a one-time atlas rebuild (also clears session data).
+- **Session tier** — events and world clock state (reset each season or test run). Use `SESSION_RESET_ON_STARTUP=true` to clear the calendar without touching geography or sports structure.
+- **Full reset** — `FULL_DATABASE_RESET_ON_STARTUP=true` deletes the SQLite file entirely.
+
+Set any reset flag for one startup, then set it back to `false`.
 
 ### World seed (optional)
 

@@ -3,6 +3,7 @@ import { MemoryCollegeRepository } from "./memory/college.memory";
 import { MemoryConferenceRepository } from "./memory/conference.memory";
 import { MemoryCountryRepository } from "./memory/country.memory";
 import { MemoryDivisionRepository } from "./memory/division.memory";
+import { MemoryEventRepository } from "./memory/event.memory";
 import { MemoryLeagueRepository } from "./memory/league.memory";
 import { MemoryLocationRepository } from "./memory/location.memory";
 import { MemoryTeamRepository } from "./memory/team.memory";
@@ -11,6 +12,7 @@ import { SqliteCollegeRepository } from "./sqlite/college.sqlite";
 import { SqliteConferenceRepository } from "./sqlite/conference.sqlite";
 import { SqliteCountryRepository } from "./sqlite/country.sqlite";
 import { SqliteDivisionRepository } from "./sqlite/division.sqlite";
+import { SqliteEventRepository } from "./sqlite/event.sqlite";
 import { SqliteLeagueRepository } from "./sqlite/league.sqlite";
 import { SqliteLocationRepository } from "./sqlite/location.sqlite";
 import { SqliteTeamRepository } from "./sqlite/team.sqlite";
@@ -28,6 +30,13 @@ import type {
 
 function useMemoryRepositories(): boolean {
   return process.env.VITEST === "true";
+}
+
+function createEventRepository(): EventRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryEventRepository();
+  }
+  return new SqliteEventRepository(getDb());
 }
 
 function createTeamRepository(): TeamRepository {
@@ -86,6 +95,10 @@ function createCountryRepository(): CountryRepository {
   return new SqliteCountryRepository(getDb());
 }
 
+export function getDefaultEventRepository(): EventRepository {
+  return createEventRepository();
+}
+
 export function getDefaultTeamRepository(): TeamRepository {
   return createTeamRepository();
 }
@@ -122,6 +135,7 @@ export { MemoryCollegeRepository } from "./memory/college.memory";
 export { MemoryConferenceRepository } from "./memory/conference.memory";
 export { MemoryCountryRepository } from "./memory/country.memory";
 export { MemoryDivisionRepository } from "./memory/division.memory";
+export { MemoryEventRepository } from "./memory/event.memory";
 export { MemoryLeagueRepository } from "./memory/league.memory";
 export { MemoryLocationRepository } from "./memory/location.memory";
 export { MemoryTeamRepository } from "./memory/team.memory";
@@ -132,6 +146,7 @@ export type {
   CountryRecord,
   CountryRepository,
   DivisionRepository,
+  EventRepository,
   LeagueRepository,
   LocationRepository,
   TeamRepository,

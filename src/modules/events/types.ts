@@ -1,6 +1,7 @@
 export type EventAction =
   | "create"
   | "get"
+  | "update"
   | "delete"
   | "listByVenue"
   | "listChildren"
@@ -34,6 +35,14 @@ export interface EventGetInput {
   id: string;
 }
 
+export interface EventUpdateInput {
+  action: "update";
+  id: string;
+  name?: string;
+  localStart?: EventLocalStartInput;
+  durationMinutes?: number;
+}
+
 export interface EventDeleteInput {
   action: "delete";
   id: string;
@@ -62,6 +71,7 @@ export interface EventListAtTimeInput {
 export type EventInput =
   | EventCreateInput
   | EventGetInput
+  | EventUpdateInput
   | EventDeleteInput
   | EventListByVenueInput
   | EventListChildrenInput

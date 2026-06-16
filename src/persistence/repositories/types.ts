@@ -1,6 +1,7 @@
 import type { College } from "@/modules/colleges/types";
 import type { Conference } from "@/modules/conferences/types";
 import type { Division } from "@/modules/divisions/types";
+import type { EventRecord } from "@/modules/events/types";
 import type { League } from "@/modules/leagues/types";
 import type { Location } from "@/modules/locations/types";
 import type { Team } from "@/modules/teams/types";
@@ -116,6 +117,19 @@ export interface TeamRepository {
   getByAbbreviation(leagueId: string, abbreviation: string): Promise<Team | null>;
   create(team: Team): Promise<Team>;
   updateLogo(id: string, logo: string): Promise<void>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface EventRepository {
+  list(options?: ListOptions): Promise<EventRecord[]>;
+  count(): Promise<number>;
+  listByVenue(venueId: string): Promise<EventRecord[]>;
+  listDirectChildren(parentId: string): Promise<EventRecord[]>;
+  listActiveAt(isoUtc: string): Promise<EventRecord[]>;
+  get(id: string): Promise<EventRecord | null>;
+  create(event: EventRecord): Promise<EventRecord>;
+  update(event: EventRecord): Promise<EventRecord>;
   delete(id: string): Promise<boolean>;
   clear(): Promise<void>;
 }

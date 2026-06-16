@@ -167,7 +167,7 @@ async function weatherForEvent(
   let event;
 
   try {
-    event = getEventStore().get(eventId);
+    event = await getEventStore().get(eventId);
   } catch (error) {
     if (error instanceof EventError) {
       throw new WeatherError(WeatherErrorCodes.EVENT_NOT_FOUND, error.message);

@@ -1,3 +1,8 @@
+import { getDb } from "@/persistence/db";
+import {
+  loadWorldClockTickerState,
+  saveWorldClockTickerState,
+} from "@/persistence/world-clock-state";
 import { loadWorldClockConfig } from "./config";
 import { WorldClockError, WorldClockErrorCodes } from "./errors";
 import {
@@ -41,11 +46,14 @@ export interface WorldClockServiceOptions {
   initialEpochMs?: number;
   simulatedMsPerRealMs?: number;
   now?: () => number;
+  initialTicker?: WorldClockTickerState;
+  persistTicker?: (ticker: WorldClockTickerState) => void;
 }
 
 export class WorldClockService {
   private ticker: WorldClockTickerState;
   private readonly now: () => number;
+  private readonly persistTicker?: (ticker: WorldClockTickerState) => void;
 
   constructor(options: WorldClockServiceOptions = {}) {
     const config = loadWorldClockConfig();
@@ -55,7 +63,19 @@ export class WorldClockService {
       options.simulatedMsPerRealMs ?? config.simulatedMsPerRealMs;
 
     this.now = options.now ?? Date.now;
-    this.ticker = createTickerState(initialEpochMs, simulatedMsPerRealMs);
+    this.persistTicker = options.persistTicker;
+    this.ticker =
+      options.initialTicker ??
+      createTickerState(initialEpochMs, simulatedMsPerRealMs);
+  }
+
+  private saveTickerState(): void {
+    this.persistTicker?.({
+      epochMs: computeCurrentEpochMs(this.ticker, this.now()),
+      isRunning: this.ticker.isRunning,
+      lastStartedAtRealMs: this.ticker.lastStartedAtRealMs,
+      simulatedMsPerRealMs: this.ticker.simulatedMsPerRealMs,
+    });
   }
 
   getTickerState(): WorldClockTickerState {
@@ -72,11 +92,13 @@ export class WorldClockService {
 
   start(): WorldClockOutput {
     this.ticker = startTicker(this.ticker, this.now());
+    this.saveTickerState();
     return this.getCurrentOutput();
   }
 
   stop(): WorldClockOutput {
     this.ticker = stopTicker(this.ticker, this.now());
+    this.saveTickerState();
     return this.getCurrentOutput();
   }
 
@@ -99,11 +121,29 @@ export class WorldClockService {
       lastStartedAtRealMs: wasRunning ? this.now() : null,
     };
 
+    this.saveTickerState();
     return this.getCurrentOutput();
   }
 }
 
 let singleton: WorldClockService | null = null;
+
+function createWorldClockPersistenceOptions(): Pick<
+  WorldClockServiceOptions,
+  "initialTicker" | "persistTicker"
+> {
+  if (process.env.VITEST === "true") {
+    return {};
+  }
+
+  const db = getDb();
+  const initialTicker = loadWorldClockTickerState(db) ?? undefined;
+
+  return {
+    initialTicker,
+    persistTicker: (ticker) => saveWorldClockTickerState(db, ticker),
+  };
+}
 
 export function getWorldClockService(): WorldClockService {
   if (globalForWorldClock.__worldClockService) {
@@ -111,7 +151,7 @@ export function getWorldClockService(): WorldClockService {
   }
 
   if (!singleton) {
-    singleton = new WorldClockService();
+    singleton = new WorldClockService(createWorldClockPersistenceOptions());
   }
 
   globalForWorldClock.__worldClockService = singleton;

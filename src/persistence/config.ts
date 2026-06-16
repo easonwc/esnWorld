@@ -11,8 +11,30 @@ export function getDatabasePath(): string {
   return path.resolve(process.cwd(), "data", "world.db");
 }
 
+/** @deprecated Use shouldResetWorldDatabaseOnStartup */
 export function shouldResetDatabaseOnStartup(
   env: NodeJS.ProcessEnv = process.env,
 ): boolean {
-  return parseBoolean(env.DATABASE_RESET_ON_STARTUP, false);
+  return shouldResetWorldDatabaseOnStartup(env);
+}
+
+export function shouldResetWorldDatabaseOnStartup(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return (
+    parseBoolean(env.WORLD_DATABASE_RESET_ON_STARTUP, false) ||
+    parseBoolean(env.DATABASE_RESET_ON_STARTUP, false)
+  );
+}
+
+export function shouldResetSessionOnStartup(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return parseBoolean(env.SESSION_RESET_ON_STARTUP, false);
+}
+
+export function shouldFullResetDatabaseOnStartup(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return parseBoolean(env.FULL_DATABASE_RESET_ON_STARTUP, false);
 }

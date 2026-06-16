@@ -7,35 +7,74 @@ import {
   deleteDatabaseFiles,
   closeDb,
   getDb,
+  resetDatabaseStartupStateForTests,
 } from "./db";
 
 describe("database reset on startup", () => {
-  const originalEnv = process.env.DATABASE_RESET_ON_STARTUP;
+  const originalWorldReset = process.env.WORLD_DATABASE_RESET_ON_STARTUP;
+  const originalLegacyReset = process.env.DATABASE_RESET_ON_STARTUP;
+  const originalSessionReset = process.env.SESSION_RESET_ON_STARTUP;
+  const originalFullReset = process.env.FULL_DATABASE_RESET_ON_STARTUP;
   const originalPath = process.env.DATABASE_PATH;
   let tempDir = "";
 
   afterEach(() => {
     closeDb();
+    resetDatabaseStartupStateForTests();
     if (tempDir) {
       fs.rmSync(tempDir, { recursive: true, force: true });
       tempDir = "";
     }
-    process.env.DATABASE_RESET_ON_STARTUP = originalEnv;
+    process.env.WORLD_DATABASE_RESET_ON_STARTUP = originalWorldReset;
+    process.env.DATABASE_RESET_ON_STARTUP = originalLegacyReset;
+    process.env.SESSION_RESET_ON_STARTUP = originalSessionReset;
+    process.env.FULL_DATABASE_RESET_ON_STARTUP = originalFullReset;
     process.env.DATABASE_PATH = originalPath;
   });
 
-  it("removes an existing database when DATABASE_RESET_ON_STARTUP=true", () => {
+  it("truncates world tier tables when WORLD_DATABASE_RESET_ON_STARTUP=true", () => {
     tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "esnworld-db-reset-"));
     const dbPath = path.join(tempDir, "world.db");
     process.env.DATABASE_PATH = dbPath;
-    process.env.DATABASE_RESET_ON_STARTUP = "true";
+    process.env.WORLD_DATABASE_RESET_ON_STARTUP = "true";
+
+    getDb();
+    const db = getDb();
+    db.prepare("INSERT INTO countries (id, name, iso_code, flag, languages) VALUES (?, ?, ?, ?, ?)").run(
+      "country-1",
+      "United States",
+      "US",
+      "/flags/us.svg",
+      JSON.stringify(["English"]),
+    );
+    closeDb();
+
+    resetDatabaseStartupStateForTests();
+    process.env.WORLD_DATABASE_RESET_ON_STARTUP = "true";
+    getDb();
+
+    const resetDb = getDb();
+    expect(
+      (
+        resetDb.prepare("SELECT COUNT(*) AS count FROM countries").get() as {
+          count: number;
+        }
+      ).count,
+    ).toBe(0);
+    expect(fs.existsSync(dbPath)).toBe(true);
+    closeDb();
+  });
+
+  it("removes sqlite files when FULL_DATABASE_RESET_ON_STARTUP=true", () => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "esnworld-db-reset-"));
+    const dbPath = path.join(tempDir, "world.db");
+    process.env.DATABASE_PATH = dbPath;
+    process.env.FULL_DATABASE_RESET_ON_STARTUP = "true";
 
     const seedDb = new Database(dbPath);
     seedDb.exec("CREATE TABLE marker (value TEXT NOT NULL)");
     seedDb.prepare("INSERT INTO marker (value) VALUES (?)").run("old-data");
     seedDb.close();
-
-    expect(fs.existsSync(dbPath)).toBe(true);
 
     getDb();
 
@@ -46,6 +85,7 @@ describe("database reset on startup", () => {
       .all() as { name: string }[];
 
     expect(tables.some((table) => table.name === "locations")).toBe(true);
+    expect(tables.some((table) => table.name === "events")).toBe(true);
     expect(tables.some((table) => table.name === "marker")).toBe(false);
     closeDb();
   });
