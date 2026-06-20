@@ -14,6 +14,14 @@ import type {
   GolfTournamentScheduleReference,
   GolfTournamentVenue,
 } from "@/modules/golf/types";
+import type {
+  TennisSeasonSchedule,
+  TennisTour,
+  TennisTourSchedulerState,
+  TennisTournament,
+  TennisTournamentScheduleReference,
+  TennisTournamentVenue,
+} from "@/modules/tennis/types";
 import type { ListOptions } from "@/lib/pagination";
 
 export interface CountryRecord {
@@ -199,5 +207,57 @@ export interface GolfSeasonScheduleRepository {
 export interface GolfTourSchedulerStateRepository {
   get(tourAbbreviation: string): Promise<GolfTourSchedulerState | null>;
   upsert(state: GolfTourSchedulerState): Promise<GolfTourSchedulerState>;
+  clear(): Promise<void>;
+}
+
+export interface TennisTourRepository {
+  list(): Promise<TennisTour[]>;
+  get(id: string): Promise<TennisTour | null>;
+  getByAbbreviation(abbreviation: string): Promise<TennisTour | null>;
+  create(tour: TennisTour): Promise<TennisTour>;
+  updateLogo(id: string, logo: string): Promise<void>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface TennisTournamentRepository {
+  listByTour(tourId: string): Promise<TennisTournament[]>;
+  get(id: string): Promise<TennisTournament | null>;
+  getBySlug(tourId: string, slug: string): Promise<TennisTournament | null>;
+  create(tournament: TennisTournament): Promise<TennisTournament>;
+  updateMaterializeOnSchedule(
+    id: string,
+    materializeOnSchedule: boolean,
+  ): Promise<void>;
+  updateScheduleReference(
+    id: string,
+    scheduleReference: TennisTournamentScheduleReference | null,
+  ): Promise<void>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface TennisTournamentVenueRepository {
+  listByTournament(tournamentId: string): Promise<TennisTournamentVenue[]>;
+  create(link: TennisTournamentVenue): Promise<TennisTournamentVenue>;
+  deleteByTournament(tournamentId: string): Promise<void>;
+  clear(): Promise<void>;
+}
+
+export interface TennisSeasonScheduleRepository {
+  listByTour(tourId: string, seasonYear?: number): Promise<TennisSeasonSchedule[]>;
+  getByTourTournamentSeason(
+    tourId: string,
+    tournamentId: string,
+    seasonYear: number,
+  ): Promise<TennisSeasonSchedule | null>;
+  create(schedule: TennisSeasonSchedule): Promise<TennisSeasonSchedule>;
+  deleteByTourSeason(tourId: string, seasonYear: number): Promise<void>;
+  clear(): Promise<void>;
+}
+
+export interface TennisTourSchedulerStateRepository {
+  get(tourAbbreviation: string): Promise<TennisTourSchedulerState | null>;
+  upsert(state: TennisTourSchedulerState): Promise<TennisTourSchedulerState>;
   clear(): Promise<void>;
 }

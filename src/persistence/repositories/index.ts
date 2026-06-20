@@ -16,6 +16,13 @@ import {
   MemoryGolfTournamentRepository,
   MemoryGolfTournamentVenueRepository,
 } from "./memory/golf.memory";
+import {
+  MemoryTennisSeasonScheduleRepository,
+  MemoryTennisTourRepository,
+  MemoryTennisTourSchedulerStateRepository,
+  MemoryTennisTournamentRepository,
+  MemoryTennisTournamentVenueRepository,
+} from "./memory/tennis.memory";
 import { SqliteCollegeRepository } from "./sqlite/college.sqlite";
 import { SqliteConferenceRepository } from "./sqlite/conference.sqlite";
 import { SqliteCountryRepository } from "./sqlite/country.sqlite";
@@ -33,6 +40,13 @@ import {
   SqliteGolfTournamentRepository,
   SqliteGolfTournamentVenueRepository,
 } from "./sqlite/golf.sqlite";
+import {
+  SqliteTennisSeasonScheduleRepository,
+  SqliteTennisTourRepository,
+  SqliteTennisTourSchedulerStateRepository,
+  SqliteTennisTournamentRepository,
+  SqliteTennisTournamentVenueRepository,
+} from "./sqlite/tennis.sqlite";
 import type {
   CollegeRepository,
   ConferenceRepository,
@@ -47,6 +61,11 @@ import type {
   LeagueRepository,
   LocationRepository,
   TeamRepository,
+  TennisSeasonScheduleRepository,
+  TennisTourRepository,
+  TennisTourSchedulerStateRepository,
+  TennisTournamentRepository,
+  TennisTournamentVenueRepository,
   VenueRepository,
   VenueResourceRepository,
 } from "./types";
@@ -160,6 +179,41 @@ function createGolfTourSchedulerStateRepository(): GolfTourSchedulerStateReposit
   return new SqliteGolfTourSchedulerStateRepository(getDb());
 }
 
+function createTennisTourRepository(): TennisTourRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryTennisTourRepository();
+  }
+  return new SqliteTennisTourRepository(getDb());
+}
+
+function createTennisTournamentRepository(): TennisTournamentRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryTennisTournamentRepository();
+  }
+  return new SqliteTennisTournamentRepository(getDb());
+}
+
+function createTennisTournamentVenueRepository(): TennisTournamentVenueRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryTennisTournamentVenueRepository();
+  }
+  return new SqliteTennisTournamentVenueRepository(getDb());
+}
+
+function createTennisSeasonScheduleRepository(): TennisSeasonScheduleRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryTennisSeasonScheduleRepository();
+  }
+  return new SqliteTennisSeasonScheduleRepository(getDb());
+}
+
+function createTennisTourSchedulerStateRepository(): TennisTourSchedulerStateRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryTennisTourSchedulerStateRepository();
+  }
+  return new SqliteTennisTourSchedulerStateRepository(getDb());
+}
+
 export function getDefaultEventRepository(): EventRepository {
   return createEventRepository();
 }
@@ -220,6 +274,26 @@ export function getDefaultGolfTourSchedulerStateRepository(): GolfTourSchedulerS
   return createGolfTourSchedulerStateRepository();
 }
 
+export function getDefaultTennisTourRepository(): TennisTourRepository {
+  return createTennisTourRepository();
+}
+
+export function getDefaultTennisTournamentRepository(): TennisTournamentRepository {
+  return createTennisTournamentRepository();
+}
+
+export function getDefaultTennisTournamentVenueRepository(): TennisTournamentVenueRepository {
+  return createTennisTournamentVenueRepository();
+}
+
+export function getDefaultTennisSeasonScheduleRepository(): TennisSeasonScheduleRepository {
+  return createTennisSeasonScheduleRepository();
+}
+
+export function getDefaultTennisTourSchedulerStateRepository(): TennisTourSchedulerStateRepository {
+  return createTennisTourSchedulerStateRepository();
+}
+
 export { MemoryCollegeRepository } from "./memory/college.memory";
 export { MemoryConferenceRepository } from "./memory/conference.memory";
 export { MemoryCountryRepository } from "./memory/country.memory";
@@ -237,6 +311,13 @@ export {
   MemoryGolfTournamentRepository,
   MemoryGolfTournamentVenueRepository,
 } from "./memory/golf.memory";
+export {
+  MemoryTennisSeasonScheduleRepository,
+  MemoryTennisTourRepository,
+  MemoryTennisTourSchedulerStateRepository,
+  MemoryTennisTournamentRepository,
+  MemoryTennisTournamentVenueRepository,
+} from "./memory/tennis.memory";
 export type {
   CollegeRepository,
   ConferenceRepository,
@@ -252,6 +333,11 @@ export type {
   LeagueRepository,
   LocationRepository,
   TeamRepository,
+  TennisSeasonScheduleRepository,
+  TennisTourRepository,
+  TennisTourSchedulerStateRepository,
+  TennisTournamentRepository,
+  TennisTournamentVenueRepository,
   VenueRepository,
   VenueResourceRepository,
 } from "./types";

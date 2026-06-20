@@ -16,7 +16,10 @@ export async function register() {
     const { seedDpWorldTourOnStartup } = await import(
       "@/persistence/seed/dp-world-tour"
     );
+    const { seedAtpTourOnStartup } = await import("@/persistence/seed/atp-tour");
+    const { seedWtaTourOnStartup } = await import("@/persistence/seed/wta-tour");
     const { registerGolfClockHandlers } = await import("@/modules/golf");
+    const { registerTennisClockHandlers } = await import("@/modules/tennis");
     const { syncCountryFlagImages } = await import(
       "@/persistence/flags/download"
     );
@@ -29,6 +32,7 @@ export async function register() {
       syncNbaTeamLogos,
       syncNflTeamLogos,
       syncNhlTeamLogos,
+      syncTennisTourLogo,
       syncWnbaTeamLogos,
     } = await import("@/persistence/logos/download");
     const {
@@ -37,9 +41,11 @@ export async function register() {
       getDefaultGolfTourRepository,
       getDefaultLeagueRepository,
       getDefaultTeamRepository,
+      getDefaultTennisTourRepository,
     } = await import("@/persistence/repositories");
 
     registerGolfClockHandlers();
+    registerTennisClockHandlers();
 
     await seedWorldOnStartup();
     const [nflSeed, mlbSeed, nbaSeed, nhlSeed, mlsSeed, wnbaSeed] =
@@ -56,7 +62,10 @@ export async function register() {
     const pgaTourSeed = await seedPgaTourOnStartup();
     const lpgaTourSeed = await seedLpgaTourOnStartup();
     const dpWorldTourSeed = await seedDpWorldTourOnStartup();
+    const atpTourSeed = await seedAtpTourOnStartup();
+    const wtaTourSeed = await seedWtaTourOnStartup();
     const golfTourRepository = getDefaultGolfTourRepository();
+    const tennisTourRepository = getDefaultTennisTourRepository();
 
     if (process.env.VITEST !== "true") {
       const sync = await syncCountryFlagImages(getDefaultCountryRepository());
@@ -269,6 +278,18 @@ export async function register() {
       );
     }
 
+    if (atpTourSeed?.enabled) {
+      console.info(
+        `[atp tour seed] tour ${atpTourSeed.tourAdded ? "created" : "exists"}, ${atpTourSeed.tournamentsAdded} tournaments added, ${atpTourSeed.tournamentsSkipped} skipped, ${atpTourSeed.venueLinksAdded} venue links${atpTourSeed.tournamentsMissingVenue > 0 ? `, ${atpTourSeed.tournamentsMissingVenue} tournaments missing venues` : ""}`,
+      );
+    }
+
+    if (wtaTourSeed?.enabled) {
+      console.info(
+        `[wta tour seed] tour ${wtaTourSeed.tourAdded ? "created" : "exists"}, ${wtaTourSeed.tournamentsAdded} tournaments added, ${wtaTourSeed.tournamentsSkipped} skipped, ${wtaTourSeed.venueLinksAdded} venue links${wtaTourSeed.tournamentsMissingVenue > 0 ? `, ${wtaTourSeed.tournamentsMissingVenue} tournaments missing venues` : ""}`,
+      );
+    }
+
     if (process.env.VITEST !== "true") {
       const pgaLogoSync = await syncGolfTourLogo(golfTourRepository, "PGA");
       if (
@@ -300,6 +321,28 @@ export async function register() {
       ) {
         console.info(
           `[golf tour logos] DPWT ${dpwtLogoSync.downloaded} downloaded, ${dpwtLogoSync.skipped} skipped, ${dpwtLogoSync.failed} failed, ${dpwtLogoSync.updated} updated`,
+        );
+      }
+
+      const atpLogoSync = await syncTennisTourLogo(tennisTourRepository, "ATP");
+      if (
+        atpLogoSync.downloaded > 0 ||
+        atpLogoSync.failed > 0 ||
+        atpLogoSync.updated > 0
+      ) {
+        console.info(
+          `[tennis tour logos] ATP ${atpLogoSync.downloaded} downloaded, ${atpLogoSync.skipped} skipped, ${atpLogoSync.failed} failed, ${atpLogoSync.updated} updated`,
+        );
+      }
+
+      const wtaLogoSync = await syncTennisTourLogo(tennisTourRepository, "WTA");
+      if (
+        wtaLogoSync.downloaded > 0 ||
+        wtaLogoSync.failed > 0 ||
+        wtaLogoSync.updated > 0
+      ) {
+        console.info(
+          `[tennis tour logos] WTA ${wtaLogoSync.downloaded} downloaded, ${wtaLogoSync.skipped} skipped, ${wtaLogoSync.failed} failed, ${wtaLogoSync.updated} updated`,
         );
       }
     }

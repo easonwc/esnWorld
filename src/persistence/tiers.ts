@@ -6,6 +6,8 @@ export const SESSION_TIER_TABLES = [
   "world_clock_state",
   "golf_season_schedules",
   "golf_tour_scheduler_state",
+  "tennis_season_schedules",
+  "tennis_tour_scheduler_state",
 ] as const;
 
 /** World tier — geography and sports structure that rarely changes. */
@@ -14,6 +16,9 @@ export const WORLD_TIER_TABLES = [
   "divisions",
   "conferences",
   "leagues",
+  "tennis_tournament_venues",
+  "tennis_tournaments",
+  "tennis_tours",
   "golf_tournament_venues",
   "golf_tournaments",
   "golf_tours",

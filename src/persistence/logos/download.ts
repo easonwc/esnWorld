@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import type { AssetDownloadOptions } from "@/persistence/env";
-import type { LeagueRepository, TeamRepository, CollegeRepository, GolfTourRepository } from "@/persistence/repositories";
+import type { LeagueRepository, TeamRepository, CollegeRepository, GolfTourRepository, TennisTourRepository } from "@/persistence/repositories";
 import { COLLEGE_ESPN_LOGO_IDS } from "./college-espn-ids";
 import {
   getLeagueLogoFilePath,
@@ -31,6 +31,11 @@ import {
   getGolfTourLogoPublicPath,
   getGolfTourLogosDirectory,
   GOLF_TOUR_LOGO_DOWNLOAD_URLS,
+  getTennisTourLogoFilePath,
+  getTennisTourLogoPublicPath,
+  getTennisTourLogosDirectory,
+  TENNIS_TOUR_LOGO_DOWNLOAD_URLS,
+  shouldDownloadTennisTourLogos,
   LEAGUE_LOGO_CDN_BASE,
   MLB_LOGO_CDN_BASE,
   MLS_LOGO_CDN_BASE,
@@ -192,6 +197,88 @@ export async function syncGolfTourLogo(
   try {
     const existed = fs.existsSync(getGolfTourLogoFilePath(normalized));
     const logoPath = await downloadGolfTourLogo(normalized);
+
+    let downloaded = 0;
+    let skipped = 0;
+
+    if (existed) {
+      skipped = 1;
+    } else {
+      downloaded = 1;
+    }
+
+    let updated = 0;
+    if (tour.logo !== logoPath) {
+      await tourRepository.updateLogo(tour.id, logoPath);
+      updated = 1;
+    }
+
+    return { downloaded, skipped, failed: 0, updated };
+  } catch {
+    return { downloaded: 0, skipped: 0, failed: 1, updated: 0 };
+  }
+}
+
+export async function downloadTennisTourLogo(
+  abbreviation: string,
+  options: AssetDownloadOptions = {},
+): Promise<string> {
+  const normalized = normalizeAbbreviation(abbreviation);
+  const publicPath = getTennisTourLogoPublicPath(normalized);
+
+  if (!shouldDownloadTennisTourLogos(options)) {
+    return publicPath;
+  }
+
+  const downloadUrl = TENNIS_TOUR_LOGO_DOWNLOAD_URLS[normalized];
+  if (!downloadUrl) {
+    return publicPath;
+  }
+
+  const logosDir = getTennisTourLogosDirectory();
+  fs.mkdirSync(logosDir, { recursive: true });
+
+  const filePath = getTennisTourLogoFilePath(normalized);
+  if (fs.existsSync(filePath)) {
+    return publicPath;
+  }
+
+  const response = await fetch(downloadUrl);
+
+  if (!response.ok) {
+    if (options.force) {
+      throw new Error(
+        `Failed to download tennis tour logo for ${normalized}: HTTP ${response.status}`,
+      );
+    }
+    return publicPath;
+  }
+
+  const buffer = Buffer.from(await response.arrayBuffer());
+  fs.writeFileSync(filePath, buffer);
+
+  return publicPath;
+}
+
+export async function syncTennisTourLogo(
+  tourRepository: TennisTourRepository,
+  abbreviation: string,
+): Promise<LeagueLogoSyncResult> {
+  const normalized = normalizeAbbreviation(abbreviation);
+
+  if (!shouldDownloadTennisTourLogos()) {
+    return { downloaded: 0, skipped: 0, failed: 0, updated: 0 };
+  }
+
+  const tour = await tourRepository.getByAbbreviation(normalized);
+
+  if (!tour) {
+    return { downloaded: 0, skipped: 0, failed: 0, updated: 0 };
+  }
+
+  try {
+    const existed = fs.existsSync(getTennisTourLogoFilePath(normalized));
+    const logoPath = await downloadTennisTourLogo(normalized);
 
     let downloaded = 0;
     let skipped = 0;

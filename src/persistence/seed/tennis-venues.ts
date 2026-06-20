@@ -14,9 +14,10 @@ export type TennisVenueSeedResult = MultiResourceVenueSeedResult;
 export async function mergeTennisVenueSeed(
   repositories: Parameters<typeof mergeMultiResourceVenueSeed>[2] = {},
   enabled: boolean = loadTennisVenueSeedConfig().enabled,
+  catalog: readonly TennisVenueSeedEntry[] = TENNIS_VENUE_SEED_DATA,
 ): Promise<TennisVenueSeedResult> {
   return mergeMultiResourceVenueSeed(
-    TENNIS_VENUE_SEED_DATA,
+    catalog,
     (entry) => resourcesForTennisVenue(entry as TennisVenueSeedEntry),
     repositories,
     enabled,

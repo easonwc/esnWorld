@@ -145,6 +145,47 @@ export function getGolfTourLogoFilePath(abbreviation: string): string {
   );
 }
 
+/** Remote sources for tennis tour logos (ATP, WTA). */
+export const TENNIS_TOUR_LOGO_DOWNLOAD_URLS: Record<string, string> = {
+  ATP: "https://upload.wikimedia.org/wikipedia/en/3/3f/ATP_Tour_logo.svg",
+  WTA: "https://upload.wikimedia.org/wikipedia/en/4/4c/WTA_Tour_logo.svg",
+};
+
+export function getTennisTourLogosDirectory(): string {
+  return path.resolve(process.cwd(), "public", "logos", "tennis-tours");
+}
+
+export function getTennisTourLogoExtension(abbreviation: string): string {
+  const normalized = abbreviation.trim().toUpperCase();
+  const url = TENNIS_TOUR_LOGO_DOWNLOAD_URLS[normalized] ?? "";
+  if (url.endsWith(".svg")) {
+    return "svg";
+  }
+  return "png";
+}
+
+export function getTennisTourLogoPublicPath(abbreviation: string): string {
+  const normalized = abbreviation.trim().toLowerCase();
+  const extension = getTennisTourLogoExtension(abbreviation);
+  return `/logos/tennis-tours/${normalized}.${extension}`;
+}
+
+export function getTennisTourLogoFilePath(abbreviation: string): string {
+  return path.join(
+    getTennisTourLogosDirectory(),
+    `${abbreviation.trim().toLowerCase()}.${getTennisTourLogoExtension(abbreviation)}`,
+  );
+}
+
+export function shouldDownloadTennisTourLogos(
+  options: AssetDownloadOptions = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.TENNIS_TOUR_LOGO_DOWNLOAD_ON_STARTUP,
+    options,
+  );
+}
+
 export function shouldDownloadGolfTourLogos(
   options: AssetDownloadOptions = {},
 ): boolean {

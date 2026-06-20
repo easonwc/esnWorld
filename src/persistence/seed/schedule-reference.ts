@@ -1,8 +1,12 @@
-import type { GolfTournamentScheduleReference } from "@/modules/golf/types";
+/** Shared schedule-reference shape for co-sanctioned / joint events across tours. */
+export interface TourScheduleReference {
+  tourAbbreviation: string;
+  tournamentSlug: string;
+}
 
 export function scheduleReferencesEqual(
-  left: GolfTournamentScheduleReference | null | undefined,
-  right: GolfTournamentScheduleReference | null | undefined,
+  left: TourScheduleReference | null | undefined,
+  right: TourScheduleReference | null | undefined,
 ): boolean {
   if (!left && !right) {
     return true;
