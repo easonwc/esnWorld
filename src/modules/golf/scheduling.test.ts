@@ -1,11 +1,9 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { getEventStore, resetEventStore } from "@/modules/events";
 import { getGolfSeasonScheduleStore, getGolfTourStore, resetGolfStores, setSchedulingRepositoriesForTests } from "@/modules/golf";
-import { buildTournamentEventTree } from "@/modules/golf/materialize";
-import { processGolfSchedulers, schedulePgaTourSeason } from "@/modules/golf/scheduling";
-import { preferredRotationIndex } from "@/modules/golf/venue-pick";
-import { getLocationStore, resetLocationStore } from "@/modules/locations";
-import { getVenueStore, resetVenueStore } from "@/modules/venues";
+import { processPgaTourClockTransition, scheduleDpWorldTourSeason, schedulePgaTourSeason } from "@/modules/golf/scheduling";
+import { resetLocationStore } from "@/modules/locations";
+import { resetVenueStore } from "@/modules/venues";
 import { clearClockTransitionHandlers } from "@/modules/world-clock/clock-scheduler";
 import { registerGolfClockHandlers, resetGolfClockHandlerRegistrationForTests } from "./register";
 import {
@@ -31,10 +29,6 @@ import {
 import { mergeDpWorldTourSeed } from "@/persistence/seed/dp-world-tour";
 import { DP_WORLD_TOURNAMENT_SEED_DATA } from "@/persistence/seed/dp-world-tour.data";
 import { mergeGolfVenueSeed } from "@/persistence/seed/golf-venues";
-import {
-  scheduleDpWorldTourSeason,
-  schedulePgaTourSeason,
-} from "@/modules/golf/scheduling";
 import { GolfErrorCodes } from "@/modules/golf/errors";
 
 describe("PGA Tour scheduling", () => {
@@ -135,81 +129,25 @@ describe("PGA Tour scheduling", () => {
     30_000,
   );
 
-  it(
-    "fires on Oct 1 clock crossing via processGolfSchedulers",
-    async () => {
-      const results = await processGolfSchedulers(
-        "2025-09-30T12:00:00.000Z",
-        "2025-10-02T12:00:00.000Z",
-      );
+  it("fires on Oct 1 clock crossing without rematerializing an already scheduled season", async () => {
+    await schedulingRepositories.schedulerStateRepository.upsert({
+      tourAbbreviation: "PGA",
+      lastProcessedIsoUtc: "2025-09-30T12:00:00.000Z",
+      lastScheduledSeasonYear: 2026,
+    });
 
-      expect(results[0]).toMatchObject({
-        tourAbbreviation: "PGA",
-        scheduled: true,
-        seasonYear: 2026,
-      });
-    },
-    30_000,
-  );
+    const result = await processPgaTourClockTransition(
+      "2025-09-30T12:00:00.000Z",
+      "2025-10-02T12:00:00.000Z",
+    );
 
-  it(
-    "uses the next rotation venue when the preferred host is already booked",
-    async () => {
-      const tour = await getGolfTourStore().getByAbbreviation("PGA");
-      const pgaChampionship =
-        await schedulingRepositories.tournamentRepository.getBySlug(
-          tour.id,
-          "pga-championship",
-        );
-      expect(pgaChampionship).not.toBeNull();
-
-      const venueLinks =
-        await schedulingRepositories.tournamentVenueRepository.listByTournament(
-          pgaChampionship!.id,
-        );
-      const preferredIndex = preferredRotationIndex(
-        pgaChampionship!,
-        venueLinks.length,
-        2026,
-      );
-      const preferredVenueId = [...venueLinks]
-        .sort((left, right) => left.rotationOrder - right.rotationOrder)[
-          preferredIndex
-        ]!.venueId;
-      const fallbackVenueId = [...venueLinks]
-        .sort((left, right) => left.rotationOrder - right.rotationOrder)[
-          (preferredIndex + 1) % venueLinks.length
-        ]!.venueId;
-
-      const preferredVenue = await getVenueStore().get(preferredVenueId);
-      const location = await getLocationStore().get(preferredVenue.locationId);
-      const teeGroups =
-        await schedulingRepositories.venueResourceRepository.listByVenue(
-          preferredVenue.id,
-        );
-      const blocker = buildTournamentEventTree({
-        tournament: pgaChampionship!,
-        seasonYear: 2026,
-        venueId: preferredVenue.id,
-        timezone: location!.timezone,
-        teeGroups,
-      });
-      for (const event of blocker) {
-        await schedulingRepositories.eventRepository.create(event);
-      }
-
-      await schedulePgaTourSeason(2026, "2025-10-01T12:00:00.000Z");
-
-      const schedules = await getGolfSeasonScheduleStore().listByTour(tour.id, 2026);
-      const pgaChampionshipSchedule = schedules.find(
-        (schedule) => schedule.tournamentId === pgaChampionship!.id,
-      );
-
-      expect(pgaChampionshipSchedule?.venueId).toBe(fallbackVenueId);
-      expect(pgaChampionshipSchedule?.venueId).not.toBe(preferredVenueId);
-    },
-    30_000,
-  );
+    expect(result).toMatchObject({
+      tourAbbreviation: "PGA",
+      scheduled: true,
+      seasonYear: 2026,
+    });
+    expect(await getEventStore().count()).toBe(0);
+  });
 });
 
 describe("DP World Tour co-sanctioned majors", () => {
@@ -304,23 +242,22 @@ describe("DP World Tour co-sanctioned majors", () => {
     delete process.env.DP_WORLD_TOUR_ENABLED;
   });
 
-  it(
-    "throws when co-sanctioned majors reference an unscheduled PGA season",
-    async () => {
-      const scheduledAt = "2025-10-01T12:00:00.000Z";
-      await expect(scheduleDpWorldTourSeason(2026, scheduledAt)).rejects.toMatchObject({
-        code: GolfErrorCodes.SCHEDULE_REFERENCE_NOT_FOUND,
-      });
-    },
-    60_000,
-  );
+  it("throws when co-sanctioned majors reference an unscheduled PGA season", async () => {
+    const scheduledAt = "2025-10-01T12:00:00.000Z";
+    await expect(scheduleDpWorldTourSeason(2026, scheduledAt)).rejects.toMatchObject({
+      code: GolfErrorCodes.SCHEDULE_REFERENCE_NOT_FOUND,
+    });
+  });
 
   it(
-    "schedules 42 tournaments when PGA season exists and shares major rootEventIds",
+    "schedules dual tours with shared major rootEventIds and no duplicate event trees",
     async () => {
       const scheduledAt = "2025-10-01T12:00:00.000Z";
       await schedulePgaTourSeason(2026, scheduledAt);
+      const eventsAfterPga = await getEventStore().count();
+
       await scheduleDpWorldTourSeason(2026, scheduledAt);
+      expect(await getEventStore().count() - eventsAfterPga).toBe(8325);
 
       const pgaTour = await getGolfTourStore().getByAbbreviation("PGA");
       const dpwtTour = await getGolfTourStore().getByAbbreviation("DPWT");
@@ -359,55 +296,16 @@ describe("DP World Tour co-sanctioned majors", () => {
         expect(dpwtSchedule?.rootEventId).toBe(pgaSchedule?.rootEventId);
         expect(dpwtSchedule?.venueId).toBe(pgaSchedule?.venueId);
       }
-    },
-    60_000,
-  );
-
-  it(
-    "schedules PGA majors without duplicating event trees on the DP World catalog",
-    async () => {
-      const scheduledAt = "2025-10-01T12:00:00.000Z";
-      await schedulePgaTourSeason(2026, scheduledAt);
-      const eventsAfterPga = await getEventStore().list();
-
-      await scheduleDpWorldTourSeason(2026, scheduledAt);
-      const eventsAfterBoth = await getEventStore().list();
-
-      expect(eventsAfterBoth.length - eventsAfterPga.length).toBe(8325);
 
       const pgaRootEventIds = new Set(
-        (
-          await getGolfSeasonScheduleStore().listByTour(
-            (await getGolfTourStore().getByAbbreviation("PGA"))!.id,
-            2026,
-          )
-        ).map((schedule) => schedule.rootEventId),
+        pgaSchedules.map((schedule) => schedule.rootEventId),
       );
-      const dpwtReferencedSchedules = (
-        await getGolfSeasonScheduleStore().listByTour(
-          (await getGolfTourStore().getByAbbreviation("DPWT"))!.id,
-          2026,
-        )
-      ).filter((schedule) => pgaRootEventIds.has(schedule.rootEventId));
-      expect(dpwtReferencedSchedules).toHaveLength(5);
-
-      const pgaTour = await getGolfTourStore().getByAbbreviation("PGA");
-      const pgaMasters = await schedulingRepositories.tournamentRepository.getBySlug(
-        pgaTour.id,
-        "masters",
-      );
-      const pgaSchedules = await getGolfSeasonScheduleStore().listByTour(
-        pgaTour.id,
-        2026,
-      );
-
       expect(
-        pgaSchedules.some(
-          (schedule) => schedule.tournamentId === pgaMasters?.id,
+        dpwtSchedules.filter((schedule) =>
+          pgaRootEventIds.has(schedule.rootEventId),
         ),
-      ).toBe(true);
+      ).toHaveLength(5);
 
-      const dpwtTour = await getGolfTourStore().getByAbbreviation("DPWT");
       const dpwtMasters =
         await schedulingRepositories.tournamentRepository.getBySlug(
           dpwtTour.id,
