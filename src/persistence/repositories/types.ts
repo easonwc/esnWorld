@@ -1,10 +1,13 @@
 import type { College } from "@/modules/colleges/types";
+import type { Golfer } from "@/modules/golfers/types";
+import type { Human } from "@/modules/humans/types";
 import type { Conference } from "@/modules/conferences/types";
 import type { Division } from "@/modules/divisions/types";
 import type { EventRecord } from "@/modules/events/types";
 import type { League } from "@/modules/leagues/types";
 import type { Location } from "@/modules/locations/types";
 import type { Team } from "@/modules/teams/types";
+import type { TennisPlayer } from "@/modules/tennis-players/types";
 import type { Venue, VenueResource } from "@/modules/venues/types";
 import type {
   GolfSeasonSchedule,
@@ -82,6 +85,35 @@ export interface CollegeRepository {
   get(id: string): Promise<College | null>;
   create(college: College): Promise<College>;
   updateLogo(id: string, logo: string): Promise<void>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface HumanRepository {
+  list(options?: ListOptions): Promise<Human[]>;
+  count(): Promise<number>;
+  get(id: string): Promise<Human | null>;
+  create(human: Human): Promise<Human>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface GolferRepository {
+  list(options?: ListOptions): Promise<Golfer[]>;
+  count(): Promise<number>;
+  get(id: string): Promise<Golfer | null>;
+  getByHumanId(humanId: string): Promise<Golfer | null>;
+  create(golfer: Golfer): Promise<Golfer>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface TennisPlayerRepository {
+  list(options?: ListOptions): Promise<TennisPlayer[]>;
+  count(): Promise<number>;
+  get(id: string): Promise<TennisPlayer | null>;
+  getByHumanId(humanId: string): Promise<TennisPlayer | null>;
+  create(player: TennisPlayer): Promise<TennisPlayer>;
   delete(id: string): Promise<boolean>;
   clear(): Promise<void>;
 }

@@ -99,6 +99,31 @@ function normalizeAbbreviation(abbreviation: string): string {
   return normalized;
 }
 
+function isPngBuffer(buffer: Buffer): boolean {
+  return (
+    buffer.length >= 4 &&
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47
+  );
+}
+
+function isPngFile(filePath: string): boolean {
+  try {
+    const header = Buffer.alloc(4);
+    const fd = fs.openSync(filePath, "r");
+    try {
+      fs.readSync(fd, header, 0, 4, 0);
+    } finally {
+      fs.closeSync(fd);
+    }
+    return isPngBuffer(header);
+  } catch {
+    return false;
+  }
+}
+
 export async function downloadLeagueLogo(
   abbreviation: string,
   options: AssetDownloadOptions = {},
@@ -277,16 +302,21 @@ export async function syncTennisTourLogo(
   }
 
   try {
-    const existed = fs.existsSync(getTennisTourLogoFilePath(normalized));
+    const logoFilePath = getTennisTourLogoFilePath(normalized);
+    const existed = fs.existsSync(logoFilePath);
     const logoPath = await downloadTennisTourLogo(normalized);
+    const saved = fs.existsSync(logoFilePath);
 
     let downloaded = 0;
     let skipped = 0;
+    let failed = 0;
 
     if (existed) {
       skipped = 1;
-    } else {
+    } else if (saved) {
       downloaded = 1;
+    } else {
+      failed = 1;
     }
 
     let updated = 0;
@@ -295,7 +325,7 @@ export async function syncTennisTourLogo(
       updated = 1;
     }
 
-    return { downloaded, skipped, failed: 0, updated };
+    return { downloaded, skipped, failed, updated };
   } catch {
     return { downloaded: 0, skipped: 0, failed: 1, updated: 0 };
   }
@@ -316,11 +346,11 @@ export async function downloadNflTeamLogo(
   fs.mkdirSync(logosDir, { recursive: true });
 
   const filePath = getNflLogoFilePath(normalized);
-  if (fs.existsSync(filePath)) {
+  if (fs.existsSync(filePath) && isPngFile(filePath)) {
     return publicPath;
   }
 
-  const response = await fetch(`${NFL_LOGO_CDN_BASE}/${normalized}`);
+  const response = await fetch(`${NFL_LOGO_CDN_BASE}/${normalized}.png`);
 
   if (!response.ok) {
     if (options.force) {
@@ -332,6 +362,15 @@ export async function downloadNflTeamLogo(
   }
 
   const buffer = Buffer.from(await response.arrayBuffer());
+  if (!isPngBuffer(buffer)) {
+    if (options.force) {
+      throw new Error(
+        `Failed to download logo for ${normalized}: response is not PNG`,
+      );
+    }
+    return publicPath;
+  }
+
   fs.writeFileSync(filePath, buffer);
 
   return publicPath;
@@ -528,13 +567,14 @@ export async function downloadSeedLeagueLogos(
     abbreviation: string,
     options?: AssetDownloadOptions,
   ) => Promise<string>,
+  isCached: (filePath: string) => boolean = fs.existsSync,
 ): Promise<LeagueLogoDownloadResult> {
   const result: LeagueLogoDownloadResult = { downloaded: 0, skipped: 0, failed: 0 };
 
   await runWithConcurrency(abbreviations, LOGO_DOWNLOAD_CONCURRENCY, async (abbreviation) => {
     const filePath = getLogoFilePath(abbreviation);
 
-    if (fs.existsSync(filePath)) {
+    if (isCached(filePath)) {
       result.skipped += 1;
       return;
     }
@@ -557,6 +597,7 @@ export async function downloadSeedNflLogos(
     abbreviations,
     getNflLogoFilePath,
     downloadNflTeamLogo,
+    isPngFile,
   );
 }
 

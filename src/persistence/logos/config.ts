@@ -2,7 +2,7 @@ import path from "node:path";
 import { isAssetDownloadEnabled, type AssetDownloadOptions } from "../env";
 
 export const NFL_LOGO_CDN_BASE =
-  "https://static.www.nfl.com/image/upload/league/api/clubs/logos";
+  "https://a.espncdn.com/i/teamlogos/nfl/500";
 
 export const MLB_LOGO_CDN_BASE =
   "https://a.espncdn.com/i/teamlogos/mlb/500";
@@ -114,8 +114,9 @@ export function getCollegeLogoPublicPath(espnId: number): string {
 
 /** Remote sources for golf tour logos (PGA, LPGA, DP World Tour, etc.). */
 export const GOLF_TOUR_LOGO_DOWNLOAD_URLS: Record<string, string> = {
-  PGA: "https://upload.wikimedia.org/wikipedia/en/5/53/PGA_Tour_logo.svg",
-  LPGA: "https://static.cdnlogo.com/logos/l/29/ladies-professional-golf-association.svg",
+  PGA: "https://upload.wikimedia.org/wikipedia/en/7/77/PGA_Tour_logo.svg",
+  LPGA:
+    "https://upload.wikimedia.org/wikipedia/en/7/75/Ladies_Professional_Golf_Association.svg",
   DPWT: "https://static.cdnlogo.com/logos/d/69/DP-World-Tour.svg",
 };
 
@@ -148,7 +149,7 @@ export function getGolfTourLogoFilePath(abbreviation: string): string {
 /** Remote sources for tennis tour logos (ATP, WTA). */
 export const TENNIS_TOUR_LOGO_DOWNLOAD_URLS: Record<string, string> = {
   ATP: "https://upload.wikimedia.org/wikipedia/en/3/3f/ATP_Tour_logo.svg",
-  WTA: "https://upload.wikimedia.org/wikipedia/en/4/4c/WTA_Tour_logo.svg",
+  WTA: "https://upload.wikimedia.org/wikipedia/en/0/0e/WTA_Tour_logo.png",
 };
 
 export function getTennisTourLogosDirectory(): string {

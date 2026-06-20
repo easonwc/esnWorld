@@ -36,6 +36,9 @@ const MIGRATIONS = [
   "022_tennis_tours.sql",
   "023_tennis_tournaments.sql",
   "024_tennis_season_schedules.sql",
+  "025_humans.sql",
+  "026_golfers.sql",
+  "027_tennis_players.sql",
 ] as const;
 
 function runMigrations(db: Database.Database): void {

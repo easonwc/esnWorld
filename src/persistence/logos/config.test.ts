@@ -3,6 +3,8 @@ import {
   getGolfTourLogoExtension,
   getGolfTourLogoPublicPath,
   getNhlLogoCdnAbbreviation,
+  getTennisTourLogoExtension,
+  getTennisTourLogoPublicPath,
 } from "./config";
 
 describe("NHL logo CDN aliases", () => {
@@ -11,6 +13,18 @@ describe("NHL logo CDN aliases", () => {
     expect(getNhlLogoCdnAbbreviation("SJS")).toBe("SJ");
     expect(getNhlLogoCdnAbbreviation("TBL")).toBe("TB");
     expect(getNhlLogoCdnAbbreviation("BOS")).toBe("BOS");
+  });
+});
+
+describe("tennis tour logo paths", () => {
+  it("maps ATP to the SVG public path", () => {
+    expect(getTennisTourLogoExtension("ATP")).toBe("svg");
+    expect(getTennisTourLogoPublicPath("ATP")).toBe("/logos/tennis-tours/atp.svg");
+  });
+
+  it("maps WTA to the PNG public path", () => {
+    expect(getTennisTourLogoExtension("WTA")).toBe("png");
+    expect(getTennisTourLogoPublicPath("WTA")).toBe("/logos/tennis-tours/wta.png");
   });
 });
 

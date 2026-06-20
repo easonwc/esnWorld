@@ -1,5 +1,7 @@
 import { getDb } from "../db";
 import { MemoryCollegeRepository } from "./memory/college.memory";
+import { MemoryGolferRepository } from "./memory/golfer.memory";
+import { MemoryHumanRepository } from "./memory/human.memory";
 import { MemoryConferenceRepository } from "./memory/conference.memory";
 import { MemoryCountryRepository } from "./memory/country.memory";
 import { MemoryDivisionRepository } from "./memory/division.memory";
@@ -16,6 +18,7 @@ import {
   MemoryGolfTournamentRepository,
   MemoryGolfTournamentVenueRepository,
 } from "./memory/golf.memory";
+import { MemoryTennisPlayerRepository } from "./memory/tennis-player.memory";
 import {
   MemoryTennisSeasonScheduleRepository,
   MemoryTennisTourRepository,
@@ -24,6 +27,8 @@ import {
   MemoryTennisTournamentVenueRepository,
 } from "./memory/tennis.memory";
 import { SqliteCollegeRepository } from "./sqlite/college.sqlite";
+import { SqliteGolferRepository } from "./sqlite/golfer.sqlite";
+import { SqliteHumanRepository } from "./sqlite/human.sqlite";
 import { SqliteConferenceRepository } from "./sqlite/conference.sqlite";
 import { SqliteCountryRepository } from "./sqlite/country.sqlite";
 import { SqliteDivisionRepository } from "./sqlite/division.sqlite";
@@ -40,6 +45,7 @@ import {
   SqliteGolfTournamentRepository,
   SqliteGolfTournamentVenueRepository,
 } from "./sqlite/golf.sqlite";
+import { SqliteTennisPlayerRepository } from "./sqlite/tennis-player.sqlite";
 import {
   SqliteTennisSeasonScheduleRepository,
   SqliteTennisTourRepository,
@@ -58,6 +64,8 @@ import type {
   GolfTourSchedulerStateRepository,
   GolfTournamentRepository,
   GolfTournamentVenueRepository,
+  GolferRepository,
+  HumanRepository,
   LeagueRepository,
   LocationRepository,
   TeamRepository,
@@ -66,6 +74,7 @@ import type {
   TennisTourSchedulerStateRepository,
   TennisTournamentRepository,
   TennisTournamentVenueRepository,
+  TennisPlayerRepository,
   VenueRepository,
   VenueResourceRepository,
 } from "./types";
@@ -114,6 +123,27 @@ function createCollegeRepository(): CollegeRepository {
     return new MemoryCollegeRepository();
   }
   return new SqliteCollegeRepository(getDb());
+}
+
+function createHumanRepository(): HumanRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryHumanRepository();
+  }
+  return new SqliteHumanRepository(getDb());
+}
+
+function createGolferRepository(): GolferRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryGolferRepository();
+  }
+  return new SqliteGolferRepository(getDb());
+}
+
+function createTennisPlayerRepository(): TennisPlayerRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryTennisPlayerRepository();
+  }
+  return new SqliteTennisPlayerRepository(getDb());
 }
 
 function createLocationRepository(): LocationRepository {
@@ -238,6 +268,18 @@ export function getDefaultCollegeRepository(): CollegeRepository {
   return createCollegeRepository();
 }
 
+export function getDefaultHumanRepository(): HumanRepository {
+  return createHumanRepository();
+}
+
+export function getDefaultGolferRepository(): GolferRepository {
+  return createGolferRepository();
+}
+
+export function getDefaultTennisPlayerRepository(): TennisPlayerRepository {
+  return createTennisPlayerRepository();
+}
+
 export function getDefaultLocationRepository(): LocationRepository {
   return createLocationRepository();
 }
@@ -295,6 +337,8 @@ export function getDefaultTennisTourSchedulerStateRepository(): TennisTourSchedu
 }
 
 export { MemoryCollegeRepository } from "./memory/college.memory";
+export { MemoryGolferRepository } from "./memory/golfer.memory";
+export { MemoryHumanRepository } from "./memory/human.memory";
 export { MemoryConferenceRepository } from "./memory/conference.memory";
 export { MemoryCountryRepository } from "./memory/country.memory";
 export { MemoryDivisionRepository } from "./memory/division.memory";
@@ -311,6 +355,7 @@ export {
   MemoryGolfTournamentRepository,
   MemoryGolfTournamentVenueRepository,
 } from "./memory/golf.memory";
+export { MemoryTennisPlayerRepository } from "./memory/tennis-player.memory";
 export {
   MemoryTennisSeasonScheduleRepository,
   MemoryTennisTourRepository,
@@ -330,6 +375,8 @@ export type {
   GolfTourSchedulerStateRepository,
   GolfTournamentRepository,
   GolfTournamentVenueRepository,
+  GolferRepository,
+  HumanRepository,
   LeagueRepository,
   LocationRepository,
   TeamRepository,
@@ -338,6 +385,7 @@ export type {
   TennisTourSchedulerStateRepository,
   TennisTournamentRepository,
   TennisTournamentVenueRepository,
+  TennisPlayerRepository,
   VenueRepository,
   VenueResourceRepository,
 } from "./types";

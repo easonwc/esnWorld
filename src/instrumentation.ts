@@ -18,6 +18,10 @@ export async function register() {
     );
     const { seedAtpTourOnStartup } = await import("@/persistence/seed/atp-tour");
     const { seedWtaTourOnStartup } = await import("@/persistence/seed/wta-tour");
+    const { seedGolfersOnStartup } = await import("@/persistence/seed/golfers");
+    const { seedTennisPlayersOnStartup } = await import(
+      "@/persistence/seed/tennis-players"
+    );
     const { registerGolfClockHandlers } = await import("@/modules/golf");
     const { registerTennisClockHandlers } = await import("@/modules/tennis");
     const { syncCountryFlagImages } = await import(
@@ -64,6 +68,8 @@ export async function register() {
     const dpWorldTourSeed = await seedDpWorldTourOnStartup();
     const atpTourSeed = await seedAtpTourOnStartup();
     const wtaTourSeed = await seedWtaTourOnStartup();
+    const golfersSeed = await seedGolfersOnStartup();
+    const tennisPlayersSeed = await seedTennisPlayersOnStartup();
     const golfTourRepository = getDefaultGolfTourRepository();
     const tennisTourRepository = getDefaultTennisTourRepository();
 
@@ -287,6 +293,18 @@ export async function register() {
     if (wtaTourSeed?.enabled) {
       console.info(
         `[wta tour seed] tour ${wtaTourSeed.tourAdded ? "created" : "exists"}, ${wtaTourSeed.tournamentsAdded} tournaments added, ${wtaTourSeed.tournamentsSkipped} skipped, ${wtaTourSeed.venueLinksAdded} venue links${wtaTourSeed.tournamentsMissingVenue > 0 ? `, ${wtaTourSeed.tournamentsMissingVenue} tournaments missing venues` : ""}`,
+      );
+    }
+
+    if (golfersSeed?.enabled) {
+      console.info(
+        `[golfers seed] target ${golfersSeed.targetMaleCount} male / ${golfersSeed.targetFemaleCount} female — added ${golfersSeed.golfersAdded} golfer profiles (${golfersSeed.humansAdded} humans)${golfersSeed.missingLocations ? " — skipped, no locations in database (enable LOCATIONS_SEED_ON_STARTUP)" : ""}`,
+      );
+    }
+
+    if (tennisPlayersSeed?.enabled) {
+      console.info(
+        `[tennis players seed] target ${tennisPlayersSeed.targetMaleCount} male / ${tennisPlayersSeed.targetFemaleCount} female — added ${tennisPlayersSeed.tennisPlayersAdded} profiles (${tennisPlayersSeed.humansAdded} humans)${tennisPlayersSeed.missingLocations ? " — skipped, no locations in database (enable LOCATIONS_SEED_ON_STARTUP)" : ""}`,
       );
     }
 

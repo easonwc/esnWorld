@@ -17,6 +17,22 @@ export function parseBoolean(
   return defaultValue;
 }
 
+export function parseNonNegativeInt(
+  value: string | undefined,
+  defaultValue: number,
+): number {
+  if (value === undefined || value.trim() === "") {
+    return defaultValue;
+  }
+
+  const parsed = Number.parseInt(value.trim(), 10);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return defaultValue;
+  }
+
+  return parsed;
+}
+
 export interface AssetDownloadOptions {
   /** Bypass startup env flags (used by CLI download scripts). */
   force?: boolean;
