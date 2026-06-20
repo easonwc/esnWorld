@@ -1,9 +1,9 @@
 import { localTimeToIsoUtc } from "@/modules/locations";
-import type { PgaTourScheduleReleaseConfig } from "@/persistence/seed/golf-config";
+import type { GolfTourScheduleReleaseConfig } from "@/persistence/seed/golf-config";
 
 export function computeReleaseInstantUtc(
   releaseYear: number,
-  config: PgaTourScheduleReleaseConfig,
+  config: GolfTourScheduleReleaseConfig,
 ): string {
   return localTimeToIsoUtc(
     {
@@ -22,7 +22,7 @@ export function computeReleaseInstantUtc(
 export function findCrossedReleaseYears(
   beforeIso: string,
   afterIso: string,
-  config: PgaTourScheduleReleaseConfig,
+  config: GolfTourScheduleReleaseConfig,
 ): number[] {
   const beforeMs = Date.parse(beforeIso);
   const afterMs = Date.parse(afterIso);

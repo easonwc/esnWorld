@@ -12,6 +12,7 @@ export async function register() {
     );
     const { seedGolfVenuesOnStartup } = await import("@/persistence/seed/golf-venues");
     const { seedPgaTourOnStartup } = await import("@/persistence/seed/pga-tour");
+    const { seedLpgaTourOnStartup } = await import("@/persistence/seed/lpga-tour");
     const { registerGolfClockHandlers } = await import("@/modules/golf");
     const { syncCountryFlagImages } = await import(
       "@/persistence/flags/download"
@@ -50,6 +51,7 @@ export async function register() {
     const tennisVenueSeed = await seedTennisVenuesOnStartup();
     const golfVenueSeed = await seedGolfVenuesOnStartup();
     const pgaTourSeed = await seedPgaTourOnStartup();
+    const lpgaTourSeed = await seedLpgaTourOnStartup();
     const golfTourRepository = getDefaultGolfTourRepository();
 
     if (process.env.VITEST !== "true") {
@@ -251,6 +253,12 @@ export async function register() {
       );
     }
 
+    if (lpgaTourSeed?.enabled) {
+      console.info(
+        `[lpga tour seed] tour ${lpgaTourSeed.tourAdded ? "created" : "exists"}, ${lpgaTourSeed.tournamentsAdded} tournaments added, ${lpgaTourSeed.tournamentsSkipped} skipped, ${lpgaTourSeed.venueLinksAdded} venue links${lpgaTourSeed.tournamentsMissingVenue > 0 ? `, ${lpgaTourSeed.tournamentsMissingVenue} tournaments missing venues` : ""}`,
+      );
+    }
+
     if (process.env.VITEST !== "true") {
       const pgaLogoSync = await syncGolfTourLogo(golfTourRepository, "PGA");
       if (
@@ -260,6 +268,17 @@ export async function register() {
       ) {
         console.info(
           `[golf tour logos] PGA ${pgaLogoSync.downloaded} downloaded, ${pgaLogoSync.skipped} skipped, ${pgaLogoSync.failed} failed, ${pgaLogoSync.updated} updated`,
+        );
+      }
+
+      const lpgaLogoSync = await syncGolfTourLogo(golfTourRepository, "LPGA");
+      if (
+        lpgaLogoSync.downloaded > 0 ||
+        lpgaLogoSync.failed > 0 ||
+        lpgaLogoSync.updated > 0
+      ) {
+        console.info(
+          `[golf tour logos] LPGA ${lpgaLogoSync.downloaded} downloaded, ${lpgaLogoSync.skipped} skipped, ${lpgaLogoSync.failed} failed, ${lpgaLogoSync.updated} updated`,
         );
       }
     }

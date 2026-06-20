@@ -1,33 +1,12 @@
-import type { GolfEntryCriteria, GolfVenueMode } from "@/modules/golf/types";
 import { DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT } from "./golf-venue-types";
+import type { GolfTournamentSeedEntry, GolfTournamentVenueRef } from "./golf-tour-seed.types";
 import { PGA_TOUR_PHASE_B_SEED_DATA } from "./pga-tour-phase-b.data";
 
-export interface PgaTournamentVenueRef {
-  locationName: string;
-  locationCountry: string;
-  locationRegion?: string | null;
-  venueName: string;
-  rotationOrder?: number;
-  isDefault?: boolean;
-}
+export type PgaTournamentVenueRef = GolfTournamentVenueRef;
 
-export interface PgaTournamentSeedEntry {
-  slug: string;
-  name: string;
-  isMajor: boolean;
-  purseUsd: number;
-  entryCriteria: GolfEntryCriteria;
-  venueMode: GolfVenueMode;
-  seasonStartMonth: number;
-  seasonStartDay: number;
-  rotationEpochYear?: number;
-  sortOrder: number;
-  /** Parallel tee-group slots per round; defaults to venue capacity. */
-  teeGroupCount?: number;
-  /** Golfer capacity; defaults to standard PGA full field (156). */
-  fieldSize?: number;
+export type PgaTournamentSeedEntry = GolfTournamentSeedEntry & {
   venues: readonly PgaTournamentVenueRef[];
-}
+};
 
 /** Parallel tee groups materialized per round (scheduling slots). */
 export const DEFAULT_PGA_TEE_GROUP_COUNT = DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT;

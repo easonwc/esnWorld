@@ -14,9 +14,10 @@ export type GolfVenueSeedResult = MultiResourceVenueSeedResult;
 export async function mergeGolfVenueSeed(
   repositories: Parameters<typeof mergeMultiResourceVenueSeed>[2] = {},
   enabled: boolean = loadGolfVenueSeedConfig().enabled,
+  catalog: readonly GolfVenueSeedEntry[] = GOLF_VENUE_SEED_DATA,
 ): Promise<GolfVenueSeedResult> {
   return mergeMultiResourceVenueSeed(
-    GOLF_VENUE_SEED_DATA,
+    catalog,
     (entry) => resourcesForGolfVenue(entry as GolfVenueSeedEntry),
     repositories,
     enabled,

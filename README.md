@@ -88,7 +88,8 @@ cp .env.example .env
 | `TENNIS_GOLF_VENUES_SEED_ON_STARTUP` | `false` | **Deprecated** — enables both `TENNIS_VENUES_SEED_ON_STARTUP` and `GOLF_VENUES_SEED_ON_STARTUP` |
 | `PGA_TOUR_SEED_ON_STARTUP` | `false` | Merge PGA Tour tournament catalog and venue pools (auto-merges required golf cities and venues) |
 | `GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download golf tour logos (PGA, future LPGA) on startup |
-| `PGA_TOUR_ENABLED` | `false` | Run PGA season scheduler on world-clock transitions (Oct 1 release → next calendar year) |
+| `LPGA_TOUR_SEED_ON_STARTUP` | `false` | Merge LPGA Tour tournament catalog and venue pools (auto-merges required golf cities and venues) |
+| `LPGA_TOUR_ENABLED` | `false` | Run LPGA season scheduler on world-clock transitions (Oct 1 release → next calendar year) |
 | `FLAG_DOWNLOAD_ON_STARTUP` | `false` | Download country flag SVGs on server startup |
 | `NFL_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download NFL team and league logos on startup |
 | `MLB_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download MLB team and league logos on startup |
@@ -379,6 +380,16 @@ Set `GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP=true` to fetch tour logo files on startu
 Set `PGA_TOUR_ENABLED=true` to run the **season scheduler** when the world clock crosses **October 1** (`PGA_TOUR_SCHEDULE_RELEASE_*`, default midnight `America/New_York`). The scheduler materializes the **next calendar year** as event trees (tournament → rounds → tee groups). Each tournament stores **`fieldSize`** (golfer capacity, typically 140–160) separately from **`teeGroupCount`** (parallel tee-group scheduling slots per round). Scheduling uses hybrid clock hooks: mutations (`set`/`advance`/`stop`), a 1-second interval while the clock is running, and manual `POST /api/golf-scheduling` with `action: "processNow"`. If any tournament fails validation, the **entire season batch fails** and an error is logged.
 
 Seed catalog: `src/persistence/seed/pga-tour.data.ts`.
+
+### LPGA Tour (optional)
+
+Set `LPGA_TOUR_SEED_ON_STARTUP=true` to merge the **LPGA Tour** catalog (**33** events from the 2025 official calendar, including five majors). Also merges required LPGA host cities, golf venues, and reuses shared courses where events overlap with PGA stops.
+
+Set `LPGA_TOUR_ENABLED=true` to run the **season scheduler** on the same **October 1** release model as PGA (`LPGA_TOUR_SCHEDULE_RELEASE_*` defaults match PGA).
+
+Each tournament uses **`fieldSize: 144`** (golfer capacity) and **`teeGroupCount: 55`** (scheduling slots).
+
+Seed catalog: `src/persistence/seed/lpga-tour.data.ts`.
 
 ### Future enhancements
 

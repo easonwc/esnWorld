@@ -19,4 +19,8 @@ describe("golf tour logo paths", () => {
     expect(getGolfTourLogoExtension("PGA")).toBe("svg");
     expect(getGolfTourLogoPublicPath("PGA")).toBe("/logos/golf-tours/pga.svg");
   });
+
+  it("maps LPGA to the default golf tour logo path", () => {
+    expect(getGolfTourLogoPublicPath("LPGA")).toBe("/logos/golf-tours/lpga.png");
+  });
 });

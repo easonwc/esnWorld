@@ -24,8 +24,11 @@ import {
   type VenueResourceRepository,
 } from "@/persistence/repositories";
 import {
+  isLpgaTourEnabled,
   isPgaTourEnabled,
+  loadLpgaTourScheduleReleaseConfig,
   loadPgaTourScheduleReleaseConfig,
+  type GolfTourScheduleReleaseConfig,
 } from "@/persistence/seed/golf-config";
 import { GolfError, GolfErrorCodes } from "./errors";
 import { buildTournamentEventTree } from "./materialize";
@@ -42,6 +45,32 @@ import type {
 } from "./types";
 
 const PGA_TOUR_ABBREVIATION = "PGA";
+const LPGA_TOUR_ABBREVIATION = "LPGA";
+
+interface GolfTourSchedulerDefinition {
+  abbreviation: string;
+  label: string;
+  seedEnvFlag: string;
+  isEnabled: () => boolean;
+  loadReleaseConfig: () => GolfTourScheduleReleaseConfig;
+}
+
+const GOLF_TOUR_SCHEDULERS: readonly GolfTourSchedulerDefinition[] = [
+  {
+    abbreviation: PGA_TOUR_ABBREVIATION,
+    label: "pga tour",
+    seedEnvFlag: "PGA_TOUR_SEED_ON_STARTUP",
+    isEnabled: isPgaTourEnabled,
+    loadReleaseConfig: loadPgaTourScheduleReleaseConfig,
+  },
+  {
+    abbreviation: LPGA_TOUR_ABBREVIATION,
+    label: "lpga tour",
+    seedEnvFlag: "LPGA_TOUR_SEED_ON_STARTUP",
+    isEnabled: isLpgaTourEnabled,
+    loadReleaseConfig: loadLpgaTourScheduleReleaseConfig,
+  },
+];
 
 export interface SchedulingRepositories {
   eventRepository: EventRepository;
@@ -188,15 +217,26 @@ async function persistSeasonBatch(input: {
   }
 }
 
-export async function schedulePgaTourSeason(
+export async function scheduleGolfTourSeason(
+  tourAbbreviation: string,
   seasonYear: number,
   scheduledAtIsoUtc: string,
   repositories: SchedulingRepositories = getSchedulingRepositories(),
+  scheduler: GolfTourSchedulerDefinition = GOLF_TOUR_SCHEDULERS.find(
+    (entry) => entry.abbreviation === tourAbbreviation,
+  )!,
 ): Promise<void> {
-  if (!isPgaTourEnabled()) {
+  if (!scheduler) {
+    throw new GolfError(
+      GolfErrorCodes.TOUR_NOT_FOUND,
+      `Unsupported golf tour scheduler: ${tourAbbreviation}`,
+    );
+  }
+
+  if (!scheduler.isEnabled()) {
     throw new GolfError(
       GolfErrorCodes.TOUR_DISABLED,
-      "PGA Tour scheduling is disabled (PGA_TOUR_ENABLED=false)",
+      `${scheduler.abbreviation} Tour scheduling is disabled`,
     );
   }
 
@@ -208,15 +248,15 @@ export async function schedulePgaTourSeason(
   const locationRepository = repositories.locationRepository;
   const venueResourceRepository = repositories.venueResourceRepository;
 
-  const tour = await tourRepository.getByAbbreviation(PGA_TOUR_ABBREVIATION);
+  const tour = await tourRepository.getByAbbreviation(scheduler.abbreviation);
   if (!tour) {
     throw new GolfError(
       GolfErrorCodes.TOUR_NOT_FOUND,
-      "PGA Tour catalog not found — enable PGA_TOUR_SEED_ON_STARTUP",
+      `${scheduler.abbreviation} Tour catalog not found — enable ${scheduler.seedEnvFlag}`,
     );
   }
 
-  const schedulerState = await schedulerStateRepository.get(PGA_TOUR_ABBREVIATION);
+  const schedulerState = await schedulerStateRepository.get(scheduler.abbreviation);
   if (
     schedulerState?.lastScheduledSeasonYear !== null &&
     schedulerState?.lastScheduledSeasonYear !== undefined &&
@@ -275,7 +315,7 @@ export async function schedulePgaTourSeason(
 
   if (schedules.length === 0) {
     await schedulerStateRepository.upsert({
-      tourAbbreviation: PGA_TOUR_ABBREVIATION,
+      tourAbbreviation: scheduler.abbreviation,
       lastProcessedIsoUtc: scheduledAtIsoUtc,
       lastScheduledSeasonYear: seasonYear,
     });
@@ -287,7 +327,7 @@ export async function schedulePgaTourSeason(
     await persistSeasonBatch({
       events: plannedEvents,
       schedules,
-      tourAbbreviation: PGA_TOUR_ABBREVIATION,
+      tourAbbreviation: scheduler.abbreviation,
       processedIsoUtc: scheduledAtIsoUtc,
       seasonYear,
       repositories,
@@ -303,29 +343,56 @@ export async function schedulePgaTourSeason(
           : undefined;
 
     console.error(
-      `[pga tour schedule] FAILED season ${seasonYear}: ${message}${cause ? ` — cause: ${cause}` : ""}`,
+      `[${scheduler.label} schedule] FAILED season ${seasonYear}: ${message}${cause ? ` — cause: ${cause}` : ""}`,
     );
     throw error;
   }
 
   console.info(
-    `[pga tour schedule] scheduled ${seasonYear} season: ${schedules.length} tournaments, ${plannedEvents.length} events`,
+    `[${scheduler.label} schedule] scheduled ${seasonYear} season: ${schedules.length} tournaments, ${plannedEvents.length} events`,
   );
 }
 
-export async function processPgaTourClockTransition(
+export async function schedulePgaTourSeason(
+  seasonYear: number,
+  scheduledAtIsoUtc: string,
+  repositories: SchedulingRepositories = getSchedulingRepositories(),
+): Promise<void> {
+  return scheduleGolfTourSeason(
+    PGA_TOUR_ABBREVIATION,
+    seasonYear,
+    scheduledAtIsoUtc,
+    repositories,
+  );
+}
+
+export async function scheduleLpgaTourSeason(
+  seasonYear: number,
+  scheduledAtIsoUtc: string,
+  repositories: SchedulingRepositories = getSchedulingRepositories(),
+): Promise<void> {
+  return scheduleGolfTourSeason(
+    LPGA_TOUR_ABBREVIATION,
+    seasonYear,
+    scheduledAtIsoUtc,
+    repositories,
+  );
+}
+
+async function processGolfTourClockTransition(
+  scheduler: GolfTourSchedulerDefinition,
   beforeIsoUtc: string,
   afterIsoUtc: string,
 ): Promise<GolfSchedulingProcessResult> {
-  if (!isPgaTourEnabled()) {
+  if (!scheduler.isEnabled()) {
     return {
-      tourAbbreviation: PGA_TOUR_ABBREVIATION,
+      tourAbbreviation: scheduler.abbreviation,
       scheduled: false,
     };
   }
 
   const repositories = getSchedulingRepositories();
-  const releaseConfig = loadPgaTourScheduleReleaseConfig();
+  const releaseConfig = scheduler.loadReleaseConfig();
   const crossedYears = findCrossedReleaseYears(
     beforeIsoUtc,
     afterIsoUtc,
@@ -334,15 +401,15 @@ export async function processPgaTourClockTransition(
 
   if (crossedYears.length === 0) {
     await repositories.schedulerStateRepository.upsert({
-      tourAbbreviation: PGA_TOUR_ABBREVIATION,
+      tourAbbreviation: scheduler.abbreviation,
       lastProcessedIsoUtc: afterIsoUtc,
       lastScheduledSeasonYear:
         (await repositories.schedulerStateRepository.get(
-          PGA_TOUR_ABBREVIATION,
+          scheduler.abbreviation,
         ))?.lastScheduledSeasonYear ?? null,
     });
     return {
-      tourAbbreviation: PGA_TOUR_ABBREVIATION,
+      tourAbbreviation: scheduler.abbreviation,
       scheduled: false,
     };
   }
@@ -350,11 +417,17 @@ export async function processPgaTourClockTransition(
   try {
     for (const releaseYear of crossedYears) {
       const seasonYear = seasonYearForRelease(releaseYear);
-      await schedulePgaTourSeason(seasonYear, afterIsoUtc, repositories);
+      await scheduleGolfTourSeason(
+        scheduler.abbreviation,
+        seasonYear,
+        afterIsoUtc,
+        repositories,
+        scheduler,
+      );
     }
 
     return {
-      tourAbbreviation: PGA_TOUR_ABBREVIATION,
+      tourAbbreviation: scheduler.abbreviation,
       scheduled: true,
       seasonYear: seasonYearForRelease(crossedYears[crossedYears.length - 1]!),
     };
@@ -366,7 +439,7 @@ export async function processPgaTourClockTransition(
         : undefined;
 
     return {
-      tourAbbreviation: PGA_TOUR_ABBREVIATION,
+      tourAbbreviation: scheduler.abbreviation,
       scheduled: false,
       error: message,
       cause,
@@ -374,29 +447,54 @@ export async function processPgaTourClockTransition(
   }
 }
 
+export async function processPgaTourClockTransition(
+  beforeIsoUtc: string,
+  afterIsoUtc: string,
+): Promise<GolfSchedulingProcessResult> {
+  return processGolfTourClockTransition(
+    GOLF_TOUR_SCHEDULERS[0]!,
+    beforeIsoUtc,
+    afterIsoUtc,
+  );
+}
+
+export async function processLpgaTourClockTransition(
+  beforeIsoUtc: string,
+  afterIsoUtc: string,
+): Promise<GolfSchedulingProcessResult> {
+  return processGolfTourClockTransition(
+    GOLF_TOUR_SCHEDULERS[1]!,
+    beforeIsoUtc,
+    afterIsoUtc,
+  );
+}
+
 export async function processGolfSchedulers(
   beforeIsoUtc: string,
   afterIsoUtc: string,
 ): Promise<GolfSchedulingProcessResult[]> {
   const results: GolfSchedulingProcessResult[] = [];
-  results.push(await processPgaTourClockTransition(beforeIsoUtc, afterIsoUtc));
+  for (const scheduler of GOLF_TOUR_SCHEDULERS) {
+    results.push(
+      await processGolfTourClockTransition(scheduler, beforeIsoUtc, afterIsoUtc),
+    );
+  }
   return results;
 }
 
-export async function processGolfSchedulersNow(
+async function processGolfTourNow(
+  scheduler: GolfTourSchedulerDefinition,
   isoUtc: string,
-): Promise<GolfSchedulingProcessResult[]> {
-  if (!isPgaTourEnabled()) {
-    return [
-      {
-        tourAbbreviation: PGA_TOUR_ABBREVIATION,
-        scheduled: false,
-      },
-    ];
+): Promise<GolfSchedulingProcessResult> {
+  if (!scheduler.isEnabled()) {
+    return {
+      tourAbbreviation: scheduler.abbreviation,
+      scheduled: false,
+    };
   }
 
   const repositories = getSchedulingRepositories();
-  const releaseConfig = loadPgaTourScheduleReleaseConfig();
+  const releaseConfig = scheduler.loadReleaseConfig();
   const nowMs = Date.parse(isoUtc);
   let seasonYear: number | null = null;
 
@@ -410,23 +508,25 @@ export async function processGolfSchedulersNow(
   }
 
   if (seasonYear === null) {
-    return [
-      {
-        tourAbbreviation: PGA_TOUR_ABBREVIATION,
-        scheduled: false,
-      },
-    ];
+    return {
+      tourAbbreviation: scheduler.abbreviation,
+      scheduled: false,
+    };
   }
 
   try {
-    await schedulePgaTourSeason(seasonYear, isoUtc, repositories);
-    return [
-      {
-        tourAbbreviation: PGA_TOUR_ABBREVIATION,
-        scheduled: true,
-        seasonYear,
-      },
-    ];
+    await scheduleGolfTourSeason(
+      scheduler.abbreviation,
+      seasonYear,
+      isoUtc,
+      repositories,
+      scheduler,
+    );
+    return {
+      tourAbbreviation: scheduler.abbreviation,
+      scheduled: true,
+      seasonYear,
+    };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Scheduling failed";
     const cause =
@@ -434,14 +534,25 @@ export async function processGolfSchedulersNow(
         ? error.cause.message
         : undefined;
 
-    return [
-      {
-        tourAbbreviation: PGA_TOUR_ABBREVIATION,
-        scheduled: false,
-        seasonYear,
-        error: message,
-        cause,
-      },
-    ];
+    return {
+      tourAbbreviation: scheduler.abbreviation,
+      scheduled: false,
+      seasonYear,
+      error: message,
+      cause,
+    };
   }
 }
+
+export async function processGolfSchedulersNow(
+  isoUtc: string,
+): Promise<GolfSchedulingProcessResult[]> {
+  const results: GolfSchedulingProcessResult[] = [];
+  for (const scheduler of GOLF_TOUR_SCHEDULERS) {
+    if (scheduler.isEnabled()) {
+      results.push(await processGolfTourNow(scheduler, isoUtc));
+    }
+  }
+  return results;
+}
+

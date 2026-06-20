@@ -1016,7 +1016,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/golf-scheduling",
     summary: "Run golf schedulers now",
     description:
-      "Manually triggers PGA Tour season scheduling for the current (or given) world clock time. Requires PGA_TOUR_ENABLED=true and a seeded catalog. Normally also runs automatically when the clock crosses Oct 1.",
+      "Manually triggers golf tour season scheduling for the current (or given) world clock time. Requires PGA_TOUR_ENABLED and/or LPGA_TOUR_ENABLED with seeded catalogs. Normally also runs automatically when the clock crosses Oct 1.",
     requestBody: JSON.stringify(
       {
         action: "processNow",
@@ -1211,7 +1211,7 @@ export function buildOpenApiSpec() {
       {
         name: "Golf Tours",
         description:
-          "Golf tours and season scheduling. PGA Tour catalog and materialized season schedules when PGA_TOUR_ENABLED=true.",
+          "Golf tours and season scheduling. PGA and LPGA catalogs with materialized season schedules when tour schedulers are enabled.",
       },
       {
         name: "Golf Tournaments",

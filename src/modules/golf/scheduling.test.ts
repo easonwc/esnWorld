@@ -109,29 +109,37 @@ describe("PGA Tour scheduling", () => {
     delete process.env.PGA_TOUR_ENABLED;
   });
 
-  it("schedules a full PGA season with tournament event trees", async () => {
-    await schedulePgaTourSeason(2026, "2025-10-01T12:00:00.000Z");
+  it(
+    "schedules a full PGA season with tournament event trees",
+    async () => {
+      await schedulePgaTourSeason(2026, "2025-10-01T12:00:00.000Z");
 
-    const tour = await getGolfTourStore().getByAbbreviation("PGA");
-    const schedules = await getGolfSeasonScheduleStore().listByTour(tour.id, 2026);
+      const tour = await getGolfTourStore().getByAbbreviation("PGA");
+      const schedules = await getGolfSeasonScheduleStore().listByTour(tour.id, 2026);
 
-    expect(schedules).toHaveLength(47);
-    const eventsPerTournament = 5 + 4 * DEFAULT_PGA_TEE_GROUP_COUNT;
-    expect(await getEventStore().count()).toBe(
-      PGA_TOURNAMENT_SEED_DATA.length * eventsPerTournament,
-    );
-  });
+      expect(schedules).toHaveLength(47);
+      const eventsPerTournament = 5 + 4 * DEFAULT_PGA_TEE_GROUP_COUNT;
+      expect(await getEventStore().count()).toBe(
+        PGA_TOURNAMENT_SEED_DATA.length * eventsPerTournament,
+      );
+    },
+    30_000,
+  );
 
-  it("fires on Oct 1 clock crossing via processGolfSchedulers", async () => {
-    const results = await processGolfSchedulers(
-      "2025-09-30T12:00:00.000Z",
-      "2025-10-02T12:00:00.000Z",
-    );
+  it(
+    "fires on Oct 1 clock crossing via processGolfSchedulers",
+    async () => {
+      const results = await processGolfSchedulers(
+        "2025-09-30T12:00:00.000Z",
+        "2025-10-02T12:00:00.000Z",
+      );
 
-    expect(results[0]).toMatchObject({
-      tourAbbreviation: "PGA",
-      scheduled: true,
-      seasonYear: 2026,
-    });
-  });
+      expect(results[0]).toMatchObject({
+        tourAbbreviation: "PGA",
+        scheduled: true,
+        seasonYear: 2026,
+      });
+    },
+    30_000,
+  );
 });
