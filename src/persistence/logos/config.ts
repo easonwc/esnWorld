@@ -112,6 +112,46 @@ export function getCollegeLogoPublicPath(espnId: number): string {
   return `/logos/ncaa/${espnId}.png`;
 }
 
+/** Remote sources for golf tour logos (PGA, future LPGA, etc.). */
+export const GOLF_TOUR_LOGO_DOWNLOAD_URLS: Record<string, string> = {
+  PGA: "https://upload.wikimedia.org/wikipedia/en/5/53/PGA_Tour_logo.svg",
+};
+
+export function getGolfTourLogosDirectory(): string {
+  return path.resolve(process.cwd(), "public", "logos", "golf-tours");
+}
+
+export function getGolfTourLogoExtension(abbreviation: string): string {
+  const normalized = abbreviation.trim().toUpperCase();
+  const url = GOLF_TOUR_LOGO_DOWNLOAD_URLS[normalized] ?? "";
+  if (url.endsWith(".svg")) {
+    return "svg";
+  }
+  return "png";
+}
+
+export function getGolfTourLogoPublicPath(abbreviation: string): string {
+  const normalized = abbreviation.trim().toLowerCase();
+  const extension = getGolfTourLogoExtension(abbreviation);
+  return `/logos/golf-tours/${normalized}.${extension}`;
+}
+
+export function getGolfTourLogoFilePath(abbreviation: string): string {
+  return path.join(
+    getGolfTourLogosDirectory(),
+    `${abbreviation.trim().toLowerCase()}.${getGolfTourLogoExtension(abbreviation)}`,
+  );
+}
+
+export function shouldDownloadGolfTourLogos(
+  options: AssetDownloadOptions = {},
+): boolean {
+  return isAssetDownloadEnabled(
+    process.env.GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP,
+    options,
+  );
+}
+
 export function getNflLogoFilePath(abbreviation: string): string {
   return path.join(
     getNflLogosDirectory(),

@@ -5,7 +5,14 @@ import type { EventRecord } from "@/modules/events/types";
 import type { League } from "@/modules/leagues/types";
 import type { Location } from "@/modules/locations/types";
 import type { Team } from "@/modules/teams/types";
-import type { Venue, VenueResource, VenueResourceType } from "@/modules/venues/types";
+import type { Venue, VenueResource } from "@/modules/venues/types";
+import type {
+  GolfSeasonSchedule,
+  GolfTour,
+  GolfTourSchedulerState,
+  GolfTournament,
+  GolfTournamentVenue,
+} from "@/modules/golf/types";
 import type { ListOptions } from "@/lib/pagination";
 
 export interface CountryRecord {
@@ -139,5 +146,49 @@ export interface EventRepository {
   create(event: EventRecord): Promise<EventRecord>;
   update(event: EventRecord): Promise<EventRecord>;
   delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface GolfTourRepository {
+  list(): Promise<GolfTour[]>;
+  get(id: string): Promise<GolfTour | null>;
+  getByAbbreviation(abbreviation: string): Promise<GolfTour | null>;
+  create(tour: GolfTour): Promise<GolfTour>;
+  updateLogo(id: string, logo: string): Promise<void>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface GolfTournamentRepository {
+  listByTour(tourId: string): Promise<GolfTournament[]>;
+  get(id: string): Promise<GolfTournament | null>;
+  getBySlug(tourId: string, slug: string): Promise<GolfTournament | null>;
+  create(tournament: GolfTournament): Promise<GolfTournament>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface GolfTournamentVenueRepository {
+  listByTournament(tournamentId: string): Promise<GolfTournamentVenue[]>;
+  create(link: GolfTournamentVenue): Promise<GolfTournamentVenue>;
+  deleteByTournament(tournamentId: string): Promise<void>;
+  clear(): Promise<void>;
+}
+
+export interface GolfSeasonScheduleRepository {
+  listByTour(tourId: string, seasonYear?: number): Promise<GolfSeasonSchedule[]>;
+  getByTourTournamentSeason(
+    tourId: string,
+    tournamentId: string,
+    seasonYear: number,
+  ): Promise<GolfSeasonSchedule | null>;
+  create(schedule: GolfSeasonSchedule): Promise<GolfSeasonSchedule>;
+  deleteByTourSeason(tourId: string, seasonYear: number): Promise<void>;
+  clear(): Promise<void>;
+}
+
+export interface GolfTourSchedulerStateRepository {
+  get(tourAbbreviation: string): Promise<GolfTourSchedulerState | null>;
+  upsert(state: GolfTourSchedulerState): Promise<GolfTourSchedulerState>;
   clear(): Promise<void>;
 }

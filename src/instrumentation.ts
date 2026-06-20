@@ -7,14 +7,18 @@ export async function register() {
     const { seedNhlOnStartup } = await import("@/persistence/seed/nhl");
     const { seedMlsOnStartup } = await import("@/persistence/seed/mls");
     const { seedWnbaOnStartup } = await import("@/persistence/seed/wnba");
-    const { seedTennisGolfVenuesOnStartup } = await import(
-      "@/persistence/seed/tennis-golf-venues"
+    const { seedTennisVenuesOnStartup } = await import(
+      "@/persistence/seed/tennis-venues"
     );
+    const { seedGolfVenuesOnStartup } = await import("@/persistence/seed/golf-venues");
+    const { seedPgaTourOnStartup } = await import("@/persistence/seed/pga-tour");
+    const { registerGolfClockHandlers } = await import("@/modules/golf");
     const { syncCountryFlagImages } = await import(
       "@/persistence/flags/download"
     );
     const {
       syncCollegeLogos,
+      syncGolfTourLogo,
       syncLeagueEntityLogo,
       syncMlbTeamLogos,
       syncMlsTeamLogos,
@@ -26,12 +30,15 @@ export async function register() {
     const {
       getDefaultCollegeRepository,
       getDefaultCountryRepository,
+      getDefaultGolfTourRepository,
       getDefaultLeagueRepository,
       getDefaultTeamRepository,
     } = await import("@/persistence/repositories");
 
+    registerGolfClockHandlers();
+
     await seedWorldOnStartup();
-    const [nflSeed, mlbSeed, nbaSeed, nhlSeed, mlsSeed, wnbaSeed, tennisGolfVenueSeed] =
+    const [nflSeed, mlbSeed, nbaSeed, nhlSeed, mlsSeed, wnbaSeed] =
       await Promise.all([
         seedNflOnStartup(),
         seedMlbOnStartup(),
@@ -39,8 +46,11 @@ export async function register() {
         seedNhlOnStartup(),
         seedMlsOnStartup(),
         seedWnbaOnStartup(),
-        seedTennisGolfVenuesOnStartup(),
       ]);
+    const tennisVenueSeed = await seedTennisVenuesOnStartup();
+    const golfVenueSeed = await seedGolfVenuesOnStartup();
+    const pgaTourSeed = await seedPgaTourOnStartup();
+    const golfTourRepository = getDefaultGolfTourRepository();
 
     if (process.env.VITEST !== "true") {
       const sync = await syncCountryFlagImages(getDefaultCountryRepository());
@@ -223,10 +233,35 @@ export async function register() {
       );
     }
 
-    if (tennisGolfVenueSeed?.enabled) {
+    if (tennisVenueSeed?.enabled) {
       console.info(
-        `[tennis/golf venues seed] ${tennisGolfVenueSeed.venuesAdded} venues added, ${tennisGolfVenueSeed.venuesSkipped} venues skipped, ${tennisGolfVenueSeed.resourcesAdded} resources added, ${tennisGolfVenueSeed.resourcesSkipped} resources skipped${tennisGolfVenueSeed.venuesMissingLocation > 0 ? `, ${tennisGolfVenueSeed.venuesMissingLocation} venues missing host cities (enable LOCATIONS_SEED_ON_STARTUP)` : ""}`,
+        `[tennis venues seed] ${tennisVenueSeed.venuesAdded} venues added, ${tennisVenueSeed.venuesSkipped} venues skipped, ${tennisVenueSeed.resourcesAdded} resources added, ${tennisVenueSeed.resourcesSkipped} resources skipped${tennisVenueSeed.venuesMissingLocation > 0 ? `, ${tennisVenueSeed.venuesMissingLocation} venues missing host cities (enable LOCATIONS_SEED_ON_STARTUP)` : ""}`,
       );
+    }
+
+    if (golfVenueSeed?.enabled) {
+      console.info(
+        `[golf venues seed] ${golfVenueSeed.venuesAdded} venues added, ${golfVenueSeed.venuesSkipped} venues skipped, ${golfVenueSeed.resourcesAdded} resources added, ${golfVenueSeed.resourcesSkipped} resources skipped${golfVenueSeed.venuesMissingLocation > 0 ? `, ${golfVenueSeed.venuesMissingLocation} venues missing host cities (enable LOCATIONS_SEED_ON_STARTUP)` : ""}`,
+      );
+    }
+
+    if (pgaTourSeed?.enabled) {
+      console.info(
+        `[pga tour seed] tour ${pgaTourSeed.tourAdded ? "created" : "exists"}, ${pgaTourSeed.tournamentsAdded} tournaments added, ${pgaTourSeed.tournamentsSkipped} skipped, ${pgaTourSeed.venueLinksAdded} venue links${pgaTourSeed.tournamentsMissingVenue > 0 ? `, ${pgaTourSeed.tournamentsMissingVenue} tournaments missing venues` : ""}`,
+      );
+    }
+
+    if (process.env.VITEST !== "true") {
+      const pgaLogoSync = await syncGolfTourLogo(golfTourRepository, "PGA");
+      if (
+        pgaLogoSync.downloaded > 0 ||
+        pgaLogoSync.failed > 0 ||
+        pgaLogoSync.updated > 0
+      ) {
+        console.info(
+          `[golf tour logos] PGA ${pgaLogoSync.downloaded} downloaded, ${pgaLogoSync.skipped} skipped, ${pgaLogoSync.failed} failed, ${pgaLogoSync.updated} updated`,
+        );
+      }
     }
   }
 }

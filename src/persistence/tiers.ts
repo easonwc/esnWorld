@@ -1,7 +1,12 @@
 import type Database from "better-sqlite3";
 
 /** Session tier — calendar and simulation state that changes frequently. */
-export const SESSION_TIER_TABLES = ["events", "world_clock_state"] as const;
+export const SESSION_TIER_TABLES = [
+  "events",
+  "world_clock_state",
+  "golf_season_schedules",
+  "golf_tour_scheduler_state",
+] as const;
 
 /** World tier — geography and sports structure that rarely changes. */
 export const WORLD_TIER_TABLES = [
@@ -9,6 +14,9 @@ export const WORLD_TIER_TABLES = [
   "divisions",
   "conferences",
   "leagues",
+  "golf_tournament_venues",
+  "golf_tournaments",
+  "golf_tours",
   "colleges",
   "venue_resources",
   "venues",

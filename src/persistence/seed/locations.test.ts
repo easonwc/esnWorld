@@ -14,7 +14,9 @@ import { getFlagPublicPath } from "@/persistence/flags/config";
 import { locationMergeKey, mergeLocationSeed } from "./locations";
 import { LOCATION_SEED_DATA } from "./locations.data";
 import { NCAA_LOCATION_SEED_DATA } from "./ncaa-locations.data";
-import { TENNIS_GOLF_LOCATION_SEED_DATA } from "./tennis-golf-locations.data";
+import { GOLF_LOCATION_SEED_DATA } from "./golf-locations.data";
+import { TENNIS_LOCATION_SEED_DATA } from "./tennis-locations.data";
+import { TOUR_LOCATION_SEED_DATA } from "./tour-locations.data";
 
 describe("country seed", () => {
   it("includes 200 countries", () => {
@@ -56,9 +58,11 @@ describe("country seed", () => {
 describe("location seed", () => {
   it("includes NCAA campus cities for FBS and FCS programs", () => {
     expect(NCAA_LOCATION_SEED_DATA.length).toBe(209);
-    expect(TENNIS_GOLF_LOCATION_SEED_DATA.length).toBe(47);
+    expect(TENNIS_LOCATION_SEED_DATA.length).toBe(23);
+    expect(GOLF_LOCATION_SEED_DATA.length).toBe(59);
+    expect(TOUR_LOCATION_SEED_DATA.length).toBe(82);
     expect(COLLEGE_SEED_DATA.length).toBe(225);
-    expect(LOCATION_SEED_DATA.length).toBe(419);
+    expect(LOCATION_SEED_DATA.length).toBe(454);
   });
 
   it("uses a stable merge key from city name, region, and country name", () => {
@@ -186,7 +190,7 @@ describe("location seed", () => {
     const countryRepository = new MemoryCountryRepository();
     await mergeCountrySeed(countryRepository);
 
-    for (const entry of TENNIS_GOLF_LOCATION_SEED_DATA) {
+    for (const entry of TOUR_LOCATION_SEED_DATA) {
       const country = await countryRepository.getByName(entry.countryName);
       expect(country).toBeTruthy();
 

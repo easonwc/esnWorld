@@ -909,6 +909,124 @@ export const apiOperations: ApiOperation[] = [
     ),
   },
   {
+    id: "golf-tours-list",
+    tag: "Golf Tours",
+    method: "GET",
+    path: "/api/golf-tours",
+    summary: "List golf tours",
+    description: "Returns all golf tours (e.g. PGA Tour) with name, abbreviation, and logo.",
+  },
+  {
+    id: "golf-tours-get",
+    tag: "Golf Tours",
+    method: "POST",
+    path: "/api/golf-tours",
+    summary: "Get a golf tour",
+    description: "Retrieves a golf tour by id or abbreviation (includes logo path).",
+    requestBody: JSON.stringify(
+      { action: "get", abbreviation: "PGA" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "golf-tours-list-tournaments",
+    tag: "Golf Tours",
+    method: "POST",
+    path: "/api/golf-tours",
+    summary: "List tournaments on a tour",
+    description:
+      "Returns the tournament catalog for a golf tour (Masters, Players, majors, etc.).",
+    requestBody: JSON.stringify(
+      { action: "listTournaments", abbreviation: "PGA" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "golf-tours-list-season-schedules",
+    tag: "Golf Tours",
+    method: "POST",
+    path: "/api/golf-tours",
+    summary: "List season schedules",
+    description:
+      "Returns materialized season schedules linking catalog tournaments to scheduled root events.",
+    requestBody: JSON.stringify(
+      {
+        action: "listSeasonSchedules",
+        abbreviation: "PGA",
+        seasonYear: 2026,
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "golf-tournaments-get",
+    tag: "Golf Tournaments",
+    method: "POST",
+    path: "/api/golf-tournaments",
+    summary: "Get a tournament",
+    description:
+      "Retrieves a tournament catalog entry by id or slug (includes purse, isMajor, entryCriteria, venueMode).",
+    requestBody: JSON.stringify(
+      {
+        action: "get",
+        slug: "masters",
+        tourAbbreviation: "PGA",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "golf-tournaments-list-by-tour",
+    tag: "Golf Tournaments",
+    method: "POST",
+    path: "/api/golf-tournaments",
+    summary: "List tournaments by tour",
+    description: "Returns all tournament catalog entries for a golf tour.",
+    requestBody: JSON.stringify(
+      { action: "listByTour", abbreviation: "PGA" },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "golf-tournaments-list-venues",
+    tag: "Golf Tournaments",
+    method: "POST",
+    path: "/api/golf-tournaments",
+    summary: "List tournament venue pool",
+    description:
+      "Returns venues linked to a tournament (fixed host or rotation pool for majors).",
+    requestBody: JSON.stringify(
+      {
+        action: "listVenues",
+        tournamentId: "paste-tournament-id-here",
+      },
+      null,
+      2,
+    ),
+  },
+  {
+    id: "golf-scheduling-process-now",
+    tag: "Golf Scheduling",
+    method: "POST",
+    path: "/api/golf-scheduling",
+    summary: "Run golf schedulers now",
+    description:
+      "Manually triggers PGA Tour season scheduling for the current (or given) world clock time. Requires PGA_TOUR_ENABLED=true and a seeded catalog. Normally also runs automatically when the clock crosses Oct 1.",
+    requestBody: JSON.stringify(
+      {
+        action: "processNow",
+        isoUtc: "2025-10-02T12:00:00.000Z",
+      },
+      null,
+      2,
+    ),
+  },
+  {
     id: "weather-at-venue",
     tag: "Weather",
     method: "POST",
@@ -1089,6 +1207,21 @@ export function buildOpenApiSpec() {
         name: "Events",
         description:
           "Scheduled events at venue-local times. Events may form a parent-child hierarchy; optional venueResourceId binds leaves to a resource on multi_resource venues.",
+      },
+      {
+        name: "Golf Tours",
+        description:
+          "Golf tours and season scheduling. PGA Tour catalog and materialized season schedules when PGA_TOUR_ENABLED=true.",
+      },
+      {
+        name: "Golf Tournaments",
+        description:
+          "Tournament catalog entries with purse, major flag, entry criteria, and venue pools.",
+      },
+      {
+        name: "Golf Scheduling",
+        description:
+          "Manual and automatic PGA season materialization (tournament → rounds → tee groups).",
       },
       {
         name: "Weather",

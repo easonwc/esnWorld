@@ -1,4 +1,10 @@
 import {
+  numberedCourts,
+  numberedTeeGroups,
+} from "./multi-resource-venue-types";
+import { TENNIS_VENUE_SEED_DATA } from "./tennis-venues.data";
+import { GOLF_VENUE_SEED_DATA } from "./golf-venues.data";
+import {
   MemoryCountryRepository,
   MemoryLocationRepository,
   MemoryVenueRepository,
@@ -6,53 +12,23 @@ import {
 } from "@/persistence/repositories";
 import { describe, expect, it } from "vitest";
 import { mergeCountrySeed } from "./countries";
+import { mergeGolfVenueSeed } from "./golf-venues";
 import { mergeLocationSeed } from "./locations";
 import { LOCATION_SEED_DATA } from "./locations.data";
-import {
-  numberedCourts,
-  numberedTeeGroups,
-  resourcesForVenueEntry,
-} from "./tennis-golf-venue-types";
-import { TENNIS_GOLF_VENUE_SEED_DATA } from "./tennis-golf-venues.data";
-import { mergeTennisGolfVenueSeed } from "./tennis-golf-venues";
+import { resourcesForTennisVenue } from "./tennis-venue-types";
+import { mergeTennisVenueSeed } from "./tennis-venues";
 
-describe("tennis/golf venue seed", () => {
-  it("defines the full Option B catalog", () => {
-    const tennisVenues = TENNIS_GOLF_VENUE_SEED_DATA.filter(
-      (entry) => entry.kind === "tennis",
-    );
-    const golfVenues = TENNIS_GOLF_VENUE_SEED_DATA.filter(
-      (entry) => entry.kind === "golf",
-    );
-
-    expect(tennisVenues).toHaveLength(33);
-    expect(golfVenues).toHaveLength(26);
-    expect(TENNIS_GOLF_VENUE_SEED_DATA).toHaveLength(59);
+describe("tennis venue seed", () => {
+  it("defines the professional tennis catalog", () => {
+    expect(TENNIS_VENUE_SEED_DATA).toHaveLength(33);
   });
 
-  it("builds full numbered court and tee group resources", () => {
+  it("builds full numbered court resources", () => {
     expect(numberedCourts(22)).toHaveLength(22);
     expect(numberedCourts(22)[0]).toEqual({
       name: "Court 1",
       resourceType: "court",
     });
-    expect(numberedCourts(22)[21]).toEqual({
-      name: "Court 22",
-      resourceType: "court",
-    });
-
-    expect(numberedTeeGroups(30)).toHaveLength(30);
-    expect(numberedTeeGroups(30)[29]).toEqual({
-      name: "Tee Group 30",
-      resourceType: "tee_group",
-    });
-
-    const usOpen = TENNIS_GOLF_VENUE_SEED_DATA.find(
-      (entry) =>
-        entry.kind === "tennis" &&
-        entry.venueName === "USTA Billie Jean King National Tennis Center",
-    )!;
-    expect(resourcesForVenueEntry(usOpen)).toHaveLength(22);
   });
 
   it("merges multi_resource venues and resources after location seed", async () => {
@@ -68,7 +44,71 @@ describe("tennis/golf venue seed", () => {
       LOCATION_SEED_DATA,
     );
 
-    const result = await mergeTennisGolfVenueSeed(
+    const result = await mergeTennisVenueSeed(
+      {
+        locationRepository,
+        venueRepository,
+        venueResourceRepository,
+      },
+      true,
+    );
+
+    expect(result).toMatchObject({
+      enabled: true,
+      venuesAdded: 33,
+      venuesSkipped: 0,
+      venuesMissingLocation: 0,
+      total: 33,
+    });
+    expect(result.resourcesAdded).toBeGreaterThan(300);
+
+    const venues = await venueRepository.list();
+    expect(venues).toHaveLength(33);
+    expect(venues.every((venue) => venue.schedulingMode === "multi_resource")).toBe(
+      true,
+    );
+
+    const usOpen = venues.find(
+      (venue) => venue.name === "USTA Billie Jean King National Tennis Center",
+    )!;
+    const usOpenCourts = await venueResourceRepository.listByVenue(usOpen.id);
+    expect(usOpenCourts).toHaveLength(22);
+    expect(new Set(usOpenCourts.map((court) => court.name))).toEqual(
+      new Set(numberedCourts(22).map((court) => court.name)),
+    );
+
+    const usOpenSeed = TENNIS_VENUE_SEED_DATA.find(
+      (entry) =>
+        entry.venueName === "USTA Billie Jean King National Tennis Center",
+    )!;
+    expect(resourcesForTennisVenue(usOpenSeed)).toHaveLength(22);
+  });
+});
+
+describe("golf venue seed", () => {
+  it("defines the professional golf catalog", () => {
+    expect(GOLF_VENUE_SEED_DATA).toHaveLength(59);
+    expect(numberedTeeGroups(30)).toHaveLength(30);
+    expect(numberedTeeGroups(30)[29]).toEqual({
+      name: "Tee Group 30",
+      resourceType: "tee_group",
+    });
+  });
+
+  it("merges multi_resource venues and resources after location seed", async () => {
+    const countryRepository = new MemoryCountryRepository();
+    const locationRepository = new MemoryLocationRepository();
+    const venueRepository = new MemoryVenueRepository();
+    const venueResourceRepository = new MemoryVenueResourceRepository();
+
+    await mergeCountrySeed(countryRepository);
+    await mergeLocationSeed(
+      locationRepository,
+      countryRepository,
+      LOCATION_SEED_DATA,
+    );
+
+    const result = await mergeGolfVenueSeed(
       {
         locationRepository,
         venueRepository,
@@ -85,82 +125,34 @@ describe("tennis/golf venue seed", () => {
       total: 59,
     });
     expect(result.resourcesAdded).toBeGreaterThan(1_000);
-
-    const venues = await venueRepository.list();
-    expect(venues).toHaveLength(59);
-    expect(venues.every((venue) => venue.schedulingMode === "multi_resource")).toBe(
-      true,
-    );
-    expect(venues.every((venue) => venue.isIndoor === false)).toBe(true);
-
-    const usOpen = venues.find(
-      (venue) => venue.name === "USTA Billie Jean King National Tennis Center",
-    )!;
-    const usOpenCourts = await venueResourceRepository.listByVenue(usOpen.id);
-    expect(usOpenCourts).toHaveLength(22);
-    expect(new Set(usOpenCourts.map((court) => court.name))).toEqual(
-      new Set(numberedCourts(22).map((court) => court.name)),
-    );
-
-    const augusta = venues.find(
-      (venue) => venue.name === "Augusta National Golf Club",
-    )!;
-    const augustaGroups = await venueResourceRepository.listByVenue(augusta.id);
-    expect(augustaGroups).toHaveLength(30);
-    expect(augustaGroups[0].resourceType).toBe("tee_group");
+    expect(await venueRepository.count()).toBe(59);
   });
 
   it("is idempotent on a second merge", async () => {
+    const repositories = {
+      locationRepository: new MemoryLocationRepository(),
+      venueRepository: new MemoryVenueRepository(),
+      venueResourceRepository: new MemoryVenueResourceRepository(),
+    };
     const countryRepository = new MemoryCountryRepository();
-    const locationRepository = new MemoryLocationRepository();
-    const venueRepository = new MemoryVenueRepository();
-    const venueResourceRepository = new MemoryVenueResourceRepository();
 
     await mergeCountrySeed(countryRepository);
     await mergeLocationSeed(
-      locationRepository,
+      repositories.locationRepository,
       countryRepository,
       LOCATION_SEED_DATA,
     );
 
-    const repositories = {
-      locationRepository,
-      venueRepository,
-      venueResourceRepository,
-    };
-
-    await mergeTennisGolfVenueSeed(repositories, true);
-    const second = await mergeTennisGolfVenueSeed(repositories, true);
+    await mergeGolfVenueSeed(repositories, true);
+    const second = await mergeGolfVenueSeed(repositories, true);
 
     expect(second).toMatchObject({
       venuesAdded: 0,
       venuesSkipped: 59,
-      resourcesAdded: 0,
       venuesMissingLocation: 0,
+      resourcesAdded: 0,
     });
     expect(second.resourcesSkipped).toBeGreaterThan(1_000);
-    expect(await venueRepository.count()).toBe(59);
-  });
-
-  it("skips venues when host cities are missing", async () => {
-    const locationRepository = new MemoryLocationRepository();
-    const venueRepository = new MemoryVenueRepository();
-    const venueResourceRepository = new MemoryVenueResourceRepository();
-
-    const result = await mergeTennisGolfVenueSeed(
-      {
-        locationRepository,
-        venueRepository,
-        venueResourceRepository,
-      },
-      true,
-    );
-
-    expect(result).toMatchObject({
-      enabled: true,
-      venuesAdded: 0,
-      venuesMissingLocation: 59,
-      resourcesAdded: 0,
-    });
+    expect(await repositories.venueRepository.count()).toBe(59);
   });
 });

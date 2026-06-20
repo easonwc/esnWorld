@@ -1,6 +1,6 @@
 import type { LocationSeedEntry } from "./types";
 import { NCAA_LOCATION_SEED_DATA } from "./ncaa-locations.data";
-import { TENNIS_GOLF_LOCATION_SEED_DATA } from "./tennis-golf-locations.data";
+import { TOUR_LOCATION_SEED_DATA } from "./tour-locations.data";
 
 /**
  * Major world cities across continents and countries, including national capitals,
@@ -191,5 +191,5 @@ const WORLD_LOCATION_SEED_DATA = [
 export const LOCATION_SEED_DATA: readonly LocationSeedEntry[] = [
   ...WORLD_LOCATION_SEED_DATA,
   ...NCAA_LOCATION_SEED_DATA,
-  ...TENNIS_GOLF_LOCATION_SEED_DATA,
+  ...TOUR_LOCATION_SEED_DATA,
 ];

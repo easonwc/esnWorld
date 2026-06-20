@@ -28,8 +28,46 @@ export interface WnbaSeedConfig {
   enabled: boolean;
 }
 
-export interface TennisGolfVenueSeedConfig {
+export interface TennisVenueSeedConfig {
   enabled: boolean;
+}
+
+export interface GolfVenueSeedConfig {
+  enabled: boolean;
+}
+
+/** @deprecated Use TennisVenueSeedConfig or GolfVenueSeedConfig */
+export type TennisGolfVenueSeedConfig = TennisVenueSeedConfig;
+
+function legacyTennisGolfVenuesEnabled(env: NodeJS.ProcessEnv): boolean {
+  return parseBoolean(env.TENNIS_GOLF_VENUES_SEED_ON_STARTUP, false);
+}
+
+export function loadTennisVenueSeedConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): TennisVenueSeedConfig {
+  return {
+    enabled:
+      parseBoolean(env.TENNIS_VENUES_SEED_ON_STARTUP, false) ||
+      legacyTennisGolfVenuesEnabled(env),
+  };
+}
+
+export function loadGolfVenueSeedConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): GolfVenueSeedConfig {
+  return {
+    enabled:
+      parseBoolean(env.GOLF_VENUES_SEED_ON_STARTUP, false) ||
+      legacyTennisGolfVenuesEnabled(env),
+  };
+}
+
+/** @deprecated Use loadTennisVenueSeedConfig or loadGolfVenueSeedConfig */
+export function loadTennisGolfVenueSeedConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): TennisVenueSeedConfig {
+  return loadTennisVenueSeedConfig(env);
 }
 
 export function loadLocationSeedConfig(
@@ -88,10 +126,3 @@ export function loadWnbaSeedConfig(
   };
 }
 
-export function loadTennisGolfVenueSeedConfig(
-  env: NodeJS.ProcessEnv = process.env,
-): TennisGolfVenueSeedConfig {
-  return {
-    enabled: parseBoolean(env.TENNIS_GOLF_VENUES_SEED_ON_STARTUP, false),
-  };
-}

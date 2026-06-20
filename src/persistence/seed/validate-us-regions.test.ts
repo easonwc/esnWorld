@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { COLLEGE_SEED_DATA } from "./colleges.data";
 import { LOCATION_SEED_DATA } from "./locations.data";
 import { NCAA_LOCATION_SEED_DATA } from "./ncaa-locations.data";
-import { TENNIS_GOLF_LOCATION_SEED_DATA } from "./tennis-golf-locations.data";
+import { GOLF_LOCATION_SEED_DATA } from "./golf-locations.data";
+import { TENNIS_LOCATION_SEED_DATA } from "./tennis-locations.data";
+import { TOUR_LOCATION_SEED_DATA } from "./tour-locations.data";
 import { MLB_TEAM_SEED_DATA } from "./mlb-teams.data";
 import { MLS_TEAM_SEED_DATA } from "./mls-teams.data";
 import { NBA_TEAM_SEED_DATA } from "./nba-teams.data";
@@ -36,8 +38,16 @@ describe("US seed region requirements", () => {
     assertUsLocationSeedRegions(LOCATION_SEED_DATA, "LOCATION_SEED_DATA");
     assertUsLocationSeedRegions(NCAA_LOCATION_SEED_DATA, "NCAA_LOCATION_SEED_DATA");
     assertUsLocationSeedRegions(
-      TENNIS_GOLF_LOCATION_SEED_DATA,
-      "TENNIS_GOLF_LOCATION_SEED_DATA",
+      TENNIS_LOCATION_SEED_DATA,
+      "TENNIS_LOCATION_SEED_DATA",
+    );
+    assertUsLocationSeedRegions(
+      GOLF_LOCATION_SEED_DATA,
+      "GOLF_LOCATION_SEED_DATA",
+    );
+    assertUsLocationSeedRegions(
+      TOUR_LOCATION_SEED_DATA,
+      "TOUR_LOCATION_SEED_DATA",
     );
   });
 

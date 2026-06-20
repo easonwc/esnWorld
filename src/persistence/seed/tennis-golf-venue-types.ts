@@ -1,68 +1,22 @@
-import type { VenueResourceType } from "@/modules/venues/types";
+/** @deprecated Use multi-resource-venue-types.ts, tennis-venue-types.ts, and golf-venue-types.ts */
+import type { MultiResourceVenueSeedResult } from "./multi-resource-venue-types";
+export type {
+  MultiResourceVenueResourceSeedEntry,
+  MultiResourceVenueSeedResult,
+} from "./multi-resource-venue-types";
+export {
+  numberedCourts,
+  numberedTeeGroups,
+} from "./multi-resource-venue-types";
+export type { TennisVenueSeedEntry } from "./tennis-venue-types";
+export { resourcesForTennisVenue as resourcesForVenueEntry } from "./tennis-venue-types";
+export type { GolfVenueSeedEntry } from "./golf-venue-types";
 
-export interface TennisGolfVenueResourceSeedEntry {
-  name: string;
-  resourceType: VenueResourceType;
-}
+import type { TennisVenueSeedEntry } from "./tennis-venue-types";
+import type { GolfVenueSeedEntry } from "./golf-venue-types";
 
-export interface TennisVenueSeedEntry {
-  kind: "tennis";
-  locationName: string;
-  locationCountry: string;
-  locationRegion?: string | null;
-  venueName: string;
-  latitude: number;
-  longitude: number;
-  courtCount: number;
-}
+export type TennisGolfVenueSeedEntry =
+  | ({ kind: "tennis" } & TennisVenueSeedEntry)
+  | ({ kind: "golf" } & GolfVenueSeedEntry);
 
-export interface GolfVenueSeedEntry {
-  kind: "golf";
-  locationName: string;
-  locationCountry: string;
-  locationRegion?: string | null;
-  venueName: string;
-  latitude: number;
-  longitude: number;
-  teeGroupCount: number;
-}
-
-export type TennisGolfVenueSeedEntry = TennisVenueSeedEntry | GolfVenueSeedEntry;
-
-export interface TennisGolfVenueSeedResult {
-  enabled: boolean;
-  venuesAdded: number;
-  venuesSkipped: number;
-  resourcesAdded: number;
-  resourcesSkipped: number;
-  venuesMissingLocation: number;
-  total: number;
-}
-
-export function numberedCourts(
-  count: number,
-): readonly TennisGolfVenueResourceSeedEntry[] {
-  return Array.from({ length: count }, (_, index) => ({
-    name: `Court ${index + 1}`,
-    resourceType: "court" as const,
-  }));
-}
-
-export function numberedTeeGroups(
-  count: number,
-): readonly TennisGolfVenueResourceSeedEntry[] {
-  return Array.from({ length: count }, (_, index) => ({
-    name: `Tee Group ${index + 1}`,
-    resourceType: "tee_group" as const,
-  }));
-}
-
-export function resourcesForVenueEntry(
-  entry: TennisGolfVenueSeedEntry,
-): readonly TennisGolfVenueResourceSeedEntry[] {
-  if (entry.kind === "tennis") {
-    return numberedCourts(entry.courtCount);
-  }
-
-  return numberedTeeGroups(entry.teeGroupCount);
-}
+export type TennisGolfVenueSeedResult = MultiResourceVenueSeedResult;

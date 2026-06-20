@@ -1,0 +1,1 @@
+ALTER TABLE golf_tours ADD COLUMN logo TEXT NOT NULL DEFAULT '';

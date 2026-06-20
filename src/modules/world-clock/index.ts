@@ -1,9 +1,15 @@
+import { registerGolfClockHandlers } from "@/modules/golf/register";
 import { getDb } from "@/persistence/db";
 import {
   loadWorldClockTickerState,
   saveWorldClockTickerState,
 } from "@/persistence/world-clock-state";
 import { loadWorldClockConfig } from "./config";
+import {
+  armWorldClockScheduler,
+  finalizeWorldClockScheduler,
+  runClockTransitionHandlers,
+} from "./clock-scheduler";
 import { WorldClockError, WorldClockErrorCodes } from "./errors";
 import {
   computeCurrentEpochMs,
@@ -93,12 +99,17 @@ export class WorldClockService {
   start(): WorldClockOutput {
     this.ticker = startTicker(this.ticker, this.now());
     this.saveTickerState();
-    return this.getCurrentOutput();
+    const output = this.getCurrentOutput();
+    armWorldClockScheduler(() => this.getCurrentOutput().isoUtc);
+    return output;
   }
 
   stop(): WorldClockOutput {
+    const beforeIsoUtc = this.getCurrentOutput().isoUtc;
     this.ticker = stopTicker(this.ticker, this.now());
     this.saveTickerState();
+    const afterIsoUtc = this.getCurrentOutput().isoUtc;
+    void finalizeWorldClockScheduler(beforeIsoUtc, afterIsoUtc);
     return this.getCurrentOutput();
   }
 
@@ -107,6 +118,7 @@ export class WorldClockService {
       return this.getCurrentOutput();
     }
 
+    const beforeIsoUtc = this.getCurrentOutput().isoUtc;
     const currentEpochMs = computeCurrentEpochMs(this.ticker, this.now());
     const wasRunning = this.ticker.isRunning;
 
@@ -122,6 +134,8 @@ export class WorldClockService {
     };
 
     this.saveTickerState();
+    const afterIsoUtc = this.getCurrentOutput().isoUtc;
+    void runClockTransitionHandlers(beforeIsoUtc, afterIsoUtc);
     return this.getCurrentOutput();
   }
 }
@@ -146,12 +160,17 @@ function createWorldClockPersistenceOptions(): Pick<
 }
 
 export function getWorldClockService(): WorldClockService {
+  registerGolfClockHandlers();
+
   if (globalForWorldClock.__worldClockService) {
     return globalForWorldClock.__worldClockService;
   }
 
   if (!singleton) {
     singleton = new WorldClockService(createWorldClockPersistenceOptions());
+    if (singleton.getTickerState().isRunning) {
+      armWorldClockScheduler(() => singleton!.getCurrentOutput().isoUtc);
+    }
   }
 
   globalForWorldClock.__worldClockService = singleton;
@@ -175,4 +194,12 @@ export {
   startTicker,
   stopTicker,
 } from "./tick";
+export {
+  armWorldClockScheduler,
+  clearClockTransitionHandlers,
+  disarmWorldClockScheduler,
+  finalizeWorldClockScheduler,
+  registerClockTransitionHandler,
+  runClockTransitionHandlers,
+} from "./clock-scheduler";
 export { createInitialState, toWorldClockOutput, transformWorldClock } from "./transform";

@@ -83,7 +83,12 @@ cp .env.example .env
 | `NHL_SEED_ON_STARTUP` | `false` | Merge NHL league hierarchy |
 | `MLS_SEED_ON_STARTUP` | `false` | Merge MLS league hierarchy |
 | `WNBA_SEED_ON_STARTUP` | `false` | Merge WNBA league hierarchy |
-| `TENNIS_GOLF_VENUES_SEED_ON_STARTUP` | `false` | Merge tennis/golf `multi_resource` venues with courts or tee groups (requires host cities — enable `LOCATIONS_SEED_ON_STARTUP` first) |
+| `TENNIS_VENUES_SEED_ON_STARTUP` | `false` | Merge tennis `multi_resource` venues with numbered courts (requires host cities — enable `LOCATIONS_SEED_ON_STARTUP` first) |
+| `GOLF_VENUES_SEED_ON_STARTUP` | `false` | Merge golf `multi_resource` venues with tee groups (shared by PGA, future LPGA, and DP World catalogs) |
+| `TENNIS_GOLF_VENUES_SEED_ON_STARTUP` | `false` | **Deprecated** — enables both `TENNIS_VENUES_SEED_ON_STARTUP` and `GOLF_VENUES_SEED_ON_STARTUP` |
+| `PGA_TOUR_SEED_ON_STARTUP` | `false` | Merge PGA Tour tournament catalog and venue pools (auto-merges required golf cities and venues) |
+| `GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download golf tour logos (PGA, future LPGA) on startup |
+| `PGA_TOUR_ENABLED` | `false` | Run PGA season scheduler on world-clock transitions (Oct 1 release → next calendar year) |
 | `FLAG_DOWNLOAD_ON_STARTUP` | `false` | Download country flag SVGs on server startup |
 | `NFL_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download NFL team and league logos on startup |
 | `MLB_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download MLB team and league logos on startup |
@@ -174,7 +179,7 @@ Set any reset flag for one startup, then set it back to `false`.
 
 ### World seed (optional)
 
-Set `LOCATIONS_SEED_ON_STARTUP=true` in `.env` to merge **200 countries**, **419 cities**, and **225 US colleges and universities** when the server starts. Countries are seeded first (ISO code, languages, local flag image), then cities are linked by country name, then colleges are linked to their campus cities.
+Set `LOCATIONS_SEED_ON_STARTUP=true` in `.env` to merge **200 countries**, **452 cities**, and **225 US colleges and universities** when the server starts. Countries are seeded first (ISO code, languages, local flag image), then cities are linked by country name, then colleges are linked to their campus cities.
 
 Merge behavior:
 
@@ -182,7 +187,7 @@ Merge behavior:
 - **Existing database** — only entries not already present are added (countries by `name`; cities by `name` + `region` + `countryName`; colleges by institution `name`, case-insensitive). Nothing is overwritten or duplicated.
 - **Disabled** (`false`, the default) — no seed runs; the database stays as-is.
 
-Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/locations.data.ts`, `src/persistence/seed/ncaa-locations.data.ts` (auto-generated from `scripts/generate-ncaa-locations.ts`), `src/persistence/seed/tennis-golf-locations.data.ts`, `src/persistence/seed/tennis-golf-venues.data.ts`, and `src/persistence/seed/colleges.data.ts` (auto-generated alongside NCAA locations).
+Seed catalogs: `src/persistence/seed/countries.data.ts`, `src/persistence/seed/locations.data.ts`, `src/persistence/seed/ncaa-locations.data.ts` (auto-generated from `scripts/generate-ncaa-locations.ts`), `src/persistence/seed/tennis-locations.data.ts`, `src/persistence/seed/golf-locations.data.ts`, `src/persistence/seed/tennis-venues.data.ts`, `src/persistence/seed/golf-venues.data.ts`, and `src/persistence/seed/colleges.data.ts` (auto-generated alongside NCAA locations).
 
 The city catalog includes major world metros, NFL/NBA/MLB/NHL/MLS/WNBA markets, **209 NCAA Division I campus cities**, and **47 tennis and golf event host cities** (Grand Slams, ATP/WTA Masters staples, golf majors, and flagship PGA/DP World Tour venues). **United States seed cities always include a `region` set to the state** (or District of Columbia). International cities may omit `region`.
 
@@ -348,22 +353,36 @@ WNBA seed also ensures countries and locations exist (including supplemental are
 
 Seed catalog: `src/persistence/seed/wnba-teams.data.ts`.
 
-### Tennis and golf venue seed (optional)
+### Tennis and golf venue seeds (optional)
 
-Set `TENNIS_GOLF_VENUES_SEED_ON_STARTUP=true` in `.env` to merge **59** `multi_resource` venues for professional tennis and golf:
+Tennis and golf venues are seeded separately so each sport (and future golf tours like LPGA) can grow independently.
 
-- **33 tennis complexes** — four Grand Slams, Masters 1000 and tour staples from the tennis/golf city catalog, plus Miami, Cincinnati, Rome, Madrid, Shanghai, Beijing, Montreal, and Toronto
-- **26 golf courses** — majors, PGA/DP World Tour flagships, Open Championship rotation venues, and Ryder Cup hosts from the tennis/golf city catalog
+Set `TENNIS_VENUES_SEED_ON_STARTUP=true` to merge **33** tennis `multi_resource` venues with numbered courts (`Court 1` … `Court N`).
 
-Each tennis venue gets a **full numbered court set** (`Court 1` … `Court N`, sized per facility). Each golf venue gets **30 tee groups** (`Tee Group 1` … `Tee Group 30`) for a full tournament field. Weather stays holistic at the venue level.
+Set `GOLF_VENUES_SEED_ON_STARTUP=true` to merge **59** golf `multi_resource` venues with **30 tee groups** each (`Tee Group 1` … `Tee Group 30`).
 
-Host cities must already exist in the database — enable `LOCATIONS_SEED_ON_STARTUP=true` first (or create cities via the API). The seed is idempotent: existing venues and resources are skipped.
+The legacy `TENNIS_GOLF_VENUES_SEED_ON_STARTUP=true` flag still enables **both** seeds.
 
-Seed catalog: `src/persistence/seed/tennis-golf-venues.data.ts`.
+- **33 tennis complexes** — four Grand Slams, Masters 1000 and tour staples, plus Miami, Cincinnati, Rome, Madrid, Shanghai, Beijing, Montreal, and Toronto
+- **59 golf courses** — majors, full PGA Tour calendar venues, Open Championship rotation venues, and Ryder Cup hosts (shared catalog for PGA, future LPGA, and DP World)
+
+Host cities must already exist in the database — enable `LOCATIONS_SEED_ON_STARTUP=true` first (or create cities via the API). Seeds are idempotent: existing venues and resources are skipped.
+
+Seed catalogs: `src/persistence/seed/tennis-venues.data.ts` and `src/persistence/seed/golf-venues.data.ts`.
+
+### PGA Tour (optional)
+
+Set `PGA_TOUR_SEED_ON_STARTUP=true` to merge the **PGA Tour** catalog (**47** tournaments: Phase A signature & designated events plus Phase B weekly and fall swing stops). Also merges required golf venues and host cities as needed. The tour record includes a **logo** path (`/logos/golf-tours/pga.svg`).
+
+Set `GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP=true` to fetch tour logo files on startup (add LPGA to `GOLF_TOUR_LOGO_DOWNLOAD_URLS` when that catalog lands).
+
+Set `PGA_TOUR_ENABLED=true` to run the **season scheduler** when the world clock crosses **October 1** (`PGA_TOUR_SCHEDULE_RELEASE_*`, default midnight `America/New_York`). The scheduler materializes the **next calendar year** as event trees (tournament → rounds → tee groups). Scheduling uses hybrid clock hooks: mutations (`set`/`advance`/`stop`), a 1-second interval while the clock is running, and manual `POST /api/golf-scheduling` with `action: "processNow"`. If any tournament fails validation, the **entire season batch fails** and an error is logged.
+
+Seed catalog: `src/persistence/seed/pga-tour.data.ts`.
 
 ### Future enhancements
 
-1. ~~**Seed data**~~ — ✅ Optional country, city, and college catalogs via `LOCATIONS_SEED_ON_STARTUP`; optional NFL, MLB, NBA, NHL, MLS, and WNBA league seeds with team and league logos; optional tennis/golf `multi_resource` venues via `TENNIS_GOLF_VENUES_SEED_ON_STARTUP`.
+1. ~~**Seed data**~~ — ✅ Optional country, city, and college catalogs via `LOCATIONS_SEED_ON_STARTUP`; optional NFL, MLB, NBA, NHL, MLS, and WNBA league seeds with team and league logos; optional tennis and golf `multi_resource` venue seeds via `TENNIS_VENUES_SEED_ON_STARTUP` / `GOLF_VENUES_SEED_ON_STARTUP`.
 2. **Persist events** — Save planned and scheduled happenings (venue, local start, duration) so the event calendar survives restarts. Event *status* (`upcoming` / `active` / `ended`) stays derived from the persisted clock + stored UTC instants.
 3. **Persist world clock** — Save current simulated UTC, whether ticking is active, and enough tick metadata to resume advancement without a jump or drift after restart.
 4. **Weather and derived simulation state** — Today weather is deterministic from `WEATHER_SEED` + clock time, so persisting the clock may be sufficient. If we add non-seeded evolution, overrides, or historical snapshots (e.g. “conditions at kickoff” stored for replay), those would be saved as part of world state rather than recomputed on every read.

@@ -1,168 +1,59 @@
-import { buildVenue } from "@/modules/venues/transform";
+/** @deprecated Combined tennis/golf venue seed — use tennis-venues.ts and golf-venues.ts */
+import type { MultiResourceVenueSeedResult } from "./multi-resource-venue-types";
 import {
-  getDefaultLocationRepository,
-  getDefaultVenueRepository,
-  getDefaultVenueResourceRepository,
-  type LocationRepository,
-  type VenueRepository,
-  type VenueResourceRepository,
-} from "@/persistence/repositories";
-import { loadTennisGolfVenueSeedConfig } from "./config";
-import { locationMergeKey } from "./locations";
-import { venueMergeKey } from "./sports-league-seed";
-import { TENNIS_GOLF_VENUE_SEED_DATA } from "./tennis-golf-venues.data";
+  mergeGolfVenueSeed,
+  seedGolfVenuesOnStartup,
+} from "./golf-venues";
 import {
-  resourcesForVenueEntry,
-  type TennisGolfVenueSeedResult,
-} from "./tennis-golf-venue-types";
+  mergeMultiResourceVenueSeed,
+} from "./multi-resource-venue-seed";
+import {
+  mergeTennisVenueSeed,
+  seedTennisVenuesOnStartup,
+} from "./tennis-venues";
 
-export type { TennisGolfVenueSeedResult } from "./tennis-golf-venue-types";
+export { seedTennisVenuesOnStartup } from "./tennis-venues";
+export { mergeGolfVenueSeed, seedGolfVenuesOnStartup } from "./golf-venues";
+export { venueResourceMergeKey } from "./multi-resource-venue-seed";
 
-export function venueResourceMergeKey(
-  venueId: string,
-  resourceName: string,
-): string {
-  return `${venueId}|${resourceName.trim().toLowerCase()}`;
-}
+type VenueSeedRepositories = Parameters<typeof mergeMultiResourceVenueSeed>[2];
 
+/** @deprecated Merges both tennis and golf venue catalogs. */
 export async function mergeTennisGolfVenueSeed(
-  repositories: {
-    locationRepository?: LocationRepository;
-    venueRepository?: VenueRepository;
-    venueResourceRepository?: VenueResourceRepository;
-  } = {},
-  enabled: boolean = loadTennisGolfVenueSeedConfig().enabled,
-): Promise<TennisGolfVenueSeedResult> {
-  if (!enabled) {
-    return {
-      enabled: false,
-      venuesAdded: 0,
-      venuesSkipped: 0,
-      resourcesAdded: 0,
-      resourcesSkipped: 0,
-      venuesMissingLocation: 0,
-      total: TENNIS_GOLF_VENUE_SEED_DATA.length,
-    };
-  }
-
-  const locationRepository =
-    repositories.locationRepository ?? getDefaultLocationRepository();
-  const venueRepository =
-    repositories.venueRepository ?? getDefaultVenueRepository();
-  const venueResourceRepository =
-    repositories.venueResourceRepository ?? getDefaultVenueResourceRepository();
-
-  const locations = await locationRepository.list();
-  const locationByKey = new Map(
-    locations.map((location) => [
-      locationMergeKey(location.name, location.countryName, location.region),
-      location,
-    ]),
-  );
-
-  const venues = await venueRepository.list();
-  const venueByKey = new Map(
-    venues.map((venue) => [venueMergeKey(venue.locationId, venue.name), venue]),
-  );
-
-  let venuesAdded = 0;
-  let venuesSkipped = 0;
-  let resourcesAdded = 0;
-  let resourcesSkipped = 0;
-  let venuesMissingLocation = 0;
-
-  for (const entry of TENNIS_GOLF_VENUE_SEED_DATA) {
-    const locationKey = locationMergeKey(
-      entry.locationName,
-      entry.locationCountry,
-      entry.locationRegion,
-    );
-    const location = locationByKey.get(locationKey);
-
-    if (!location) {
-      venuesMissingLocation += 1;
-      continue;
-    }
-
-    const venueKey = venueMergeKey(location.id, entry.venueName);
-    let venue = venueByKey.get(venueKey);
-
-    if (!venue) {
-      venue = buildVenue(
-        {
-          locationId: location.id,
-          name: entry.venueName,
-          latitude: entry.latitude,
-          longitude: entry.longitude,
-          isIndoor: false,
-          schedulingMode: "multi_resource",
-        },
-        crypto.randomUUID(),
-      );
-      await venueRepository.create(venue);
-      venueByKey.set(venueKey, venue);
-      venuesAdded += 1;
-    } else {
-      venuesSkipped += 1;
-      if (venue.schedulingMode !== "multi_resource") {
-        continue;
-      }
-    }
-
-    const existingResources = await venueResourceRepository.listByVenue(venue.id);
-    const existingResourceKeys = new Set(
-      existingResources.map((resource) =>
-        venueResourceMergeKey(venue!.id, resource.name),
-      ),
-    );
-
-    for (const resource of resourcesForVenueEntry(entry)) {
-      const resourceKey = venueResourceMergeKey(venue.id, resource.name);
-      if (existingResourceKeys.has(resourceKey)) {
-        resourcesSkipped += 1;
-        continue;
-      }
-
-      await venueResourceRepository.create({
-        id: crypto.randomUUID(),
-        venueId: venue.id,
-        name: resource.name,
-        resourceType: resource.resourceType,
-      });
-      existingResourceKeys.add(resourceKey);
-      resourcesAdded += 1;
-    }
-  }
+  repositories: VenueSeedRepositories = {},
+  enabled = true,
+): Promise<MultiResourceVenueSeedResult> {
+  const tennis = await mergeTennisVenueSeed(repositories, enabled);
+  const golf = await mergeGolfVenueSeed(repositories, enabled);
 
   return {
-    enabled: true,
-    venuesAdded,
-    venuesSkipped,
-    resourcesAdded,
-    resourcesSkipped,
-    venuesMissingLocation,
-    total: TENNIS_GOLF_VENUE_SEED_DATA.length,
+    enabled: tennis.enabled || golf.enabled,
+    venuesAdded: tennis.venuesAdded + golf.venuesAdded,
+    venuesSkipped: tennis.venuesSkipped + golf.venuesSkipped,
+    resourcesAdded: tennis.resourcesAdded + golf.resourcesAdded,
+    resourcesSkipped: tennis.resourcesSkipped + golf.resourcesSkipped,
+    venuesMissingLocation:
+      tennis.venuesMissingLocation + golf.venuesMissingLocation,
+    total: tennis.total + golf.total,
   };
 }
 
-const globalForTennisGolfVenueSeed = globalThis as typeof globalThis & {
-  __tennisGolfVenueSeedApplied?: boolean;
-};
-
-export async function seedTennisGolfVenuesOnStartup(): Promise<TennisGolfVenueSeedResult | null> {
-  if (process.env.VITEST === "true") {
+/** @deprecated Use seedTennisVenuesOnStartup and seedGolfVenuesOnStartup */
+export async function seedTennisGolfVenuesOnStartup() {
+  const tennis = await seedTennisVenuesOnStartup();
+  const golf = await seedGolfVenuesOnStartup();
+  if (!tennis && !golf) {
     return null;
   }
-
-  const config = loadTennisGolfVenueSeedConfig();
-  if (!config.enabled) {
-    return null;
-  }
-
-  if (globalForTennisGolfVenueSeed.__tennisGolfVenueSeedApplied) {
-    return null;
-  }
-
-  globalForTennisGolfVenueSeed.__tennisGolfVenueSeedApplied = true;
-  return mergeTennisGolfVenueSeed();
+  return {
+    enabled: true,
+    venuesAdded: (tennis?.venuesAdded ?? 0) + (golf?.venuesAdded ?? 0),
+    venuesSkipped: (tennis?.venuesSkipped ?? 0) + (golf?.venuesSkipped ?? 0),
+    resourcesAdded: (tennis?.resourcesAdded ?? 0) + (golf?.resourcesAdded ?? 0),
+    resourcesSkipped:
+      (tennis?.resourcesSkipped ?? 0) + (golf?.resourcesSkipped ?? 0),
+    venuesMissingLocation:
+      (tennis?.venuesMissingLocation ?? 0) + (golf?.venuesMissingLocation ?? 0),
+    total: (tennis?.total ?? 0) + (golf?.total ?? 0),
+  };
 }

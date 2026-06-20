@@ -1,0 +1,409 @@
+import type {
+  GolfEntryCriteria,
+  GolfSeasonSchedule,
+  GolfTour,
+  GolfTourSchedulerState,
+  GolfTournament,
+  GolfTournamentVenue,
+  GolfVenueMode,
+} from "@/modules/golf/types";
+import type { Database } from "better-sqlite3";
+import type {
+  GolfSeasonScheduleRepository,
+  GolfTourRepository,
+  GolfTourSchedulerStateRepository,
+  GolfTournamentRepository,
+  GolfTournamentVenueRepository,
+} from "../types";
+
+function parseEntryCriteria(json: string): GolfEntryCriteria {
+  return JSON.parse(json) as GolfEntryCriteria;
+}
+
+function rowToTournament(row: {
+  id: string;
+  tour_id: string;
+  slug: string;
+  name: string;
+  is_major: number;
+  purse_usd: number;
+  entry_criteria_json: string;
+  venue_mode: GolfVenueMode;
+  typical_duration_days: number;
+  field_size: number;
+  season_start_month: number;
+  season_start_day: number;
+  rotation_epoch_year: number | null;
+  sort_order: number;
+}): GolfTournament {
+  return {
+    id: row.id,
+    tourId: row.tour_id,
+    slug: row.slug,
+    name: row.name,
+    isMajor: row.is_major === 1,
+    purseUsd: row.purse_usd,
+    entryCriteria: parseEntryCriteria(row.entry_criteria_json),
+    venueMode: row.venue_mode,
+    typicalDurationDays: row.typical_duration_days,
+    fieldSize: row.field_size,
+    seasonStartMonth: row.season_start_month,
+    seasonStartDay: row.season_start_day,
+    rotationEpochYear: row.rotation_epoch_year,
+    sortOrder: row.sort_order,
+  };
+}
+
+const TOURNAMENT_COLUMNS = `
+  id, tour_id, slug, name, is_major, purse_usd, entry_criteria_json,
+  venue_mode, typical_duration_days, field_size, season_start_month,
+  season_start_day, rotation_epoch_year, sort_order
+`;
+
+const TOUR_SELECT = "SELECT id, name, abbreviation, logo FROM golf_tours";
+
+export class SqliteGolfTourRepository implements GolfTourRepository {
+  constructor(private readonly db: Database) {}
+
+  async list(): Promise<GolfTour[]> {
+    const rows = this.db
+      .prepare(`${TOUR_SELECT} ORDER BY name ASC`)
+      .all() as GolfTour[];
+    return rows;
+  }
+
+  async get(id: string): Promise<GolfTour | null> {
+    const row = this.db
+      .prepare(`${TOUR_SELECT} WHERE id = ?`)
+      .get(id) as GolfTour | undefined;
+    return row ?? null;
+  }
+
+  async getByAbbreviation(abbreviation: string): Promise<GolfTour | null> {
+    const row = this.db
+      .prepare(
+        `${TOUR_SELECT} WHERE upper(abbreviation) = upper(?)`,
+      )
+      .get(abbreviation) as GolfTour | undefined;
+    return row ?? null;
+  }
+
+  async create(tour: GolfTour): Promise<GolfTour> {
+    this.db
+      .prepare(
+        "INSERT INTO golf_tours (id, name, abbreviation, logo) VALUES (?, ?, ?, ?)",
+      )
+      .run(tour.id, tour.name, tour.abbreviation, tour.logo);
+    return tour;
+  }
+
+  async updateLogo(id: string, logo: string): Promise<void> {
+    this.db
+      .prepare("UPDATE golf_tours SET logo = ? WHERE id = ?")
+      .run(logo, id);
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const result = this.db.prepare("DELETE FROM golf_tours WHERE id = ?").run(id);
+    return result.changes > 0;
+  }
+
+  async clear(): Promise<void> {
+    this.db.prepare("DELETE FROM golf_tours").run();
+  }
+}
+
+export class SqliteGolfTournamentRepository implements GolfTournamentRepository {
+  constructor(private readonly db: Database) {}
+
+  async listByTour(tourId: string): Promise<GolfTournament[]> {
+    const rows = this.db
+      .prepare(
+        `SELECT ${TOURNAMENT_COLUMNS}
+         FROM golf_tournaments
+         WHERE tour_id = ?
+         ORDER BY sort_order ASC`,
+      )
+      .all(tourId) as Parameters<typeof rowToTournament>[0][];
+    return rows.map(rowToTournament);
+  }
+
+  async get(id: string): Promise<GolfTournament | null> {
+    const row = this.db
+      .prepare(`SELECT ${TOURNAMENT_COLUMNS} FROM golf_tournaments WHERE id = ?`)
+      .get(id) as Parameters<typeof rowToTournament>[0] | undefined;
+    return row ? rowToTournament(row) : null;
+  }
+
+  async getBySlug(tourId: string, slug: string): Promise<GolfTournament | null> {
+    const row = this.db
+      .prepare(
+        `SELECT ${TOURNAMENT_COLUMNS}
+         FROM golf_tournaments
+         WHERE tour_id = ? AND lower(slug) = lower(?)`,
+      )
+      .get(tourId, slug) as Parameters<typeof rowToTournament>[0] | undefined;
+    return row ? rowToTournament(row) : null;
+  }
+
+  async create(tournament: GolfTournament): Promise<GolfTournament> {
+    this.db
+      .prepare(
+        `INSERT INTO golf_tournaments (
+          id, tour_id, slug, name, is_major, purse_usd, entry_criteria_json,
+          venue_mode, typical_duration_days, field_size, season_start_month,
+          season_start_day, rotation_epoch_year, sort_order
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        tournament.id,
+        tournament.tourId,
+        tournament.slug,
+        tournament.name,
+        tournament.isMajor ? 1 : 0,
+        tournament.purseUsd,
+        JSON.stringify(tournament.entryCriteria),
+        tournament.venueMode,
+        tournament.typicalDurationDays,
+        tournament.fieldSize,
+        tournament.seasonStartMonth,
+        tournament.seasonStartDay,
+        tournament.rotationEpochYear,
+        tournament.sortOrder,
+      );
+    return tournament;
+  }
+
+  async delete(id: string): Promise<boolean> {
+    const result = this.db
+      .prepare("DELETE FROM golf_tournaments WHERE id = ?")
+      .run(id);
+    return result.changes > 0;
+  }
+
+  async clear(): Promise<void> {
+    this.db.prepare("DELETE FROM golf_tournaments").run();
+  }
+}
+
+export class SqliteGolfTournamentVenueRepository
+  implements GolfTournamentVenueRepository
+{
+  constructor(private readonly db: Database) {}
+
+  async listByTournament(tournamentId: string): Promise<GolfTournamentVenue[]> {
+    const rows = this.db
+      .prepare(
+        `SELECT id, tournament_id, venue_id, rotation_order, is_default
+         FROM golf_tournament_venues
+         WHERE tournament_id = ?
+         ORDER BY rotation_order ASC`,
+      )
+      .all(tournamentId) as {
+      id: string;
+      tournament_id: string;
+      venue_id: string;
+      rotation_order: number;
+      is_default: number;
+    }[];
+
+    return rows.map((row) => ({
+      id: row.id,
+      tournamentId: row.tournament_id,
+      venueId: row.venue_id,
+      rotationOrder: row.rotation_order,
+      isDefault: row.is_default === 1,
+    }));
+  }
+
+  async create(link: GolfTournamentVenue): Promise<GolfTournamentVenue> {
+    this.db
+      .prepare(
+        `INSERT INTO golf_tournament_venues (
+          id, tournament_id, venue_id, rotation_order, is_default
+        ) VALUES (?, ?, ?, ?, ?)`,
+      )
+      .run(
+        link.id,
+        link.tournamentId,
+        link.venueId,
+        link.rotationOrder,
+        link.isDefault ? 1 : 0,
+      );
+    return link;
+  }
+
+  async deleteByTournament(tournamentId: string): Promise<void> {
+    this.db
+      .prepare("DELETE FROM golf_tournament_venues WHERE tournament_id = ?")
+      .run(tournamentId);
+  }
+
+  async clear(): Promise<void> {
+    this.db.prepare("DELETE FROM golf_tournament_venues").run();
+  }
+}
+
+export class SqliteGolfSeasonScheduleRepository
+  implements GolfSeasonScheduleRepository
+{
+  constructor(private readonly db: Database) {}
+
+  async listByTour(
+    tourId: string,
+    seasonYear?: number,
+  ): Promise<GolfSeasonSchedule[]> {
+    const rows =
+      seasonYear === undefined
+        ? (this.db
+            .prepare(
+              `SELECT id, tour_id, tournament_id, season_year, venue_id,
+                      root_event_id, scheduled_at_iso_utc
+               FROM golf_season_schedules
+               WHERE tour_id = ?
+               ORDER BY season_year ASC`,
+            )
+            .all(tourId) as GolfSeasonScheduleRow[])
+        : (this.db
+            .prepare(
+              `SELECT id, tour_id, tournament_id, season_year, venue_id,
+                      root_event_id, scheduled_at_iso_utc
+               FROM golf_season_schedules
+               WHERE tour_id = ? AND season_year = ?
+               ORDER BY season_year ASC`,
+            )
+            .all(tourId, seasonYear) as GolfSeasonScheduleRow[]);
+
+    return rows.map(rowToSchedule);
+  }
+
+  async getByTourTournamentSeason(
+    tourId: string,
+    tournamentId: string,
+    seasonYear: number,
+  ): Promise<GolfSeasonSchedule | null> {
+    const row = this.db
+      .prepare(
+        `SELECT id, tour_id, tournament_id, season_year, venue_id,
+                root_event_id, scheduled_at_iso_utc
+         FROM golf_season_schedules
+         WHERE tour_id = ? AND tournament_id = ? AND season_year = ?`,
+      )
+      .get(tourId, tournamentId, seasonYear) as GolfSeasonScheduleRow | undefined;
+    return row ? rowToSchedule(row) : null;
+  }
+
+  async create(schedule: GolfSeasonSchedule): Promise<GolfSeasonSchedule> {
+    this.db
+      .prepare(
+        `INSERT INTO golf_season_schedules (
+          id, tour_id, tournament_id, season_year, venue_id,
+          root_event_id, scheduled_at_iso_utc
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        schedule.id,
+        schedule.tourId,
+        schedule.tournamentId,
+        schedule.seasonYear,
+        schedule.venueId,
+        schedule.rootEventId,
+        schedule.scheduledAtIsoUtc,
+      );
+    return schedule;
+  }
+
+  async deleteByTourSeason(tourId: string, seasonYear: number): Promise<void> {
+    this.db
+      .prepare(
+        "DELETE FROM golf_season_schedules WHERE tour_id = ? AND season_year = ?",
+      )
+      .run(tourId, seasonYear);
+  }
+
+  async clear(): Promise<void> {
+    this.db.prepare("DELETE FROM golf_season_schedules").run();
+  }
+}
+
+type GolfSeasonScheduleRow = {
+  id: string;
+  tour_id: string;
+  tournament_id: string;
+  season_year: number;
+  venue_id: string;
+  root_event_id: string;
+  scheduled_at_iso_utc: string;
+};
+
+function rowToSchedule(row: GolfSeasonScheduleRow): GolfSeasonSchedule {
+  return {
+    id: row.id,
+    tourId: row.tour_id,
+    tournamentId: row.tournament_id,
+    seasonYear: row.season_year,
+    venueId: row.venue_id,
+    rootEventId: row.root_event_id,
+    scheduledAtIsoUtc: row.scheduled_at_iso_utc,
+  };
+}
+
+export class SqliteGolfTourSchedulerStateRepository
+  implements GolfTourSchedulerStateRepository
+{
+  constructor(private readonly db: Database) {}
+
+  async get(tourAbbreviation: string): Promise<GolfTourSchedulerState | null> {
+    const row = this.db
+      .prepare(
+        `SELECT tour_abbreviation, last_processed_iso_utc, last_scheduled_season_year
+         FROM golf_tour_scheduler_state
+         WHERE tour_abbreviation = ?`,
+      )
+      .get(tourAbbreviation.trim().toUpperCase()) as
+      | {
+          tour_abbreviation: string;
+          last_processed_iso_utc: string;
+          last_scheduled_season_year: number | null;
+        }
+      | undefined;
+
+    if (!row) {
+      return null;
+    }
+
+    return {
+      tourAbbreviation: row.tour_abbreviation,
+      lastProcessedIsoUtc: row.last_processed_iso_utc,
+      lastScheduledSeasonYear: row.last_scheduled_season_year,
+    };
+  }
+
+  async upsert(state: GolfTourSchedulerState): Promise<GolfTourSchedulerState> {
+    const normalized = {
+      ...state,
+      tourAbbreviation: state.tourAbbreviation.trim().toUpperCase(),
+    };
+
+    this.db
+      .prepare(
+        `INSERT INTO golf_tour_scheduler_state (
+          tour_abbreviation, last_processed_iso_utc, last_scheduled_season_year
+        ) VALUES (?, ?, ?)
+        ON CONFLICT(tour_abbreviation) DO UPDATE SET
+          last_processed_iso_utc = excluded.last_processed_iso_utc,
+          last_scheduled_season_year = excluded.last_scheduled_season_year`,
+      )
+      .run(
+        normalized.tourAbbreviation,
+        normalized.lastProcessedIsoUtc,
+        normalized.lastScheduledSeasonYear,
+      );
+
+    return normalized;
+  }
+
+  async clear(): Promise<void> {
+    this.db.prepare("DELETE FROM golf_tour_scheduler_state").run();
+  }
+}
