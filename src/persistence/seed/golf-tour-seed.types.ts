@@ -1,4 +1,4 @@
-import type { GolfEntryCriteria, GolfVenueMode } from "@/modules/golf/types";
+import type { GolfEntryCriteria, GolfTournamentScheduleReference, GolfVenueMode } from "@/modules/golf/types";
 
 export interface GolfTournamentVenueRef {
   locationName: string;
@@ -22,6 +22,10 @@ export interface GolfTournamentSeedEntry {
   sortOrder: number;
   teeGroupCount?: number;
   fieldSize?: number;
+  /** When false, catalog-only (no season schedule row). */
+  materializeOnSchedule?: boolean;
+  /** Reuse another tour's materialized events for this tournament. */
+  scheduleReference?: GolfTournamentScheduleReference;
 }
 
 export interface GolfTourSeedDefinition {

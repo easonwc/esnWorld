@@ -363,16 +363,17 @@ Tennis and golf venues are seeded separately so each sport and golf tour can gro
 
 Set `TENNIS_VENUES_SEED_ON_STARTUP=true` to merge **33** tennis `multi_resource` venues with numbered courts (`Court 1` … `Court N`).
 
-Set `GOLF_VENUES_SEED_ON_STARTUP=true` to merge **59** golf `multi_resource` venues with **55 tee groups** each (`Tee Group 1` … `Tee Group 55`).
+Set `GOLF_VENUES_SEED_ON_STARTUP=true` to merge **59** golf `multi_resource` venues with **55 tee groups** each (`Tee Group 1` … `Tee Group 55`). Golf tour catalog seeds additionally merge **14 rotation-only alternates** for major and links rotation pools.
 
 The legacy `TENNIS_GOLF_VENUES_SEED_ON_STARTUP=true` flag still enables **both** seeds.
 
 - **33 tennis complexes** — four Grand Slams, Masters 1000 and tour staples, plus Miami, Cincinnati, Rome, Madrid, Shanghai, Beijing, Montreal, and Toronto
 - **59 golf courses** — majors, full PGA Tour calendar venues, Open Championship rotation venues, and Ryder Cup hosts (shared catalog for PGA, LPGA, and DP World Tour)
+- **14 rotation alternates** — extra major and DP World rotation hosts (`golf-rotation-venues.data.ts`), merged automatically when any golf tour catalog seeds
 
 Host cities must already exist in the database — enable `LOCATIONS_SEED_ON_STARTUP=true` first (or create cities via the API). Seeds are idempotent: existing venues and resources are skipped.
 
-Seed catalogs: `src/persistence/seed/tennis-venues.data.ts` and `src/persistence/seed/golf-venues.data.ts`.
+Seed catalogs: `src/persistence/seed/tennis-venues.data.ts`, `src/persistence/seed/golf-venues.data.ts`, and `src/persistence/seed/golf-rotation-venues.data.ts`.
 
 ### PGA Tour (optional)
 
@@ -397,6 +398,8 @@ Seed catalog: `src/persistence/seed/lpga-tour.data.ts`.
 ### DP World Tour (optional)
 
 Set `DP_WORLD_TOUR_SEED_ON_STARTUP=true` to merge the **DP World Tour** catalog (**42** Race to Dubai events from the 2025 official calendar, including four majors). Also merges required host cities, golf venues, and reuses shared courses where events overlap with PGA stops.
+
+The four **co-sanctioned majors** (Masters, PGA Championship, U.S. Open, The Open) remain in the DP World catalog for metadata and Race to Dubai points, but their `golf_season_schedules` rows **reference PGA Tour materialization** (`scheduleReference`) — same `rootEventId` and venue, no duplicate event trees. PGA runs first in the scheduler order when both tours are enabled.
 
 Set `DP_WORLD_TOUR_ENABLED=true` to run the **season scheduler** on the same **October 1** release model as PGA (`DP_WORLD_TOUR_SCHEDULE_RELEASE_*` defaults match PGA).
 

@@ -4,6 +4,7 @@ import type {
   GolfTour,
   GolfTourSchedulerState,
   GolfTournament,
+  GolfTournamentScheduleReference,
   GolfTournamentVenue,
   GolfVenueMode,
 } from "@/modules/golf/types";
@@ -18,6 +19,21 @@ import type {
 
 function parseEntryCriteria(json: string): GolfEntryCriteria {
   return JSON.parse(json) as GolfEntryCriteria;
+}
+
+function parseScheduleReference(
+  json: string | null,
+): GolfTournamentScheduleReference | null {
+  if (!json) {
+    return null;
+  }
+  return JSON.parse(json) as GolfTournamentScheduleReference;
+}
+
+function serializeScheduleReference(
+  reference: GolfTournamentScheduleReference | null,
+): string | null {
+  return reference ? JSON.stringify(reference) : null;
 }
 
 function rowToTournament(row: {
@@ -36,6 +52,8 @@ function rowToTournament(row: {
   season_start_day: number;
   rotation_epoch_year: number | null;
   sort_order: number;
+  materialize_on_schedule: number;
+  schedule_reference_json: string | null;
 }): GolfTournament {
   return {
     id: row.id,
@@ -53,13 +71,16 @@ function rowToTournament(row: {
     seasonStartDay: row.season_start_day,
     rotationEpochYear: row.rotation_epoch_year,
     sortOrder: row.sort_order,
+    materializeOnSchedule: row.materialize_on_schedule === 1,
+    scheduleReference: parseScheduleReference(row.schedule_reference_json),
   };
 }
 
 const TOURNAMENT_COLUMNS = `
   id, tour_id, slug, name, is_major, purse_usd, entry_criteria_json,
   venue_mode, typical_duration_days, tee_group_count, field_size, season_start_month,
-  season_start_day, rotation_epoch_year, sort_order
+  season_start_day, rotation_epoch_year, sort_order, materialize_on_schedule,
+  schedule_reference_json
 `;
 
 const TOUR_SELECT = "SELECT id, name, abbreviation, logo FROM golf_tours";
@@ -154,8 +175,9 @@ export class SqliteGolfTournamentRepository implements GolfTournamentRepository 
         `INSERT INTO golf_tournaments (
           id, tour_id, slug, name, is_major, purse_usd, entry_criteria_json,
           venue_mode, typical_duration_days, tee_group_count, field_size, season_start_month,
-          season_start_day, rotation_epoch_year, sort_order
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          season_start_day, rotation_epoch_year, sort_order, materialize_on_schedule,
+          schedule_reference_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         tournament.id,
@@ -173,8 +195,32 @@ export class SqliteGolfTournamentRepository implements GolfTournamentRepository 
         tournament.seasonStartDay,
         tournament.rotationEpochYear,
         tournament.sortOrder,
+        tournament.materializeOnSchedule ? 1 : 0,
+        serializeScheduleReference(tournament.scheduleReference),
       );
     return tournament;
+  }
+
+  async updateMaterializeOnSchedule(
+    id: string,
+    materializeOnSchedule: boolean,
+  ): Promise<void> {
+    this.db
+      .prepare(
+        "UPDATE golf_tournaments SET materialize_on_schedule = ? WHERE id = ?",
+      )
+      .run(materializeOnSchedule ? 1 : 0, id);
+  }
+
+  async updateScheduleReference(
+    id: string,
+    scheduleReference: GolfTournamentScheduleReference | null,
+  ): Promise<void> {
+    this.db
+      .prepare(
+        "UPDATE golf_tournaments SET schedule_reference_json = ? WHERE id = ?",
+      )
+      .run(serializeScheduleReference(scheduleReference), id);
   }
 
   async delete(id: string): Promise<boolean> {

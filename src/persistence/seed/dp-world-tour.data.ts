@@ -13,6 +13,16 @@ export const DP_WORLD_TOUR_SEED = {
 export const DEFAULT_DP_WORLD_TEE_GROUP_COUNT = DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT;
 export const DEFAULT_DP_WORLD_FIELD_SIZE = 156;
 
+/** Co-sanctioned with PGA Tour — reuse PGA season materialization. */
+const pgaScheduleReference = (tournamentSlug: string) => ({
+  scheduleReference: {
+    tourAbbreviation: "PGA",
+    tournamentSlug,
+  },
+});
+
+const pgaMajorReference = pgaScheduleReference;
+
 const ranked = (minOfficialWorldGolfRank: number) => ({
   kind: "ranked" as const,
   minOfficialWorldGolfRank,
@@ -73,6 +83,18 @@ export const DP_WORLD_TOURNAMENT_SEED_DATA: readonly DpWorldTournamentSeedEntry[
         locationCountry: "Australia",
         venueName: "Victoria Golf Club",
         rotationOrder: 1,
+      },
+      {
+        locationName: "Melbourne",
+        locationCountry: "Australia",
+        venueName: "Royal Melbourne Golf Club",
+        rotationOrder: 2,
+      },
+      {
+        locationName: "Sydney",
+        locationCountry: "Australia",
+        venueName: "The Lakes Golf Club",
+        rotationOrder: 3,
       },
     ],
   },
@@ -224,6 +246,7 @@ export const DP_WORLD_TOURNAMENT_SEED_DATA: readonly DpWorldTournamentSeedEntry[
     slug: "the-masters",
     name: "The Masters Tournament",
     isMajor: true,
+    ...pgaMajorReference("masters"),
     purseUsd: 20_000_000,
     entryCriteria: {
       kind: "exemptions",
@@ -276,6 +299,7 @@ export const DP_WORLD_TOURNAMENT_SEED_DATA: readonly DpWorldTournamentSeedEntry[
     slug: "us-pga-championship",
     name: "U.S. PGA Championship",
     isMajor: true,
+    ...pgaMajorReference("pga-championship"),
     purseUsd: 19_000_000,
     entryCriteria: { kind: "open", description: "PGA Championship qualifying field" },
     venueMode: "fixed",
@@ -324,6 +348,7 @@ export const DP_WORLD_TOURNAMENT_SEED_DATA: readonly DpWorldTournamentSeedEntry[
     slug: "us-open",
     name: "U.S. Open",
     isMajor: true,
+    ...pgaMajorReference("us-open"),
     purseUsd: 21_500_000,
     entryCriteria: { kind: "open", description: "Open qualifying and exemptions" },
     venueMode: "fixed",
@@ -360,6 +385,7 @@ export const DP_WORLD_TOURNAMENT_SEED_DATA: readonly DpWorldTournamentSeedEntry[
     slug: "genesis-scottish-open",
     name: "Genesis Scottish Open",
     isMajor: false,
+    ...pgaScheduleReference("scottish-open"),
     purseUsd: 9_000_000,
     entryCriteria: ranked(70),
     venueMode: "fixed",
@@ -384,6 +410,7 @@ export const DP_WORLD_TOURNAMENT_SEED_DATA: readonly DpWorldTournamentSeedEntry[
     slug: "the-open-championship",
     name: "The Open Championship",
     isMajor: true,
+    ...pgaMajorReference("the-open-championship"),
     purseUsd: 16_500_000,
     entryCriteria: { kind: "open", description: "Open qualifying and exemptions" },
     venueMode: "rotation",
@@ -545,6 +572,27 @@ export const DP_WORLD_TOURNAMENT_SEED_DATA: readonly DpWorldTournamentSeedEntry[
         locationRegion: "Scotland",
         venueName: "Kingsbarns Golf Links",
         rotationOrder: 2,
+      },
+      {
+        locationName: "Gullane",
+        locationCountry: "United Kingdom",
+        locationRegion: "Scotland",
+        venueName: "Gullane Golf Club No. 1",
+        rotationOrder: 3,
+      },
+      {
+        locationName: "Leven",
+        locationCountry: "United Kingdom",
+        locationRegion: "Scotland",
+        venueName: "Dumbarnie Links",
+        rotationOrder: 4,
+      },
+      {
+        locationName: "Aberdeen",
+        locationCountry: "United Kingdom",
+        locationRegion: "Scotland",
+        venueName: "Royal Aberdeen Golf Club",
+        rotationOrder: 5,
       },
     ],
   },

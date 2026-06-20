@@ -13,6 +13,11 @@ export interface GolfTour {
   logo: string;
 }
 
+export interface GolfTournamentScheduleReference {
+  tourAbbreviation: string;
+  tournamentSlug: string;
+}
+
 export interface GolfTournament {
   id: string;
   tourId: string;
@@ -31,6 +36,10 @@ export interface GolfTournament {
   seasonStartDay: number;
   rotationEpochYear: number | null;
   sortOrder: number;
+  /** When false, tournament stays in the catalog but is skipped by season schedulers. */
+  materializeOnSchedule: boolean;
+  /** When set, season scheduling reuses another tour's materialized event tree. */
+  scheduleReference: GolfTournamentScheduleReference | null;
 }
 
 export interface GolfTournamentVenue {

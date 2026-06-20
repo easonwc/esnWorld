@@ -92,6 +92,8 @@ describe("PGA Tour seed", () => {
         seasonStartDay: entry.seasonStartDay,
         rotationEpochYear: entry.rotationEpochYear ?? null,
         sortOrder: entry.sortOrder,
+        materializeOnSchedule: entry.materializeOnSchedule ?? true,
+        scheduleReference: entry.scheduleReference ?? null,
       });
     }
 

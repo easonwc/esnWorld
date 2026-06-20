@@ -11,6 +11,7 @@ import type {
   GolfTour,
   GolfTourSchedulerState,
   GolfTournament,
+  GolfTournamentScheduleReference,
   GolfTournamentVenue,
 } from "@/modules/golf/types";
 import type { ListOptions } from "@/lib/pagination";
@@ -164,6 +165,14 @@ export interface GolfTournamentRepository {
   get(id: string): Promise<GolfTournament | null>;
   getBySlug(tourId: string, slug: string): Promise<GolfTournament | null>;
   create(tournament: GolfTournament): Promise<GolfTournament>;
+  updateMaterializeOnSchedule(
+    id: string,
+    materializeOnSchedule: boolean,
+  ): Promise<void>;
+  updateScheduleReference(
+    id: string,
+    scheduleReference: GolfTournamentScheduleReference | null,
+  ): Promise<void>;
   delete(id: string): Promise<boolean>;
   clear(): Promise<void>;
 }

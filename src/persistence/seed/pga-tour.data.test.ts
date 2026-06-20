@@ -67,4 +67,13 @@ describe("PGA Tour catalog seed", () => {
       );
     }
   });
+
+  it("uses deep rotation pools for majors", () => {
+    const poolSize = (slug: string) =>
+      PGA_TOURNAMENT_SEED_DATA.find((entry) => entry.slug === slug)?.venues.length;
+
+    expect(poolSize("pga-championship")).toBe(10);
+    expect(poolSize("us-open")).toBe(10);
+    expect(poolSize("the-open-championship")).toBe(10);
+  });
 });

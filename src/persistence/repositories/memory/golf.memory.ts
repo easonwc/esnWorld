@@ -3,6 +3,7 @@ import type {
   GolfTour,
   GolfTourSchedulerState,
   GolfTournament,
+  GolfTournamentScheduleReference,
   GolfTournamentVenue,
 } from "@/modules/golf/types";
 import type {
@@ -81,6 +82,28 @@ export class MemoryGolfTournamentRepository implements GolfTournamentRepository 
   async create(tournament: GolfTournament): Promise<GolfTournament> {
     this.tournaments.set(tournament.id, tournament);
     return tournament;
+  }
+
+  async updateMaterializeOnSchedule(
+    id: string,
+    materializeOnSchedule: boolean,
+  ): Promise<void> {
+    const tournament = this.tournaments.get(id);
+    if (!tournament) {
+      return;
+    }
+    this.tournaments.set(id, { ...tournament, materializeOnSchedule });
+  }
+
+  async updateScheduleReference(
+    id: string,
+    scheduleReference: GolfTournamentScheduleReference | null,
+  ): Promise<void> {
+    const tournament = this.tournaments.get(id);
+    if (!tournament) {
+      return;
+    }
+    this.tournaments.set(id, { ...tournament, scheduleReference });
   }
 
   async delete(id: string): Promise<boolean> {

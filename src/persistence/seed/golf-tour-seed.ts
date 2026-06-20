@@ -3,10 +3,13 @@ import { mergeCountrySeed } from "./countries";
 import { locationMergeKey, mergeLocationSeed } from "./locations";
 import { venueMergeKey } from "./sports-league-seed";
 import { GOLF_LOCATION_SEED_DATA } from "./golf-locations.data";
+import { GOLF_ROTATION_LOCATION_SEED_DATA } from "./golf-rotation-locations.data";
 import { mergeGolfVenueSeed } from "./golf-venues";
 import type { GolfVenueSeedEntry } from "./golf-venue-types";
 import { GOLF_VENUE_SEED_DATA } from "./golf-venues.data";
+import { GOLF_ROTATION_VENUE_SEED_DATA } from "./golf-rotation-venues.data";
 import { getGolfTourLogoPublicPath } from "@/persistence/logos/config";
+import { scheduleReferencesEqual } from "./schedule-reference";
 import type {
   GolfTournamentSeedEntry,
   GolfTournamentVenueRef,
@@ -79,7 +82,11 @@ async function ensureGolfCatalogPrerequisites(
   await mergeLocationSeed(
     repositories.locationRepository,
     repositories.countryRepository,
-    [...GOLF_LOCATION_SEED_DATA, ...supplementalLocations],
+    [
+      ...GOLF_LOCATION_SEED_DATA,
+      ...GOLF_ROTATION_LOCATION_SEED_DATA,
+      ...supplementalLocations,
+    ],
   );
   await mergeGolfVenueSeed(
     {
@@ -88,7 +95,11 @@ async function ensureGolfCatalogPrerequisites(
       venueResourceRepository: repositories.venueResourceRepository,
     },
     true,
-    [...GOLF_VENUE_SEED_DATA, ...supplementalVenues],
+    [
+      ...GOLF_VENUE_SEED_DATA,
+      ...GOLF_ROTATION_VENUE_SEED_DATA,
+      ...supplementalVenues,
+    ],
   );
 }
 
@@ -217,9 +228,23 @@ export async function mergeGolfTourCatalogSeed(input: {
     const existing = await tournamentRepository.getBySlug(tour.id, entry.slug);
 
     let tournamentId: string;
+    const materializeOnSchedule = entry.materializeOnSchedule ?? true;
+    const scheduleReference = entry.scheduleReference ?? null;
     if (existing) {
       tournamentsSkipped += 1;
       tournamentId = existing.id;
+      if (existing.materializeOnSchedule !== materializeOnSchedule) {
+        await tournamentRepository.updateMaterializeOnSchedule(
+          tournamentId,
+          materializeOnSchedule,
+        );
+      }
+      if (!scheduleReferencesEqual(existing.scheduleReference, scheduleReference)) {
+        await tournamentRepository.updateScheduleReference(
+          tournamentId,
+          scheduleReference,
+        );
+      }
     } else {
       const tournament = {
         id: crypto.randomUUID(),
@@ -237,6 +262,8 @@ export async function mergeGolfTourCatalogSeed(input: {
         seasonStartDay: entry.seasonStartDay,
         rotationEpochYear: entry.rotationEpochYear ?? null,
         sortOrder: entry.sortOrder,
+        materializeOnSchedule,
+        scheduleReference,
       };
 
       await tournamentRepository.create(tournament);

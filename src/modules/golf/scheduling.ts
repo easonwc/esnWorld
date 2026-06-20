@@ -33,7 +33,7 @@ import {
   type GolfTourScheduleReleaseConfig,
 } from "@/persistence/seed/golf-config";
 import { GolfError, GolfErrorCodes } from "./errors";
-import { buildTournamentEventTree } from "./materialize";
+import { pickAvailableVenueLink } from "./venue-pick";
 import {
   computeReleaseInstantUtc,
   findCrossedReleaseYears,
@@ -43,7 +43,7 @@ import type {
   GolfSchedulingProcessResult,
   GolfSeasonSchedule,
   GolfTournament,
-  GolfTournamentVenue,
+  GolfTournamentScheduleReference,
 } from "./types";
 
 const PGA_TOUR_ABBREVIATION = "PGA";
@@ -118,30 +118,50 @@ function getSchedulingRepositories(): SchedulingRepositories {
   };
 }
 
-function pickVenueLink(
-  tournament: GolfTournament,
-  venueLinks: readonly GolfTournamentVenue[],
-  seasonYear: number,
-): GolfTournamentVenue {
-  if (venueLinks.length === 0) {
+async function resolveScheduleReference(input: {
+  reference: GolfTournamentScheduleReference;
+  seasonYear: number;
+  repositories: SchedulingRepositories;
+}): Promise<{ venueId: string; rootEventId: string }> {
+  const { reference, seasonYear, repositories } = input;
+  const referenceTour = await repositories.tourRepository.getByAbbreviation(
+    reference.tourAbbreviation,
+  );
+  if (!referenceTour) {
     throw new GolfError(
-      GolfErrorCodes.VENUE_POOL_EMPTY,
-      `No venues configured for tournament ${tournament.slug}`,
+      GolfErrorCodes.SCHEDULE_REFERENCE_NOT_FOUND,
+      `Reference tour ${reference.tourAbbreviation} not found`,
     );
   }
 
-  const sorted = [...venueLinks].sort(
-    (left, right) => left.rotationOrder - right.rotationOrder,
+  const referenceTournament = await repositories.tournamentRepository.getBySlug(
+    referenceTour.id,
+    reference.tournamentSlug,
   );
-
-  if (tournament.venueMode === "fixed") {
-    return sorted.find((link) => link.isDefault) ?? sorted[0]!;
+  if (!referenceTournament) {
+    throw new GolfError(
+      GolfErrorCodes.SCHEDULE_REFERENCE_NOT_FOUND,
+      `Reference tournament ${reference.tournamentSlug} not found on ${reference.tourAbbreviation}`,
+    );
   }
 
-  const epoch = tournament.rotationEpochYear ?? seasonYear;
-  const index =
-    ((seasonYear - epoch) % sorted.length + sorted.length) % sorted.length;
-  return sorted[index]!;
+  const referenceSchedule =
+    await repositories.seasonScheduleRepository.getByTourTournamentSeason(
+      referenceTour.id,
+      referenceTournament.id,
+      seasonYear,
+    );
+  if (!referenceSchedule) {
+    throw new GolfError(
+      GolfErrorCodes.SCHEDULE_REFERENCE_NOT_FOUND,
+      `Referenced schedule missing: ${reference.tourAbbreviation}/${reference.tournamentSlug} ${seasonYear}`,
+    );
+  }
+
+  return {
+    venueId: referenceSchedule.venueId,
+    rootEventId: referenceSchedule.rootEventId,
+  };
 }
 
 async function validatePlannedEvents(
@@ -278,6 +298,7 @@ export async function scheduleGolfTourSeason(
   const tournaments = await tournamentRepository.listByTour(tour.id);
   const plannedEvents: EventRecord[] = [];
   const schedules: GolfSeasonSchedule[] = [];
+  const existingEvents = await repositories.eventRepository.list();
 
   for (const tournament of tournaments) {
     const existingSchedule = await scheduleRepository.getByTourTournamentSeason(
@@ -289,36 +310,49 @@ export async function scheduleGolfTourSeason(
       continue;
     }
 
+    if (tournament.scheduleReference) {
+      const referenced = await resolveScheduleReference({
+        reference: tournament.scheduleReference,
+        seasonYear,
+        repositories,
+      });
+      schedules.push({
+        id: crypto.randomUUID(),
+        tourId: tour.id,
+        tournamentId: tournament.id,
+        seasonYear,
+        venueId: referenced.venueId,
+        rootEventId: referenced.rootEventId,
+        scheduledAtIsoUtc,
+      });
+      continue;
+    }
+
+    if (!tournament.materializeOnSchedule) {
+      continue;
+    }
+
     const venueLinks = await tournamentVenueRepository.listByTournament(
       tournament.id,
     );
-    const venueLink = pickVenueLink(tournament, venueLinks, seasonYear);
-    const venue = await getVenueStore().get(venueLink.venueId);
-    const location = await locationRepository.get(venue.locationId);
-    if (!location) {
-      throw new GolfError(
-        GolfErrorCodes.VENUE_NOT_FOUND,
-        `Location missing for venue ${venue.name}`,
-      );
-    }
-
-    const teeGroups = await venueResourceRepository.listByVenue(venue.id);
-    const tree = buildTournamentEventTree({
+    const materialized = await pickAvailableVenueLink({
       tournament,
+      venueLinks,
       seasonYear,
-      venueId: venue.id,
-      timezone: location.timezone,
-      teeGroups,
+      locationRepository,
+      venueResourceRepository,
+      existingEvents,
+      priorPlannedEvents: plannedEvents,
     });
 
-    plannedEvents.push(...tree);
+    plannedEvents.push(...materialized.tree);
     schedules.push({
       id: crypto.randomUUID(),
       tourId: tour.id,
       tournamentId: tournament.id,
       seasonYear,
-      venueId: venue.id,
-      rootEventId: tree[0]!.id,
+      venueId: materialized.venue.id,
+      rootEventId: materialized.tree[0]!.id,
       scheduledAtIsoUtc,
     });
   }

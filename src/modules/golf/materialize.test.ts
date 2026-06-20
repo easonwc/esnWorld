@@ -18,6 +18,8 @@ const tournament: GolfTournament = {
   seasonStartDay: 10,
   rotationEpochYear: null,
   sortOrder: 1,
+  materializeOnSchedule: true,
+  scheduleReference: null,
 };
 
 describe("buildTournamentEventTree", () => {

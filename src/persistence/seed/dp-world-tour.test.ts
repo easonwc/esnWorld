@@ -68,5 +68,10 @@ describe("DP World Tour seed", () => {
       teeGroupCount: DEFAULT_DP_WORLD_TEE_GROUP_COUNT,
       fieldSize: DEFAULT_DP_WORLD_FIELD_SIZE,
     });
+
+    const referencedMajors = tournaments.filter(
+      (entry) => entry.isMajor && entry.scheduleReference,
+    );
+    expect(referencedMajors).toHaveLength(4);
   });
 });
