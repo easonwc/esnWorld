@@ -1,8 +1,11 @@
-import type { GolfVenueSeedEntry } from "./golf-venue-types";
+import {
+  DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
+  type GolfVenueSeedEntry,
+} from "./golf-venue-types";
 
 /** Professional golf multi_resource venues (tee groups). Shared by PGA, future LPGA, and DP World catalog seeds. */
 export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
-// Golf majors and flagship courses (full 30-group field)
+// Golf majors and flagship courses (full 55-group field)
   {
     locationName: "Augusta",
     locationCountry: "United States",
@@ -10,7 +13,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Augusta National Golf Club",
     latitude: 33.5021,
     longitude: -82.0228,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Pinehurst",
@@ -19,7 +22,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Pinehurst No. 2",
     latitude: 35.1954,
     longitude: -79.4695,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Pebble Beach",
@@ -28,7 +31,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Pebble Beach Golf Links",
     latitude: 36.5674,
     longitude: -121.9487,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Ponte Vedra Beach",
@@ -37,7 +40,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "TPC Sawgrass",
     latitude: 30.1975,
     longitude: -81.3859,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Palm Beach Gardens",
@@ -46,7 +49,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "PGA National Champion Course",
     latitude: 26.8234,
     longitude: -80.1386,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "La Quinta",
@@ -55,7 +58,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "PGA West Stadium Course",
     latitude: 33.6634,
     longitude: -116.278,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Lahaina",
@@ -64,7 +67,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Kapalua Plantation Course",
     latitude: 20.9983,
     longitude: -156.6542,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Scottsdale",
@@ -73,7 +76,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "TPC Scottsdale Stadium Course",
     latitude: 33.6424,
     longitude: -111.9085,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Brookline",
@@ -82,7 +85,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "The Country Club",
     latitude: 42.3318,
     longitude: -71.1212,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Southampton",
@@ -91,7 +94,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Shinnecock Hills Golf Club",
     latitude: 40.8843,
     longitude: -72.3895,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Oakmont",
@@ -100,7 +103,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Oakmont Country Club",
     latitude: 40.5217,
     longitude: -79.8417,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Kiawah Island",
@@ -109,7 +112,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Kiawah Island Ocean Course",
     latitude: 32.6082,
     longitude: -80.0848,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Rochester",
@@ -118,7 +121,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Oak Hill Country Club",
     latitude: 43.1566,
     longitude: -77.6088,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Farmingdale",
@@ -127,7 +130,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Bethpage Black Course",
     latitude: 40.7446,
     longitude: -73.4658,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Sheboygan",
@@ -136,7 +139,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Whistling Straits",
     latitude: 43.8436,
     longitude: -87.7308,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "St Andrews",
@@ -145,7 +148,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "St Andrews Old Course",
     latitude: 56.3398,
     longitude: -2.7967,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Troon",
@@ -154,7 +157,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Royal Troon Golf Club",
     latitude: 55.5415,
     longitude: -4.6599,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Carnoustie",
@@ -163,7 +166,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Carnoustie Golf Links",
     latitude: 56.5026,
     longitude: -2.7059,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Gullane",
@@ -172,7 +175,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Gullane Golf Club No. 1",
     latitude: 56.035,
     longitude: -2.8284,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Southport",
@@ -181,7 +184,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Royal Birkdale Golf Club",
     latitude: 53.6476,
     longitude: -3.0053,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Hoylake",
@@ -190,7 +193,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Royal Liverpool Golf Club",
     latitude: 53.3908,
     longitude: -3.1806,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Sandwich",
@@ -199,7 +202,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Royal St George's Golf Club",
     latitude: 51.272,
     longitude: 1.3378,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Wentworth",
@@ -208,7 +211,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Wentworth Club West Course",
     latitude: 51.383,
     longitude: -0.663,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Portrush",
@@ -217,7 +220,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Royal Portrush Dunluce Links",
     latitude: 55.1958,
     longitude: -6.6533,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Crans-Montana",
@@ -225,7 +228,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Crans-sur-Sierre Golf Club",
     latitude: 46.3088,
     longitude: 7.4756,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Adare",
@@ -233,7 +236,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Adare Manor Golf Club",
     latitude: 52.5642,
     longitude: -8.7909,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
 
   // PGA Tour signature & designated venues (Phase A)
@@ -244,7 +247,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Riviera Country Club",
     latitude: 34.0497,
     longitude: -118.5012,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Palm Harbor",
@@ -253,7 +256,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Innisbrook Resort Copperhead Course",
     latitude: 28.0781,
     longitude: -82.7637,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Orlando",
@@ -262,7 +265,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Bay Hill Club & Lodge",
     latitude: 28.4583,
     longitude: -81.5089,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Houston",
@@ -271,7 +274,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Memorial Park Golf Course",
     latitude: 29.7671,
     longitude: -95.4342,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "San Antonio",
@@ -280,7 +283,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "TPC San Antonio Oaks Course",
     latitude: 29.4241,
     longitude: -98.4936,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Hilton Head Island",
@@ -289,7 +292,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Harbour Town Golf Links",
     latitude: 32.141,
     longitude: -80.7934,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Charlotte",
@@ -298,7 +301,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Quail Hollow Club",
     latitude: 35.1085,
     longitude: -80.8487,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Avondale",
@@ -307,7 +310,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "TPC Louisiana",
     latitude: 29.9127,
     longitude: -90.2031,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Fort Worth",
@@ -316,7 +319,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Colonial Country Club",
     latitude: 32.7248,
     longitude: -97.3628,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Dublin",
@@ -325,7 +328,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Muirfield Village Golf Club",
     latitude: 40.0992,
     longitude: -83.1141,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Cromwell",
@@ -334,7 +337,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "TPC River Highlands",
     latitude: 41.5951,
     longitude: -72.6454,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Toronto",
@@ -342,7 +345,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "St George's Golf and Country Club",
     latitude: 43.6532,
     longitude: -79.5322,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "North Berwick",
@@ -351,7 +354,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "The Renaissance Club",
     latitude: 56.058,
     longitude: -2.7169,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Silvis",
@@ -360,7 +363,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "TPC Deere Run",
     latitude: 41.5123,
     longitude: -90.4151,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Detroit",
@@ -369,7 +372,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Detroit Golf Club",
     latitude: 42.3314,
     longitude: -83.0458,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Greensboro",
@@ -378,7 +381,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Sedgefield Country Club",
     latitude: 36.0726,
     longitude: -79.792,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
 
   // PGA Tour weekly & fall swing venues (Phase B)
@@ -389,7 +392,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Waialae Country Club",
     latitude: 21.2729,
     longitude: -157.7756,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "San Diego",
@@ -398,7 +401,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Torrey Pines Golf Course",
     latitude: 32.9002,
     longitude: -117.2521,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Nuevo Vallarta",
@@ -406,7 +409,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Vidanta Vallarta",
     latitude: 20.9943,
     longitude: -105.3033,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Rio Grande",
@@ -415,7 +418,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Grand Reserve Golf Club",
     latitude: 18.3808,
     longitude: -65.8314,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Punta Cana",
@@ -423,7 +426,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Corales Golf Course",
     latitude: 18.5601,
     longitude: -68.3725,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Myrtle Beach",
@@ -432,7 +435,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Dunes Golf and Beach Club",
     latitude: 33.6891,
     longitude: -78.8867,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Louisville",
@@ -441,7 +444,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Hurstbourne Country Club",
     latitude: 38.2527,
     longitude: -85.7585,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "McKinney",
@@ -450,7 +453,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "TPC Craig Ranch",
     latitude: 33.1972,
     longitude: -96.6398,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Incline Village",
@@ -459,7 +462,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Edgewood Tahoe Golf Course",
     latitude: 39.2519,
     longitude: -119.9727,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Napa",
@@ -468,7 +471,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Silverado Resort North Course",
     latitude: 38.3485,
     longitude: -122.2611,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Jackson",
@@ -477,7 +480,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Country Club of Jackson",
     latitude: 32.2988,
     longitude: -90.1848,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Las Vegas",
@@ -486,7 +489,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "TPC Summerlin",
     latitude: 36.1699,
     longitude: -115.3338,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Chiba",
@@ -494,7 +497,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Accordia Golf Narashino Country Club",
     latitude: 35.6073,
     longitude: 140.1063,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Hamilton",
@@ -503,7 +506,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Port Royal Golf Course",
     latitude: 32.2949,
     longitude: -64.781,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Ivins",
@@ -512,7 +515,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Black Desert Resort",
     latitude: 37.1686,
     longitude: -113.6794,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Los Cabos",
@@ -520,7 +523,7 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "El Cardonal at Diamante",
     latitude: 22.8905,
     longitude: -109.9167,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
   {
     locationName: "Sea Island",
@@ -529,6 +532,6 @@ export const GOLF_VENUE_SEED_DATA: readonly GolfVenueSeedEntry[] = [
     venueName: "Sea Island Plantation Course",
     latitude: 31.2274,
     longitude: -81.3532,
-    teeGroupCount: 30,
+    teeGroupCount: DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
   },
 ] as const;

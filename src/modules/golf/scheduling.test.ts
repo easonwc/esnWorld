@@ -22,6 +22,10 @@ import { mergeCountrySeed } from "@/persistence/seed/countries";
 import { mergeLocationSeed } from "@/persistence/seed/locations";
 import { LOCATION_SEED_DATA } from "@/persistence/seed/locations.data";
 import { mergePgaTourSeed } from "@/persistence/seed/pga-tour";
+import {
+  DEFAULT_PGA_TEE_GROUP_COUNT,
+  PGA_TOURNAMENT_SEED_DATA,
+} from "@/persistence/seed/pga-tour.data";
 import { mergeGolfVenueSeed } from "@/persistence/seed/golf-venues";
 
 describe("PGA Tour scheduling", () => {
@@ -112,7 +116,10 @@ describe("PGA Tour scheduling", () => {
     const schedules = await getGolfSeasonScheduleStore().listByTour(tour.id, 2026);
 
     expect(schedules).toHaveLength(47);
-    expect(await getEventStore().count()).toBe(5875);
+    const eventsPerTournament = 5 + 4 * DEFAULT_PGA_TEE_GROUP_COUNT;
+    expect(await getEventStore().count()).toBe(
+      PGA_TOURNAMENT_SEED_DATA.length * eventsPerTournament,
+    );
   });
 
   it("fires on Oct 1 clock crossing via processGolfSchedulers", async () => {

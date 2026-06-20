@@ -4,6 +4,7 @@ import {
 } from "./multi-resource-venue-types";
 import { TENNIS_VENUE_SEED_DATA } from "./tennis-venues.data";
 import { GOLF_VENUE_SEED_DATA } from "./golf-venues.data";
+import { DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT } from "./golf-venue-types";
 import {
   MemoryCountryRepository,
   MemoryLocationRepository,
@@ -88,9 +89,15 @@ describe("tennis venue seed", () => {
 describe("golf venue seed", () => {
   it("defines the professional golf catalog", () => {
     expect(GOLF_VENUE_SEED_DATA).toHaveLength(59);
-    expect(numberedTeeGroups(30)).toHaveLength(30);
-    expect(numberedTeeGroups(30)[29]).toEqual({
-      name: "Tee Group 30",
+    expect(numberedTeeGroups(DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT)).toHaveLength(
+      DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT,
+    );
+    expect(
+      numberedTeeGroups(DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT)[
+        DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT - 1
+      ],
+    ).toEqual({
+      name: `Tee Group ${DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT}`,
       resourceType: "tee_group",
     });
   });
@@ -124,7 +131,7 @@ describe("golf venue seed", () => {
       venuesMissingLocation: 0,
       total: 59,
     });
-    expect(result.resourcesAdded).toBeGreaterThan(1_000);
+    expect(result.resourcesAdded).toBeGreaterThan(3_000);
     expect(await venueRepository.count()).toBe(59);
   });
 
@@ -152,7 +159,7 @@ describe("golf venue seed", () => {
       venuesMissingLocation: 0,
       resourcesAdded: 0,
     });
-    expect(second.resourcesSkipped).toBeGreaterThan(1_000);
+    expect(second.resourcesSkipped).toBeGreaterThan(3_000);
     expect(await repositories.venueRepository.count()).toBe(59);
   });
 });

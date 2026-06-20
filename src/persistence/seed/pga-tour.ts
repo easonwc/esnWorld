@@ -8,6 +8,8 @@ import { getGolfTourLogoPublicPath } from "@/persistence/logos/config";
 import {
   PGA_TOURNAMENT_SEED_DATA,
   PGA_TOUR_SEED,
+  DEFAULT_PGA_FIELD_SIZE,
+  DEFAULT_PGA_TEE_GROUP_COUNT,
   type PgaTournamentSeedEntry,
 } from "./pga-tour.data";
 import type {
@@ -214,7 +216,8 @@ export async function mergePgaTourSeed(
         entryCriteria: entry.entryCriteria,
         venueMode: entry.venueMode,
         typicalDurationDays: 4,
-        fieldSize: 30,
+        teeGroupCount: entry.teeGroupCount ?? DEFAULT_PGA_TEE_GROUP_COUNT,
+        fieldSize: entry.fieldSize ?? DEFAULT_PGA_FIELD_SIZE,
         seasonStartMonth: entry.seasonStartMonth,
         seasonStartDay: entry.seasonStartDay,
         rotationEpochYear: entry.rotationEpochYear ?? null,

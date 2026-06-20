@@ -1,5 +1,8 @@
 import type { MultiResourceVenueResourceSeedEntry } from "./multi-resource-venue-types";
 
+/** Max parallel tee-group slots seeded on each golf course. */
+export const DEFAULT_GOLF_VENUE_TEE_GROUP_COUNT = 55;
+
 export interface GolfVenueSeedEntry {
   locationName: string;
   locationCountry: string;

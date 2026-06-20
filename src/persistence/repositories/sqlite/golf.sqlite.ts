@@ -30,6 +30,7 @@ function rowToTournament(row: {
   entry_criteria_json: string;
   venue_mode: GolfVenueMode;
   typical_duration_days: number;
+  tee_group_count: number;
   field_size: number;
   season_start_month: number;
   season_start_day: number;
@@ -46,6 +47,7 @@ function rowToTournament(row: {
     entryCriteria: parseEntryCriteria(row.entry_criteria_json),
     venueMode: row.venue_mode,
     typicalDurationDays: row.typical_duration_days,
+    teeGroupCount: row.tee_group_count,
     fieldSize: row.field_size,
     seasonStartMonth: row.season_start_month,
     seasonStartDay: row.season_start_day,
@@ -56,7 +58,7 @@ function rowToTournament(row: {
 
 const TOURNAMENT_COLUMNS = `
   id, tour_id, slug, name, is_major, purse_usd, entry_criteria_json,
-  venue_mode, typical_duration_days, field_size, season_start_month,
+  venue_mode, typical_duration_days, tee_group_count, field_size, season_start_month,
   season_start_day, rotation_epoch_year, sort_order
 `;
 
@@ -151,9 +153,9 @@ export class SqliteGolfTournamentRepository implements GolfTournamentRepository 
       .prepare(
         `INSERT INTO golf_tournaments (
           id, tour_id, slug, name, is_major, purse_usd, entry_criteria_json,
-          venue_mode, typical_duration_days, field_size, season_start_month,
+          venue_mode, typical_duration_days, tee_group_count, field_size, season_start_month,
           season_start_day, rotation_epoch_year, sort_order
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         tournament.id,
@@ -165,6 +167,7 @@ export class SqliteGolfTournamentRepository implements GolfTournamentRepository 
         JSON.stringify(tournament.entryCriteria),
         tournament.venueMode,
         tournament.typicalDurationDays,
+        tournament.teeGroupCount,
         tournament.fieldSize,
         tournament.seasonStartMonth,
         tournament.seasonStartDay,

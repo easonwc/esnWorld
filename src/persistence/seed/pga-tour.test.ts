@@ -1,5 +1,9 @@
 import { getGolfTourLogoPublicPath } from "@/persistence/logos/config";
 import {
+  DEFAULT_PGA_FIELD_SIZE,
+  DEFAULT_PGA_TEE_GROUP_COUNT,
+} from "./pga-tour.data";
+import {
   MemoryCountryRepository,
   MemoryGolfTournamentRepository,
   MemoryGolfTournamentVenueRepository,
@@ -46,6 +50,12 @@ describe("PGA Tour seed", () => {
 
     const tour = await tourRepository.getByAbbreviation("PGA");
     expect(tour?.logo).toBe(getGolfTourLogoPublicPath("PGA"));
+
+    const tournaments = await tournamentRepository.listByTour(tour!.id);
+    expect(tournaments[0]).toMatchObject({
+      teeGroupCount: DEFAULT_PGA_TEE_GROUP_COUNT,
+      fieldSize: DEFAULT_PGA_FIELD_SIZE,
+    });
   });
 
   it("backfills venue links for tournaments created without venues", async () => {
@@ -76,7 +86,8 @@ describe("PGA Tour seed", () => {
         entryCriteria: entry.entryCriteria,
         venueMode: entry.venueMode,
         typicalDurationDays: 4,
-        fieldSize: 30,
+        teeGroupCount: DEFAULT_PGA_TEE_GROUP_COUNT,
+        fieldSize: DEFAULT_PGA_FIELD_SIZE,
         seasonStartMonth: entry.seasonStartMonth,
         seasonStartDay: entry.seasonStartDay,
         rotationEpochYear: entry.rotationEpochYear ?? null,

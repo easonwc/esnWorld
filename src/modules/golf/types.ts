@@ -23,6 +23,9 @@ export interface GolfTournament {
   entryCriteria: GolfEntryCriteria;
   venueMode: GolfVenueMode;
   typicalDurationDays: number;
+  /** Parallel tee-group slots scheduled per round at this tournament. */
+  teeGroupCount: number;
+  /** Golfer capacity (typical full fields are 140–160). */
   fieldSize: number;
   seasonStartMonth: number;
   seasonStartDay: number;

@@ -359,7 +359,7 @@ Tennis and golf venues are seeded separately so each sport (and future golf tour
 
 Set `TENNIS_VENUES_SEED_ON_STARTUP=true` to merge **33** tennis `multi_resource` venues with numbered courts (`Court 1` … `Court N`).
 
-Set `GOLF_VENUES_SEED_ON_STARTUP=true` to merge **59** golf `multi_resource` venues with **30 tee groups** each (`Tee Group 1` … `Tee Group 30`).
+Set `GOLF_VENUES_SEED_ON_STARTUP=true` to merge **59** golf `multi_resource` venues with **55 tee groups** each (`Tee Group 1` … `Tee Group 55`).
 
 The legacy `TENNIS_GOLF_VENUES_SEED_ON_STARTUP=true` flag still enables **both** seeds.
 
@@ -376,7 +376,7 @@ Set `PGA_TOUR_SEED_ON_STARTUP=true` to merge the **PGA Tour** catalog (**47** to
 
 Set `GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP=true` to fetch tour logo files on startup (add LPGA to `GOLF_TOUR_LOGO_DOWNLOAD_URLS` when that catalog lands).
 
-Set `PGA_TOUR_ENABLED=true` to run the **season scheduler** when the world clock crosses **October 1** (`PGA_TOUR_SCHEDULE_RELEASE_*`, default midnight `America/New_York`). The scheduler materializes the **next calendar year** as event trees (tournament → rounds → tee groups). Scheduling uses hybrid clock hooks: mutations (`set`/`advance`/`stop`), a 1-second interval while the clock is running, and manual `POST /api/golf-scheduling` with `action: "processNow"`. If any tournament fails validation, the **entire season batch fails** and an error is logged.
+Set `PGA_TOUR_ENABLED=true` to run the **season scheduler** when the world clock crosses **October 1** (`PGA_TOUR_SCHEDULE_RELEASE_*`, default midnight `America/New_York`). The scheduler materializes the **next calendar year** as event trees (tournament → rounds → tee groups). Each tournament stores **`fieldSize`** (golfer capacity, typically 140–160) separately from **`teeGroupCount`** (parallel tee-group scheduling slots per round). Scheduling uses hybrid clock hooks: mutations (`set`/`advance`/`stop`), a 1-second interval while the clock is running, and manual `POST /api/golf-scheduling` with `action: "processNow"`. If any tournament fails validation, the **entire season batch fails** and an error is logged.
 
 Seed catalog: `src/persistence/seed/pga-tour.data.ts`.
 

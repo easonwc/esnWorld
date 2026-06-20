@@ -51,11 +51,11 @@ export function buildTournamentEventTree(input: {
   const { tournament, seasonYear, venueId, timezone, teeGroups } = input;
   const groups = teeGroups
     .filter((resource) => resource.resourceType === "tee_group")
-    .slice(0, tournament.fieldSize);
+    .slice(0, tournament.teeGroupCount);
 
-  if (groups.length < tournament.fieldSize) {
+  if (groups.length < tournament.teeGroupCount) {
     throw new Error(
-      `Venue has ${groups.length} tee groups but ${tournament.name} requires ${tournament.fieldSize}`,
+      `Venue has ${groups.length} tee groups but ${tournament.name} requires ${tournament.teeGroupCount}`,
     );
   }
 

@@ -968,7 +968,7 @@ export const apiOperations: ApiOperation[] = [
     path: "/api/golf-tournaments",
     summary: "Get a tournament",
     description:
-      "Retrieves a tournament catalog entry by id or slug (includes purse, isMajor, entryCriteria, venueMode).",
+      "Retrieves a tournament catalog entry by id or slug (includes purse, isMajor, fieldSize golfer capacity, teeGroupCount scheduling slots, entryCriteria, venueMode).",
     requestBody: JSON.stringify(
       {
         action: "get",
