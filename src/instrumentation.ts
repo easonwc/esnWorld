@@ -13,6 +13,9 @@ export async function register() {
     const { seedGolfVenuesOnStartup } = await import("@/persistence/seed/golf-venues");
     const { seedPgaTourOnStartup } = await import("@/persistence/seed/pga-tour");
     const { seedLpgaTourOnStartup } = await import("@/persistence/seed/lpga-tour");
+    const { seedDpWorldTourOnStartup } = await import(
+      "@/persistence/seed/dp-world-tour"
+    );
     const { registerGolfClockHandlers } = await import("@/modules/golf");
     const { syncCountryFlagImages } = await import(
       "@/persistence/flags/download"
@@ -52,6 +55,7 @@ export async function register() {
     const golfVenueSeed = await seedGolfVenuesOnStartup();
     const pgaTourSeed = await seedPgaTourOnStartup();
     const lpgaTourSeed = await seedLpgaTourOnStartup();
+    const dpWorldTourSeed = await seedDpWorldTourOnStartup();
     const golfTourRepository = getDefaultGolfTourRepository();
 
     if (process.env.VITEST !== "true") {
@@ -259,6 +263,12 @@ export async function register() {
       );
     }
 
+    if (dpWorldTourSeed?.enabled) {
+      console.info(
+        `[dp world tour seed] tour ${dpWorldTourSeed.tourAdded ? "created" : "exists"}, ${dpWorldTourSeed.tournamentsAdded} tournaments added, ${dpWorldTourSeed.tournamentsSkipped} skipped, ${dpWorldTourSeed.venueLinksAdded} venue links${dpWorldTourSeed.tournamentsMissingVenue > 0 ? `, ${dpWorldTourSeed.tournamentsMissingVenue} tournaments missing venues` : ""}`,
+      );
+    }
+
     if (process.env.VITEST !== "true") {
       const pgaLogoSync = await syncGolfTourLogo(golfTourRepository, "PGA");
       if (
@@ -279,6 +289,17 @@ export async function register() {
       ) {
         console.info(
           `[golf tour logos] LPGA ${lpgaLogoSync.downloaded} downloaded, ${lpgaLogoSync.skipped} skipped, ${lpgaLogoSync.failed} failed, ${lpgaLogoSync.updated} updated`,
+        );
+      }
+
+      const dpwtLogoSync = await syncGolfTourLogo(golfTourRepository, "DPWT");
+      if (
+        dpwtLogoSync.downloaded > 0 ||
+        dpwtLogoSync.failed > 0 ||
+        dpwtLogoSync.updated > 0
+      ) {
+        console.info(
+          `[golf tour logos] DPWT ${dpwtLogoSync.downloaded} downloaded, ${dpwtLogoSync.skipped} skipped, ${dpwtLogoSync.failed} failed, ${dpwtLogoSync.updated} updated`,
         );
       }
     }

@@ -20,7 +20,13 @@ describe("golf tour logo paths", () => {
     expect(getGolfTourLogoPublicPath("PGA")).toBe("/logos/golf-tours/pga.svg");
   });
 
-  it("maps LPGA to the default golf tour logo path", () => {
-    expect(getGolfTourLogoPublicPath("LPGA")).toBe("/logos/golf-tours/lpga.png");
+  it("maps LPGA to the SVG public path", () => {
+    expect(getGolfTourLogoExtension("LPGA")).toBe("svg");
+    expect(getGolfTourLogoPublicPath("LPGA")).toBe("/logos/golf-tours/lpga.svg");
+  });
+
+  it("maps DPWT to the SVG public path", () => {
+    expect(getGolfTourLogoExtension("DPWT")).toBe("svg");
+    expect(getGolfTourLogoPublicPath("DPWT")).toBe("/logos/golf-tours/dpwt.svg");
   });
 });

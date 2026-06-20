@@ -112,9 +112,11 @@ export function getCollegeLogoPublicPath(espnId: number): string {
   return `/logos/ncaa/${espnId}.png`;
 }
 
-/** Remote sources for golf tour logos (PGA, future LPGA, etc.). */
+/** Remote sources for golf tour logos (PGA, LPGA, DP World Tour, etc.). */
 export const GOLF_TOUR_LOGO_DOWNLOAD_URLS: Record<string, string> = {
   PGA: "https://upload.wikimedia.org/wikipedia/en/5/53/PGA_Tour_logo.svg",
+  LPGA: "https://static.cdnlogo.com/logos/l/29/ladies-professional-golf-association.svg",
+  DPWT: "https://static.cdnlogo.com/logos/d/69/DP-World-Tour.svg",
 };
 
 export function getGolfTourLogosDirectory(): string {

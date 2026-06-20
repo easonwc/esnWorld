@@ -84,12 +84,15 @@ cp .env.example .env
 | `MLS_SEED_ON_STARTUP` | `false` | Merge MLS league hierarchy |
 | `WNBA_SEED_ON_STARTUP` | `false` | Merge WNBA league hierarchy |
 | `TENNIS_VENUES_SEED_ON_STARTUP` | `false` | Merge tennis `multi_resource` venues with numbered courts (requires host cities — enable `LOCATIONS_SEED_ON_STARTUP` first) |
-| `GOLF_VENUES_SEED_ON_STARTUP` | `false` | Merge golf `multi_resource` venues with tee groups (shared by PGA, future LPGA, and DP World catalogs) |
+| `GOLF_VENUES_SEED_ON_STARTUP` | `false` | Merge golf `multi_resource` venues with tee groups (shared by PGA, LPGA, and DP World Tour catalogs) |
 | `TENNIS_GOLF_VENUES_SEED_ON_STARTUP` | `false` | **Deprecated** — enables both `TENNIS_VENUES_SEED_ON_STARTUP` and `GOLF_VENUES_SEED_ON_STARTUP` |
 | `PGA_TOUR_SEED_ON_STARTUP` | `false` | Merge PGA Tour tournament catalog and venue pools (auto-merges required golf cities and venues) |
-| `GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download golf tour logos (PGA, future LPGA) on startup |
+| `GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download golf tour logos (PGA, LPGA, DP World Tour) on startup |
+| `PGA_TOUR_ENABLED` | `false` | Run PGA season scheduler on world-clock transitions (Oct 1 release → next calendar year) |
 | `LPGA_TOUR_SEED_ON_STARTUP` | `false` | Merge LPGA Tour tournament catalog and venue pools (auto-merges required golf cities and venues) |
 | `LPGA_TOUR_ENABLED` | `false` | Run LPGA season scheduler on world-clock transitions (Oct 1 release → next calendar year) |
+| `DP_WORLD_TOUR_SEED_ON_STARTUP` | `false` | Merge DP World Tour tournament catalog and venue pools (auto-merges required golf cities and venues) |
+| `DP_WORLD_TOUR_ENABLED` | `false` | Run DP World Tour season scheduler on world-clock transitions (Oct 1 release → next calendar year) |
 | `FLAG_DOWNLOAD_ON_STARTUP` | `false` | Download country flag SVGs on server startup |
 | `NFL_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download NFL team and league logos on startup |
 | `MLB_LOGO_DOWNLOAD_ON_STARTUP` | `false` | Download MLB team and league logos on startup |
@@ -356,7 +359,7 @@ Seed catalog: `src/persistence/seed/wnba-teams.data.ts`.
 
 ### Tennis and golf venue seeds (optional)
 
-Tennis and golf venues are seeded separately so each sport (and future golf tours like LPGA) can grow independently.
+Tennis and golf venues are seeded separately so each sport and golf tour can grow independently.
 
 Set `TENNIS_VENUES_SEED_ON_STARTUP=true` to merge **33** tennis `multi_resource` venues with numbered courts (`Court 1` … `Court N`).
 
@@ -365,7 +368,7 @@ Set `GOLF_VENUES_SEED_ON_STARTUP=true` to merge **59** golf `multi_resource` ven
 The legacy `TENNIS_GOLF_VENUES_SEED_ON_STARTUP=true` flag still enables **both** seeds.
 
 - **33 tennis complexes** — four Grand Slams, Masters 1000 and tour staples, plus Miami, Cincinnati, Rome, Madrid, Shanghai, Beijing, Montreal, and Toronto
-- **59 golf courses** — majors, full PGA Tour calendar venues, Open Championship rotation venues, and Ryder Cup hosts (shared catalog for PGA, future LPGA, and DP World)
+- **59 golf courses** — majors, full PGA Tour calendar venues, Open Championship rotation venues, and Ryder Cup hosts (shared catalog for PGA, LPGA, and DP World Tour)
 
 Host cities must already exist in the database — enable `LOCATIONS_SEED_ON_STARTUP=true` first (or create cities via the API). Seeds are idempotent: existing venues and resources are skipped.
 
@@ -375,7 +378,7 @@ Seed catalogs: `src/persistence/seed/tennis-venues.data.ts` and `src/persistence
 
 Set `PGA_TOUR_SEED_ON_STARTUP=true` to merge the **PGA Tour** catalog (**47** tournaments: Phase A signature & designated events plus Phase B weekly and fall swing stops). Also merges required golf venues and host cities as needed. The tour record includes a **logo** path (`/logos/golf-tours/pga.svg`).
 
-Set `GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP=true` to fetch tour logo files on startup (add LPGA to `GOLF_TOUR_LOGO_DOWNLOAD_URLS` when that catalog lands).
+Set `GOLF_TOUR_LOGO_DOWNLOAD_ON_STARTUP=true` to fetch tour logo files on startup (PGA, LPGA, and DP World Tour URLs in `GOLF_TOUR_LOGO_DOWNLOAD_URLS`).
 
 Set `PGA_TOUR_ENABLED=true` to run the **season scheduler** when the world clock crosses **October 1** (`PGA_TOUR_SCHEDULE_RELEASE_*`, default midnight `America/New_York`). The scheduler materializes the **next calendar year** as event trees (tournament → rounds → tee groups). Each tournament stores **`fieldSize`** (golfer capacity, typically 140–160) separately from **`teeGroupCount`** (parallel tee-group scheduling slots per round). Scheduling uses hybrid clock hooks: mutations (`set`/`advance`/`stop`), a 1-second interval while the clock is running, and manual `POST /api/golf-scheduling` with `action: "processNow"`. If any tournament fails validation, the **entire season batch fails** and an error is logged.
 
@@ -390,6 +393,16 @@ Set `LPGA_TOUR_ENABLED=true` to run the **season scheduler** on the same **Octob
 Each tournament uses **`fieldSize: 144`** (golfer capacity) and **`teeGroupCount: 55`** (scheduling slots).
 
 Seed catalog: `src/persistence/seed/lpga-tour.data.ts`.
+
+### DP World Tour (optional)
+
+Set `DP_WORLD_TOUR_SEED_ON_STARTUP=true` to merge the **DP World Tour** catalog (**42** Race to Dubai events from the 2025 official calendar, including four majors). Also merges required host cities, golf venues, and reuses shared courses where events overlap with PGA stops.
+
+Set `DP_WORLD_TOUR_ENABLED=true` to run the **season scheduler** on the same **October 1** release model as PGA (`DP_WORLD_TOUR_SCHEDULE_RELEASE_*` defaults match PGA).
+
+Each tournament uses **`fieldSize: 156`** (golfer capacity) and **`teeGroupCount: 55`** (scheduling slots).
+
+Seed catalog: `src/persistence/seed/dp-world-tour.data.ts`.
 
 ### Future enhancements
 

@@ -24,8 +24,10 @@ import {
   type VenueResourceRepository,
 } from "@/persistence/repositories";
 import {
+  isDpWorldTourEnabled,
   isLpgaTourEnabled,
   isPgaTourEnabled,
+  loadDpWorldTourScheduleReleaseConfig,
   loadLpgaTourScheduleReleaseConfig,
   loadPgaTourScheduleReleaseConfig,
   type GolfTourScheduleReleaseConfig,
@@ -46,6 +48,7 @@ import type {
 
 const PGA_TOUR_ABBREVIATION = "PGA";
 const LPGA_TOUR_ABBREVIATION = "LPGA";
+const DP_WORLD_TOUR_ABBREVIATION = "DPWT";
 
 interface GolfTourSchedulerDefinition {
   abbreviation: string;
@@ -69,6 +72,13 @@ const GOLF_TOUR_SCHEDULERS: readonly GolfTourSchedulerDefinition[] = [
     seedEnvFlag: "LPGA_TOUR_SEED_ON_STARTUP",
     isEnabled: isLpgaTourEnabled,
     loadReleaseConfig: loadLpgaTourScheduleReleaseConfig,
+  },
+  {
+    abbreviation: DP_WORLD_TOUR_ABBREVIATION,
+    label: "dp world tour",
+    seedEnvFlag: "DP_WORLD_TOUR_SEED_ON_STARTUP",
+    isEnabled: isDpWorldTourEnabled,
+    loadReleaseConfig: loadDpWorldTourScheduleReleaseConfig,
   },
 ];
 
@@ -373,6 +383,19 @@ export async function scheduleLpgaTourSeason(
 ): Promise<void> {
   return scheduleGolfTourSeason(
     LPGA_TOUR_ABBREVIATION,
+    seasonYear,
+    scheduledAtIsoUtc,
+    repositories,
+  );
+}
+
+export async function scheduleDpWorldTourSeason(
+  seasonYear: number,
+  scheduledAtIsoUtc: string,
+  repositories: SchedulingRepositories = getSchedulingRepositories(),
+): Promise<void> {
+  return scheduleGolfTourSeason(
+    DP_WORLD_TOUR_ABBREVIATION,
     seasonYear,
     scheduledAtIsoUtc,
     repositories,

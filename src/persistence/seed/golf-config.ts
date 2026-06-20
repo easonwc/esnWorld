@@ -15,10 +15,12 @@ export type PgaTourSeedConfig = GolfTourSeedConfig;
 export type PgaTourScheduleReleaseConfig = GolfTourScheduleReleaseConfig;
 export type LpgaTourSeedConfig = GolfTourSeedConfig;
 export type LpgaTourScheduleReleaseConfig = GolfTourScheduleReleaseConfig;
+export type DpWorldTourSeedConfig = GolfTourSeedConfig;
+export type DpWorldTourScheduleReleaseConfig = GolfTourScheduleReleaseConfig;
 
 function loadGolfTourScheduleReleaseConfig(
   env: NodeJS.ProcessEnv,
-  prefix: "PGA_TOUR" | "LPGA_TOUR",
+  prefix: "PGA_TOUR" | "LPGA_TOUR" | "DP_WORLD_TOUR",
 ): GolfTourScheduleReleaseConfig {
   const month = Number.parseInt(env[`${prefix}_SCHEDULE_RELEASE_MONTH`] ?? "10", 10);
   const day = Number.parseInt(env[`${prefix}_SCHEDULE_RELEASE_DAY`] ?? "1", 10);
@@ -48,6 +50,14 @@ export function loadLpgaTourSeedConfig(
   };
 }
 
+export function loadDpWorldTourSeedConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): DpWorldTourSeedConfig {
+  return {
+    enabled: parseBoolean(env.DP_WORLD_TOUR_SEED_ON_STARTUP, false),
+  };
+}
+
 export function loadPgaTourScheduleReleaseConfig(
   env: NodeJS.ProcessEnv = process.env,
 ): PgaTourScheduleReleaseConfig {
@@ -60,10 +70,22 @@ export function loadLpgaTourScheduleReleaseConfig(
   return loadGolfTourScheduleReleaseConfig(env, "LPGA_TOUR");
 }
 
+export function loadDpWorldTourScheduleReleaseConfig(
+  env: NodeJS.ProcessEnv = process.env,
+): DpWorldTourScheduleReleaseConfig {
+  return loadGolfTourScheduleReleaseConfig(env, "DP_WORLD_TOUR");
+}
+
 export function isPgaTourEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
   return parseBoolean(env.PGA_TOUR_ENABLED, false);
 }
 
 export function isLpgaTourEnabled(env: NodeJS.ProcessEnv = process.env): boolean {
   return parseBoolean(env.LPGA_TOUR_ENABLED, false);
+}
+
+export function isDpWorldTourEnabled(
+  env: NodeJS.ProcessEnv = process.env,
+): boolean {
+  return parseBoolean(env.DP_WORLD_TOUR_ENABLED, false);
 }
