@@ -19,6 +19,10 @@ export async function register() {
     const { seedAtpTourOnStartup } = await import("@/persistence/seed/atp-tour");
     const { seedWtaTourOnStartup } = await import("@/persistence/seed/wta-tour");
     const { seedGolfersOnStartup } = await import("@/persistence/seed/golfers");
+    const { seedPgaTourMembershipsOnStartup } = await import(
+      "@/persistence/seed/pga-tour-memberships"
+    );
+    const { seedOwgrOnStartup } = await import("@/persistence/seed/owgr-seed");
     const { seedTennisPlayersOnStartup } = await import(
       "@/persistence/seed/tennis-players"
     );
@@ -69,6 +73,8 @@ export async function register() {
     const atpTourSeed = await seedAtpTourOnStartup();
     const wtaTourSeed = await seedWtaTourOnStartup();
     const golfersSeed = await seedGolfersOnStartup();
+    const pgaMembershipSeed = await seedPgaTourMembershipsOnStartup();
+    const owgrSeed = await seedOwgrOnStartup();
     const tennisPlayersSeed = await seedTennisPlayersOnStartup();
     const golfTourRepository = getDefaultGolfTourRepository();
     const tennisTourRepository = getDefaultTennisTourRepository();
@@ -299,6 +305,18 @@ export async function register() {
     if (golfersSeed?.enabled) {
       console.info(
         `[golfers seed] target ${golfersSeed.targetMaleCount} male / ${golfersSeed.targetFemaleCount} female — added ${golfersSeed.golfersAdded} golfer profiles (${golfersSeed.humansAdded} humans)${golfersSeed.missingLocations ? " — skipped, no locations in database (enable LOCATIONS_SEED_ON_STARTUP)" : ""}`,
+      );
+    }
+
+    if (pgaMembershipSeed?.enabled) {
+      console.info(
+        `[pga membership seed] season ${pgaMembershipSeed.seasonYear} target ${pgaMembershipSeed.targetMemberCount} — added ${pgaMembershipSeed.membershipsAdded} memberships${pgaMembershipSeed.missingTour ? " — skipped, PGA tour not seeded (enable PGA_TOUR_SEED_ON_STARTUP)" : ""}${pgaMembershipSeed.missingMaleGolfers ? " — skipped, no male golfers (enable GOLFERS_SEED_ON_STARTUP)" : ""}`,
+      );
+    }
+
+    if (owgrSeed?.enabled) {
+      console.info(
+        `[owgr seed] as of ${owgrSeed.asOfDate} — ranked ${owgrSeed.maleGolferCount} male golfers (${owgrSeed.rankingsAdded} added)${owgrSeed.missingMaleGolfers ? " — skipped, no male golfers (enable GOLFERS_SEED_ON_STARTUP)" : ""}`,
       );
     }
 

@@ -118,12 +118,25 @@ describe("PGA Tour scheduling", () => {
       await schedulePgaTourSeason(2026, "2025-10-01T12:00:00.000Z");
 
       const tour = await getGolfTourStore().getByAbbreviation("PGA");
-      const schedules = await getGolfSeasonScheduleStore().listByTour(tour.id, 2026);
+      const tournaments = await schedulingRepositories.tournamentRepository.listByTour(
+        tour.id,
+      );
+      const sentry = tournaments.find(
+        (tournament) => tournament.slug === "sentry-tournament-of-champions",
+      );
+      expect(sentry).toBeDefined();
 
-      expect(schedules).toHaveLength(47);
+      const schedules = await getGolfSeasonScheduleStore().listByTour(tour.id, 2026);
+      const scheduledTournamentIds = new Set(
+        schedules.map((schedule) => schedule.tournamentId),
+      );
+
+      expect(schedules).toHaveLength(PGA_TOURNAMENT_SEED_DATA.length - 1);
+      expect(scheduledTournamentIds.has(sentry!.id)).toBe(false);
+
       const eventsPerTournament = 5 + 4 * DEFAULT_PGA_TEE_GROUP_COUNT;
       expect(await getEventStore().count()).toBe(
-        PGA_TOURNAMENT_SEED_DATA.length * eventsPerTournament,
+        (PGA_TOURNAMENT_SEED_DATA.length - 1) * eventsPerTournament,
       );
     },
     30_000,

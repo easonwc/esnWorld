@@ -4,6 +4,10 @@ import {
 import type { EventRecord } from "@/modules/events/types";
 import { EventError } from "@/modules/events/errors";
 import { getVenueStore } from "@/modules/venues";
+import {
+  getGolfTourWinStore,
+  tournamentRequiresPriorWinners,
+} from "@/modules/golf-tour-wins";
 import { getDb } from "@/persistence/db";
 import {
   getDefaultEventRepository,
@@ -116,6 +120,22 @@ function getSchedulingRepositories(): SchedulingRepositories {
     locationRepository: getDefaultLocationRepository(),
     venueResourceRepository: getDefaultVenueResourceRepository(),
   };
+}
+
+export async function shouldSkipTournamentWithoutPriorWinners(
+  tournament: GolfTournament,
+  tourId: string,
+  seasonYear: number,
+): Promise<boolean> {
+  if (!tournamentRequiresPriorWinners(tournament)) {
+    return false;
+  }
+
+  const priorWinnerCount = await getGolfTourWinStore().countPriorSeasonWinners(
+    tourId,
+    seasonYear,
+  );
+  return priorWinnerCount === 0;
 }
 
 async function resolveScheduleReference(input: {
@@ -325,6 +345,16 @@ export async function scheduleGolfTourSeason(
         rootEventId: referenced.rootEventId,
         scheduledAtIsoUtc,
       });
+      continue;
+    }
+
+    if (
+      await shouldSkipTournamentWithoutPriorWinners(
+        tournament,
+        tour.id,
+        seasonYear,
+      )
+    ) {
       continue;
     }
 

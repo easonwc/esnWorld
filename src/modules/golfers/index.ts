@@ -163,3 +163,8 @@ export {
   validatePlaysLeftHanded,
   validateTurnedProYear,
 } from "./transform";
+export {
+  compareGolfersByOverallSkill,
+  golferOverallSkillAverage,
+  rankGolfersByOverallSkill,
+} from "./skill";

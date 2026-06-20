@@ -1,5 +1,8 @@
 import { getDb } from "../db";
 import { MemoryCollegeRepository } from "./memory/college.memory";
+import { MemoryGolfTourWinRepository } from "./memory/golf-tour-win.memory";
+import { MemoryGolfWorldRankingRepository } from "./memory/golf-world-ranking.memory";
+import { MemoryGolfTourMembershipRepository } from "./memory/golf-tour-membership.memory";
 import { MemoryGolferRepository } from "./memory/golfer.memory";
 import { MemoryHumanRepository } from "./memory/human.memory";
 import { MemoryConferenceRepository } from "./memory/conference.memory";
@@ -27,6 +30,9 @@ import {
   MemoryTennisTournamentVenueRepository,
 } from "./memory/tennis.memory";
 import { SqliteCollegeRepository } from "./sqlite/college.sqlite";
+import { SqliteGolfTourWinRepository } from "./sqlite/golf-tour-win.sqlite";
+import { SqliteGolfWorldRankingRepository } from "./sqlite/golf-world-ranking.sqlite";
+import { SqliteGolfTourMembershipRepository } from "./sqlite/golf-tour-membership.sqlite";
 import { SqliteGolferRepository } from "./sqlite/golfer.sqlite";
 import { SqliteHumanRepository } from "./sqlite/human.sqlite";
 import { SqliteConferenceRepository } from "./sqlite/conference.sqlite";
@@ -65,6 +71,9 @@ import type {
   GolfTournamentRepository,
   GolfTournamentVenueRepository,
   GolferRepository,
+  GolfTourMembershipRepository,
+  GolfTourWinRepository,
+  GolfWorldRankingRepository,
   HumanRepository,
   LeagueRepository,
   LocationRepository,
@@ -130,6 +139,27 @@ function createHumanRepository(): HumanRepository {
     return new MemoryHumanRepository();
   }
   return new SqliteHumanRepository(getDb());
+}
+
+function createGolfTourWinRepository(): GolfTourWinRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryGolfTourWinRepository();
+  }
+  return new SqliteGolfTourWinRepository(getDb());
+}
+
+function createGolfWorldRankingRepository(): GolfWorldRankingRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryGolfWorldRankingRepository();
+  }
+  return new SqliteGolfWorldRankingRepository(getDb());
+}
+
+function createGolfTourMembershipRepository(): GolfTourMembershipRepository {
+  if (useMemoryRepositories()) {
+    return new MemoryGolfTourMembershipRepository();
+  }
+  return new SqliteGolfTourMembershipRepository(getDb());
 }
 
 function createGolferRepository(): GolferRepository {
@@ -272,6 +302,18 @@ export function getDefaultHumanRepository(): HumanRepository {
   return createHumanRepository();
 }
 
+export function getDefaultGolfTourWinRepository(): GolfTourWinRepository {
+  return createGolfTourWinRepository();
+}
+
+export function getDefaultGolfWorldRankingRepository(): GolfWorldRankingRepository {
+  return createGolfWorldRankingRepository();
+}
+
+export function getDefaultGolfTourMembershipRepository(): GolfTourMembershipRepository {
+  return createGolfTourMembershipRepository();
+}
+
 export function getDefaultGolferRepository(): GolferRepository {
   return createGolferRepository();
 }
@@ -337,6 +379,9 @@ export function getDefaultTennisTourSchedulerStateRepository(): TennisTourSchedu
 }
 
 export { MemoryCollegeRepository } from "./memory/college.memory";
+export { MemoryGolfTourWinRepository } from "./memory/golf-tour-win.memory";
+export { MemoryGolfWorldRankingRepository } from "./memory/golf-world-ranking.memory";
+export { MemoryGolfTourMembershipRepository } from "./memory/golf-tour-membership.memory";
 export { MemoryGolferRepository } from "./memory/golfer.memory";
 export { MemoryHumanRepository } from "./memory/human.memory";
 export { MemoryConferenceRepository } from "./memory/conference.memory";
@@ -376,6 +421,9 @@ export type {
   GolfTournamentRepository,
   GolfTournamentVenueRepository,
   GolferRepository,
+  GolfTourMembershipRepository,
+  GolfTourWinRepository,
+  GolfWorldRankingRepository,
   HumanRepository,
   LeagueRepository,
   LocationRepository,

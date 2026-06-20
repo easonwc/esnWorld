@@ -1,5 +1,8 @@
 import type { College } from "@/modules/colleges/types";
 import type { Golfer } from "@/modules/golfers/types";
+import type { GolfTourWin } from "@/modules/golf-tour-wins/types";
+import type { GolfWorldRanking } from "@/modules/golf-world-rankings/types";
+import type { GolfTourMembership } from "@/modules/golf-tour-memberships/types";
 import type { Human } from "@/modules/humans/types";
 import type { Conference } from "@/modules/conferences/types";
 import type { Division } from "@/modules/divisions/types";
@@ -105,6 +108,63 @@ export interface GolferRepository {
   getByHumanId(humanId: string): Promise<Golfer | null>;
   create(golfer: Golfer): Promise<Golfer>;
   delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface GolfTourMembershipRepository {
+  listByTourSeason(
+    tourId: string,
+    seasonYear: number,
+  ): Promise<GolfTourMembership[]>;
+  countByTourSeason(tourId: string, seasonYear: number): Promise<number>;
+  get(id: string): Promise<GolfTourMembership | null>;
+  getByGolferTourSeason(
+    golferId: string,
+    tourId: string,
+    seasonYear: number,
+  ): Promise<GolfTourMembership | null>;
+  create(membership: GolfTourMembership): Promise<GolfTourMembership>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface GolfTourWinRepository {
+  listByTourSeason(tourId: string, seasonYear: number): Promise<GolfTourWin[]>;
+  listDistinctGolfersByTourSeason(
+    tourId: string,
+    seasonYear: number,
+  ): Promise<string[]>;
+  countDistinctGolfersByTourSeason(
+    tourId: string,
+    seasonYear: number,
+  ): Promise<number>;
+  get(id: string): Promise<GolfTourWin | null>;
+  create(win: GolfTourWin): Promise<GolfTourWin>;
+  delete(id: string): Promise<boolean>;
+  clear(): Promise<void>;
+}
+
+export interface GolfWorldRankingRepository {
+  listBySystemDate(
+    rankingSystem: GolfWorldRanking["rankingSystem"],
+    asOfDate: string,
+  ): Promise<GolfWorldRanking[]>;
+  countBySystemDate(
+    rankingSystem: GolfWorldRanking["rankingSystem"],
+    asOfDate: string,
+  ): Promise<number>;
+  get(id: string): Promise<GolfWorldRanking | null>;
+  getByGolferSystemDate(
+    golferId: string,
+    rankingSystem: GolfWorldRanking["rankingSystem"],
+    asOfDate: string,
+  ): Promise<GolfWorldRanking | null>;
+  create(ranking: GolfWorldRanking): Promise<GolfWorldRanking>;
+  update(ranking: GolfWorldRanking): Promise<GolfWorldRanking>;
+  deleteBySystemDate(
+    rankingSystem: GolfWorldRanking["rankingSystem"],
+    asOfDate: string,
+  ): Promise<void>;
   clear(): Promise<void>;
 }
 
